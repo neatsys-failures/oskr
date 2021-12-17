@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 
 namespace oscar
 {
@@ -7,17 +6,18 @@ template <typename Transport> class TransportReceiver
 {
 public:
     const typename Transport::Address address;
+    TransportReceiver(typename Transport::Address address) : address(address) {}
 
-    virtual void ReceiveMessage(
+    virtual void receiveMessage(
         const typename Transport::Address &remote,
         const typename Transport::Message &message) = 0;
 
     // the codebase assume at most one multicast address present
-    virtual void ReceiveMulticastMessage(
+    virtual void receiveMulticastMessage(
         const typename Transport::Address &remote,
         const typename Transport::Message &message)
     {
-        ReceiveMessage(remote, message);
+        receiveMessage(remote, message);
     }
 };
 

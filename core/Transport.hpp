@@ -8,9 +8,10 @@
 
 namespace oscar
 {
-
 template <typename Transport> struct AddressTrait {
 };
+
+template <typename Transport> class TransportReceiver;
 
 template <typename Self> class Transport
 {
@@ -26,19 +27,21 @@ public:
     virtual void
     registerMulticastReceiver(TransportReceiver<Self> &receiver) = 0;
 
-    using SequentialCallback = std::function<void()>;
-    virtual void scheduleTimeout(
-        std::chrono::microseconds delay, SequentialCallback callback) = 0;
+    using Callback = std::function<void()>;
+    virtual void
+    scheduleTimeout(std::chrono::microseconds delay, Callback callback) = 0;
 
-    virtual void scheduleSequential(SequentialCallback callback)
+    virtual void scheduleSequential(Callback callback)
     {
         scheduleTimeout(std::chrono::microseconds(0), callback);
     }
 
-    using ConcurrentCallback = std::function<void(int)>;
-    virtual void scheduleConcurrent(ConcurrentCallback callback) = 0;
+    virtual void scheduleConcurrent(Callback callback) = 0;
+
+    virtual int getConcurrentId() const = 0;
 
     using Message = std::vector<std::uint8_t>;
+
     virtual void sendMessage(
         const TransportReceiver<Self> &sender, const Address &dest,
         const Message &message) = 0;
@@ -61,7 +64,10 @@ public:
     }
 
     virtual void sendMessageToMulticast(
-        const TransportReceiver<Self> &sender, const Message &message) = 0;
+        const TransportReceiver<Self> &sender, const Message &message)
+    {
+        sendMessage(sender, config.multicast_address, message);
+    }
 };
 
 } // namespace oscar

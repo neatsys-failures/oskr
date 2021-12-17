@@ -1,10 +1,13 @@
 #pragma once
-#include "core/Transport.hpp"
-
 #include <map>
 #include <queue>
 #include <string>
 #include <unordered_map>
+
+#include <spdlog/spdlog.h>
+
+#include "core/Transport.hpp"
+#include "core/TransportReceiver.hpp"
 
 namespace oscar
 {
@@ -24,12 +27,12 @@ class SimulatedTransport : public Transport<SimulatedTransport>
         Message message;
     };
     std::uint64_t now_us;
-    std::map<std::uint64_t, MessageBox> message_queue;
-    std::map<std::uint64_t, SequentialCallback> timeout_queue;
+    std::multimap<std::uint64_t, MessageBox> message_queue;
+    std::multimap<std::uint64_t, Callback> timeout_queue;
 
     // should clear up per message/timeout
-    std::queue<SequentialCallback> sequential_queue;
-    std::queue<ConcurrentCallback> concurrent_queue;
+    std::queue<Callback> sequential_queue, concurrent_queue;
+    int concurrent_id;
 
 public:
     SimulatedTransport(const Config<SimulatedTransport> &config)
@@ -44,6 +47,12 @@ public:
         receiver_table.insert({{receiver.address, receiver}});
     }
 
+    void registerMulticastReceiver(
+        TransportReceiver<SimulatedTransport> &receiver) override
+    {
+        // TODO
+    }
+
     void sendMessage(
         const TransportReceiver<SimulatedTransport> &sender,
         const Address &dest, const Message &message) override
@@ -53,22 +62,78 @@ public:
             {{now_us, MessageBox{sender.address, dest, message}}});
     }
 
-    void sendMessageToMulticast(
-        const TransportReceiver<SimulatedTransport> &sender,
-        const Message &message) override
-    {
-        // TODO
-    }
-
-    void scheduleTimeout(
-        std::chrono::microseconds delay, SequentialCallback callback) override
+    void
+    scheduleTimeout(std::chrono::microseconds delay, Callback callback) override
     {
         timeout_queue.insert({{now_us + delay.count(), callback}});
     }
 
-    void scheduleConcurrent(ConcurrentCallback callback) override
+    void scheduleSequential(Callback callback) override
+    {
+        sequential_queue.push(callback);
+    }
+
+    void scheduleConcurrent(Callback callback) override
     {
         concurrent_queue.push(callback);
+    }
+
+    int getConcurrentId() const override { return concurrent_id; }
+
+private:
+    void processScheduled()
+    {
+        while (true) {
+            if (!concurrent_queue.empty()) {
+                concurrent_id = 0;
+                concurrent_queue.front()();
+                concurrent_queue.pop();
+            } else if (!sequential_queue.empty()) {
+                concurrent_id = -1;
+                sequential_queue.front()();
+                sequential_queue.pop();
+            } else {
+                return;
+            }
+        }
+    }
+
+public:
+    void clearTimeout() { timeout_queue.clear(); }
+
+    void run()
+    {
+        while (true) {
+            auto message_iter = message_queue.begin();
+            while (message_iter != message_queue.end() &&
+                   message_iter->first == now_us) {
+                auto box = message_iter->second;
+                message_queue.erase(message_iter);
+
+                // TODO multicast message
+
+                concurrent_id = 0;
+                receiver_table.at(box.dest).receiveMessage(
+                    box.source, box.message);
+                processScheduled();
+                message_iter = message_queue.begin();
+            }
+
+            auto timeout_iter = timeout_queue.begin();
+            if (timeout_iter != timeout_queue.end() &&
+                (message_iter == message_queue.end() ||
+                 timeout_iter->first < message_iter->first)) {
+                now_us = timeout_iter->first;
+                concurrent_id = 0;
+                timeout_iter->second();
+                processScheduled();
+                timeout_queue.erase(timeout_iter);
+            } else if (message_iter != message_queue.end()) {
+                now_us = message_iter->first;
+            } else {
+                return;
+            }
+        }
     }
 };
 

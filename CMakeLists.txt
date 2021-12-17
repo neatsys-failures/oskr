@@ -5,11 +5,9 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
-include_directories(
-    ./
-    dep/
-)
+include_directories(./)
 
 add_subdirectory(dep/googletest)
+add_subdirectory(dep/spdlog)
 
 add_subdirectory(test)
