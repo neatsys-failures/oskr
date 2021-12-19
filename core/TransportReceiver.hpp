@@ -1,4 +1,5 @@
 #pragma once
+#include "core/Type.hpp"
 
 namespace oscar
 {
@@ -9,15 +10,13 @@ public:
     TransportReceiver(typename Transport::Address address) : address(address) {}
 
     virtual void receiveMessage(
-        const typename Transport::Address &remote,
-        const typename Transport::Message &message) = 0;
+        const typename Transport::Address &remote, const Span &buffer) = 0;
 
     // the codebase assume at most one multicast address present
     virtual void receiveMulticastMessage(
-        const typename Transport::Address &remote,
-        const typename Transport::Message &message)
+        const typename Transport::Address &remote, const Span &buffer)
     {
-        receiveMessage(remote, message);
+        receiveMessage(remote, buffer);
     }
 };
 

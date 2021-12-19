@@ -16,6 +16,9 @@ class SimulatedTransport;
 template <> struct AddressTrait<SimulatedTransport> {
     using Type = std::string;
 };
+template <> struct BufferSizeTrait<SimulatedTransport> {
+    static constexpr std::size_t N = 9000;
+};
 
 class SimulatedTransport : public Transport<SimulatedTransport>
 {
@@ -24,7 +27,7 @@ class SimulatedTransport : public Transport<SimulatedTransport>
 
     struct MessageBox {
         Address source, dest;
-        Message message;
+        Data message;
     };
     std::uint64_t now_us;
     std::multimap<std::uint64_t, MessageBox> message_queue;
@@ -41,6 +44,13 @@ public:
         now_us = 0;
     }
 
+    Address allocateAddress() override
+    {
+        Address addr("client-");
+        addr.push_back('A' + (char)receiver_table.size());
+        return addr;
+    }
+
     void
     registerReceiver(TransportReceiver<SimulatedTransport> &receiver) override
     {
@@ -55,9 +65,11 @@ public:
 
     void sendMessage(
         const TransportReceiver<SimulatedTransport> &sender,
-        const Address &dest, const Message &message) override
+        const Address &dest, Write write) override
     {
         // TODO filter
+        Data message(BUFFER_SIZE);
+        message.resize(write(message.data()));
         message_queue.insert(
             {{now_us, MessageBox{sender.address, dest, message}}});
     }
@@ -114,7 +126,7 @@ public:
 
                 concurrent_id = 0;
                 receiver_table.at(box.dest).receiveMessage(
-                    box.source, box.message);
+                    box.source, Span(box.message.data(), box.message.size()));
                 processScheduled();
                 message_iter = message_queue.begin();
             }

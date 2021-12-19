@@ -1,7 +1,9 @@
-add_executable(TestSimulatedTransport SimulatedTransport.cpp)
-target_link_libraries(TestSimulatedTransport PRIVATE gtest_main spdlog::spdlog)
-
 include(GoogleTest)
-gtest_discover_tests(
-    TestSimulatedTransport
-)
+
+add_executable(TestSimulatedTransport SimulatedTransport.cpp)
+target_link_libraries(TestSimulatedTransport PRIVATE oscar_core gtest_main)
+gtest_discover_tests(TestSimulatedTransport)
+
+add_executable(TestCoreFoundation CoreFoundation.cpp)
+target_link_libraries(TestCoreFoundation PRIVATE oscar_core gtest_main)
+gtest_discover_tests(TestCoreFoundation)

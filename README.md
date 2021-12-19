@@ -1,4 +1,4 @@
-### High Performance State Machine Replication Protocols Collection
+### High Performance Distributed Protocols Collection
 
 **Motivation.** This is an attempt to improve base on [specpaxos]. The detail of
 consideration is listed in [a piece of blog][sgd-blog].

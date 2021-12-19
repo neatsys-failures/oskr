@@ -1,6 +1,7 @@
 #pragma once
 #include "core/Config.hpp"
 #include "core/TransportReceiver.hpp"
+#include "core/Type.hpp"
 
 #include <chrono>
 #include <functional>
@@ -9,6 +10,10 @@
 namespace oscar
 {
 template <typename Transport> struct AddressTrait {
+    // using Type = ...
+};
+template <typename Transport> struct BufferSizeTrait {
+    // static constexpr size_t N = ...
 };
 
 template <typename Transport> class TransportReceiver;
@@ -20,6 +25,7 @@ protected:
 
 public:
     using Address = typename AddressTrait<Self>::Type;
+    virtual Address allocateAddress() = 0;
 
     const Config<Self> &config;
 
@@ -40,33 +46,31 @@ public:
 
     virtual int getConcurrentId() const = 0;
 
-    using Message = std::vector<std::uint8_t>;
-
+    static constexpr std::size_t BUFFER_SIZE = BufferSizeTrait<Self>::N;
+    using Write = std::function<std::size_t(std::uint8_t *mutable_buffer)>;
     virtual void sendMessage(
         const TransportReceiver<Self> &sender, const Address &dest,
-        const Message &message) = 0;
+        Write write) = 0;
 
     void sendMessageToReplica(
-        const TransportReceiver<Self> &sender, int replica_id,
-        const Message &message)
+        const TransportReceiver<Self> &sender, int replica_id, Write write)
     {
-        sendMessage(sender, config.replica_address_list[replica_id], message);
+        sendMessage(sender, config.replica_address_list[replica_id], write);
     }
 
-    void sendMessageToAll(
-        const TransportReceiver<Self> &sender, const Message &message)
+    void sendMessageToAll(const TransportReceiver<Self> &sender, Write write)
     {
         for (auto address : config.replica_address_list) {
             if (address != sender.address) {
-                sendMessage(sender, address, message);
+                sendMessage(sender, address, write);
             }
         }
     }
 
-    virtual void sendMessageToMulticast(
-        const TransportReceiver<Self> &sender, const Message &message)
+    virtual void
+    sendMessageToMulticast(const TransportReceiver<Self> &sender, Write write)
     {
-        sendMessage(sender, config.multicast_address, message);
+        sendMessage(sender, config.multicast_address, write);
     }
 };
 

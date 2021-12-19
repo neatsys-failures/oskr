@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
@@ -26,14 +28,13 @@ public:
     }
 
     typename Transport::Address latest_remote;
-    typename Transport::Message latest_message;
+    Data latest_message;
 
     void receiveMessage(
-        const typename Transport::Address &remote,
-        const typename Transport::Message &message) override
+        const typename Transport::Address &remote, const Span &buffer) override
     {
         latest_remote = remote;
-        latest_message = message;
+        latest_message = Data(buffer.begin(), buffer.end());
     }
 };
 
@@ -44,9 +45,13 @@ TEST(SimulatedTransport, OneMessage)
     SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
         receiver2("receiver-2");
     transport.registerReceiver(receiver1);
-    SimulatedTransport::Message message{0, 1, 2, 3};
+    Data message{0, 1, 2, 3};
     transport.scheduleTimeout(0us, [&]() {
-        transport.sendMessage(receiver2, "receiver-1", message);
+        transport.sendMessage(
+            receiver2, "receiver-1", [&](std::uint8_t *buffer) {
+                std::memcpy(buffer, message.data(), message.size());
+                return message.size();
+            });
     });
     transport.run();
     ASSERT_EQ(receiver1.latest_remote, "receiver-2");
@@ -72,26 +77,35 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote,
-        const typename Transport::Message &message) override
+        const typename Transport::Address &remote, const Span &buffer) override
     {
-        if (message.size() == 100) {
+        if (buffer.size() == 100) {
             on_exit(*this);
             return;
         }
-        typename Transport::Message reply = message;
-        reply.push_back(message.size());
+
+        Data reply(buffer.begin(), buffer.end());
+        reply.push_back(buffer.size());
+        auto write = [reply](std::uint8_t *buffer) {
+            std::memcpy(buffer, reply.data(), reply.size());
+            return reply.size();
+        };
+
         if (delay_us == 0) {
-            transport.sendMessage(*this, remote, reply);
+            transport.sendMessage(*this, remote, write);
         } else {
             transport.scheduleTimeout(
-                std::chrono::microseconds(delay_us), [this, remote, reply] {
-                    transport.sendMessage(*this, remote, reply);
+                std::chrono::microseconds(delay_us), [this, remote, write] {
+                    transport.sendMessage(*this, remote, write);
                 });
         }
     }
 
-    void Start() { transport.sendMessageToAll(*this, {}); }
+    void Start()
+    {
+        transport.sendMessageToAll(
+            *this, [](std::uint8_t *buffer) { return 0; });
+    }
 };
 
 TEST(SimulatedTransport, PingPong)
