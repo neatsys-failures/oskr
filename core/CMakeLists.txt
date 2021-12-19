@@ -10,4 +10,5 @@ target_precompile_headers(oscar_core INTERFACE
 target_link_libraries(oscar_core INTERFACE
     Boost::core
     spdlog::spdlog
+    Bitsery::bitsery
 )

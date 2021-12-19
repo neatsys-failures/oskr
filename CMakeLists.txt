@@ -10,6 +10,7 @@ include_directories(./)
 add_subdirectory(dependency/spdlog EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/boost EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
+add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 
 add_subdirectory(core)
 add_subdirectory(test)

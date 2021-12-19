@@ -69,7 +69,7 @@ public:
     {
         // TODO filter
         Data message(BUFFER_SIZE);
-        message.resize(write(message.data()));
+        message.resize(write(*(Buffer *)message.data()));
         message_queue.insert(
             {{now_us, MessageBox{sender.address, dest, message}}});
     }

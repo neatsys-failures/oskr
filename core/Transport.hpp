@@ -47,7 +47,8 @@ public:
     virtual int getConcurrentId() const = 0;
 
     static constexpr std::size_t BUFFER_SIZE = BufferSizeTrait<Self>::N;
-    using Write = std::function<std::size_t(std::uint8_t *mutable_buffer)>;
+    using Buffer = oscar::Buffer<BUFFER_SIZE>;
+    using Write = std::function<std::size_t(Buffer &buffer)>;
     virtual void sendMessage(
         const TransportReceiver<Self> &sender, const Address &dest,
         Write write) = 0;
