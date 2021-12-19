@@ -1,9 +1,9 @@
 [submodule "dep/googletest"]
-	path = dep/googletest
+	path = dependency/googletest
 	url = https://github.com/google/googletest
 [submodule "dep/spdlog"]
-	path = dep/spdlog
+	path = dependency/spdlog
 	url = https://github.com/gabime/spdlog
 [submodule "dep/boost"]
-	path = dep/boost
+	path = dependency/boost
 	url = https://github.com/boostorg/boost
