@@ -9,7 +9,7 @@ namespace oscar
 template <typename Transport> class Client : public TransportReceiver<Transport>
 {
 protected:
-    std::uint32_t client_id;
+    ClientId client_id;
 
 public:
     Client(Transport &transport)
@@ -17,7 +17,7 @@ public:
     {
         std::random_device rand;
         std::default_random_engine engine(rand());
-        client_id = std::uniform_int_distribution<std::uint32_t>()(engine);
+        client_id = std::uniform_int_distribution<ClientId>()(engine);
     }
 
     using InvokeCallback = std::function<void(Data result)>;

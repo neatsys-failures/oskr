@@ -10,7 +10,7 @@ template <typename Transport> struct Config {
     std::vector<typename Transport::Address> replica_address_list;
     typename Transport::Address multicast_address;
 
-    int primary_id(ViewNumber view_number) const
+    virtual int primary_id(ViewNumber view_number) const
     {
         return view_number % replica_address_list.size();
     }

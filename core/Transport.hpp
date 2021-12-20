@@ -54,7 +54,8 @@ public:
         Write write) = 0;
 
     void sendMessageToReplica(
-        const TransportReceiver<Self> &sender, int replica_id, Write write)
+        const TransportReceiver<Self> &sender, ReplicaId replica_id,
+        Write write)
     {
         sendMessage(sender, config.replica_address_list[replica_id], write);
     }

@@ -5,11 +5,19 @@
 
 using namespace oscar;
 using namespace std::literals::chrono_literals;
-using Strategy = BasicClient<SimulatedTransport>::Config::Strategy;
+using ReplicaMessage = std::variant<RequestMessage>;
+using Strategy =
+    BasicClient<SimulatedTransport, ReplicaMessage>::Config::Strategy;
+
+template <typename S> void serialize(S &s, ReplicaMessage &message)
+{
+    s(message);
+}
 
 TEST(BasicClient, Noop)
 {
     Config<SimulatedTransport> config{0, {}, {}};
     SimulatedTransport transport(config);
-    BasicClient client(transport, {Strategy::PRIMARY_FIRST, 1000ms, 1});
+    BasicClient<SimulatedTransport, ReplicaMessage> client(
+        transport, {Strategy::PRIMARY_FIRST, 1000ms, 1});
 }

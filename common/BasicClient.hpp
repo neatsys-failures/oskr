@@ -26,7 +26,8 @@ struct ReplyMessage {
     }
 };
 
-template <typename Transport> class BasicClient : public Client<Transport>
+template <typename Transport, typename ReplicaMessage>
+class BasicClient : public Client<Transport>
 {
 public:
     struct Config {
@@ -73,9 +74,8 @@ public:
             std::bind(&BasicClient::handleReply, this, reply));
     }
 
-    // TODO
     virtual std::size_t serializeRequestMessage(
-        typename Transport::Buffer &buffer, const RequestMessage &request)
+        typename Transport::Buffer &buffer, const ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
     }
@@ -90,8 +90,8 @@ private:
     void handleReply(const ReplyMessage &reply);
 };
 
-template <typename Transport>
-void BasicClient<Transport>::invoke(
+template <typename Transport, typename ReplicaMessage>
+void BasicClient<Transport, ReplicaMessage>::invoke(
     Data op, typename BasicClient::InvokeCallback callback)
 {
     if (pending) {
@@ -106,15 +106,15 @@ void BasicClient<Transport>::invoke(
     sendRequest(false);
 }
 
-template <typename Transport>
-void BasicClient<Transport>::sendRequest(bool resend)
+template <typename Transport, typename ReplicaMessage>
+void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
 {
     RequestMessage request;
     request.client_id = Client<Transport>::client_id;
     request.request_number = request_number;
     request.op = op;
     auto write = [this, request](typename Transport::Buffer &buffer) {
-        return serializeRequestMessage(buffer, request);
+        return serializeRequestMessage(buffer, ReplicaMessage(request));
     };
     auto send_to_primary = [this, write] {
         transport.sendMessageToReplica(
@@ -148,8 +148,9 @@ void BasicClient<Transport>::sendRequest(bool resend)
         });
 }
 
-template <typename Transport>
-void BasicClient<Transport>::handleReply(const ReplyMessage &reply)
+template <typename Transport, typename ReplicaMessage>
+void BasicClient<Transport, ReplicaMessage>::handleReply(
+    const ReplyMessage &reply)
 {
     if (!pending) {
         return;

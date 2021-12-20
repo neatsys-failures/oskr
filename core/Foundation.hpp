@@ -1,7 +1,10 @@
 #pragma once
+#include <variant>
+
 #include <bitsery/adapter/buffer.h>
 #include <bitsery/bitsery.h>
 #include <bitsery/brief_syntax.h>
+#include <bitsery/brief_syntax/variant.h>
 #include <bitsery/brief_syntax/vector.h>
 #include <spdlog/spdlog.h>
 
