@@ -6,13 +6,18 @@ add_subdirectory(dependency/boost EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 
-enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 include_directories(./)
-add_compile_options(-Wall -Wextra -pedantic)
+# no-exceptions: not really about overhead, mostly hope program crash fast
+# without unwinding, to ease debug with core dump
+add_compile_options(-Wall -Wextra -pedantic -fno-exceptions)
+enable_testing()
 
 add_subdirectory(core)
+add_subdirectory(common)
+
 add_subdirectory(replication/unreplicated)
+
 add_subdirectory(test)

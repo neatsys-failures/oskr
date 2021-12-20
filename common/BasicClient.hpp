@@ -59,8 +59,8 @@ private:
     std::optional<PendingRequest> pending;
 
 public:
-    BasicClient(Transport &transport, Config config)
-        : Client<Transport>(transport), transport(transport)
+    BasicClient(Transport &transport, Config config) :
+        Client<Transport>(transport), transport(transport)
     {
         this->config = config;
         request_number = 0;
@@ -113,7 +113,7 @@ template <typename Transport, typename ReplicaMessage>
 void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
 {
     RequestMessage request;
-    request.client_id = Client<Transport>::client_id;
+    request.client_id = this->client_id;
     request.request_number = pending->request_number;
     request.op = pending->op;
     auto write = [this, request](typename Transport::Buffer &buffer) {
