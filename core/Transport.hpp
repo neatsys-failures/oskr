@@ -24,6 +24,8 @@ protected:
     Transport(const Config<Self> &config) : config(config) {}
 
 public:
+    virtual ~Transport() {}
+
     using Address = typename AddressTrait<Self>::Type;
     virtual Address allocateAddress() = 0;
 

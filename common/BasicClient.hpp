@@ -1,4 +1,7 @@
 #pragma once
+#include <map>
+#include <optional>
+
 #include "core/Foundation.hpp"
 
 namespace oscar
@@ -45,19 +48,22 @@ private:
     Config config;
 
     RequestNumber request_number;
-    bool pending;
-    Data op;
-    typename BasicClient::InvokeCallback callback;
     ViewNumber view_number;
+
+    struct PendingRequest {
+        RequestNumber request_number;
+        Data op;
+        std::multimap<Data, ReplicaId> result_table;
+        typename BasicClient::InvokeCallback callback;
+    };
+    std::optional<PendingRequest> pending;
 
 public:
     BasicClient(Transport &transport, Config config)
         : Client<Transport>(transport), transport(transport)
     {
         this->config = config;
-
         request_number = 0;
-        pending = false;
         view_number = 0;
     }
 
@@ -98,11 +104,8 @@ void BasicClient<Transport, ReplicaMessage>::invoke(
         panic("Invoke pending client");
     }
 
-    pending = true;
     request_number += 1;
-    this->op = op;
-    this->callback = callback;
-
+    pending = PendingRequest{request_number, op, {}, callback};
     sendRequest(false);
 }
 
@@ -111,8 +114,8 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
 {
     RequestMessage request;
     request.client_id = Client<Transport>::client_id;
-    request.request_number = request_number;
-    request.op = op;
+    request.request_number = pending->request_number;
+    request.op = pending->op;
     auto write = [this, request](typename Transport::Buffer &buffer) {
         return serializeRequestMessage(buffer, ReplicaMessage(request));
     };
@@ -155,10 +158,20 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
     if (!pending) {
         return;
     }
-    if (request_number != reply.request_number) {
+    if (pending->request_number != reply.request_number) {
         return;
     }
-    // TODO
+
+    if (config.n_matched > 1) {
+        pending->result_table.insert({reply.result, reply.replica_id});
+        if (pending->result_table.count(reply.result) < config.n_matched) {
+            return;
+        }
+    }
+
+    auto callback = pending->callback;
+    pending.reset();
+    callback(reply.result);
 }
 
 } // namespace oscar

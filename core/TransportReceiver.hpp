@@ -8,6 +8,7 @@ template <typename Transport> class TransportReceiver
 public:
     const typename Transport::Address address;
     TransportReceiver(typename Transport::Address address) : address(address) {}
+    virtual ~TransportReceiver() {}
 
     virtual void receiveMessage(
         const typename Transport::Address &remote, const Span &span) = 0;
