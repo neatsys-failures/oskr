@@ -52,7 +52,7 @@ TEST(Misc, Bitsery)
 
     SimpleMessage message{42, {12, 11}};
     auto write = [message](typename SimulatedTransport::Buffer &buffer) {
-        return serialize(buffer, message);
+        return bitserySerialize(buffer, message);
     };
     typename SimulatedTransport::Buffer buffer;
     std::size_t len = write(buffer);
@@ -60,7 +60,7 @@ TEST(Misc, Bitsery)
 
     Span buffer_span(buffer, len);
     SimpleMessage out_message;
-    deserialize(buffer_span, out_message);
+    bitseryDeserialize(buffer_span, out_message);
     ASSERT_EQ(out_message.op_number, 42);
     Data expected_data{12, 11};
     ASSERT_EQ(out_message.data, expected_data);

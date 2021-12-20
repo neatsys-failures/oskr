@@ -94,60 +94,64 @@ public:
     int getConcurrentId() const override { return concurrent_id; }
 
 private:
-    void processScheduled()
-    {
-        while (true) {
-            if (!concurrent_queue.empty()) {
-                concurrent_id = 0;
-                concurrent_queue.front()();
-                concurrent_queue.pop();
-            } else if (!sequential_queue.empty()) {
-                concurrent_id = -1;
-                sequential_queue.front()();
-                sequential_queue.pop();
-            } else {
-                return;
-            }
-        }
-    }
+    void processScheduled();
 
 public:
     void clearTimeout() { timeout_queue.clear(); }
 
-    void run()
-    {
-        while (true) {
-            auto message_iter = message_queue.begin();
-            while (message_iter != message_queue.end() &&
-                   message_iter->first == now_us) {
-                auto box = message_iter->second;
-                message_queue.erase(message_iter);
+    void run();
+};
 
-                // TODO multicast message
-
-                concurrent_id = 0;
-                receiver_table.at(box.dest).receiveMessage(
-                    box.source, Span(box.message.data(), box.message.size()));
-                processScheduled();
-                message_iter = message_queue.begin();
-            }
-
-            auto timeout_iter = timeout_queue.begin();
-            if (timeout_iter != timeout_queue.end() &&
-                (message_iter == message_queue.end() ||
-                 timeout_iter->first < message_iter->first)) {
-                now_us = timeout_iter->first;
-                concurrent_id = 0;
-                timeout_iter->second();
-                processScheduled();
-                timeout_queue.erase(timeout_iter);
-            } else if (message_iter != message_queue.end()) {
-                now_us = message_iter->first;
-            } else {
-                return;
-            }
+void SimulatedTransport::processScheduled()
+{
+    while (true) {
+        if (!concurrent_queue.empty()) {
+            concurrent_id = 0;
+            concurrent_queue.front()();
+            concurrent_queue.pop();
+        } else if (!sequential_queue.empty()) {
+            concurrent_id = -1;
+            sequential_queue.front()();
+            sequential_queue.pop();
+        } else {
+            return;
         }
     }
-};
+}
+
+void SimulatedTransport::run()
+{
+    while (true) {
+        auto message_iter = message_queue.begin();
+        while (message_iter != message_queue.end() &&
+               message_iter->first == now_us) {
+            auto box = message_iter->second;
+            message_queue.erase(message_iter);
+
+            // TODO multicast message
+
+            concurrent_id = 0;
+            receiver_table.at(box.dest).receiveMessage(
+                box.source, Span(box.message.data(), box.message.size()));
+            processScheduled();
+            message_iter = message_queue.begin();
+        }
+
+        auto timeout_iter = timeout_queue.begin();
+        if (timeout_iter != timeout_queue.end() &&
+            (message_iter == message_queue.end() ||
+             timeout_iter->first < message_iter->first)) {
+            now_us = timeout_iter->first;
+            concurrent_id = 0;
+            timeout_iter->second();
+            processScheduled();
+            timeout_queue.erase(timeout_iter);
+        } else if (message_iter != message_queue.end()) {
+            now_us = message_iter->first;
+        } else {
+            return;
+        }
+    }
+}
 
 } // namespace oscar

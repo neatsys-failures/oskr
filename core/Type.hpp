@@ -8,6 +8,10 @@ namespace oscar
 {
 using OpNumber = std::uint64_t;
 using RequestNumber = std::uint32_t;
+using ViewNumber = std::uint32_t;
+
+using ReplicaId = std::int8_t;
+using ClientId = std::uint32_t;
 
 using Data = std::vector<std::uint8_t>;
 // although value semantic is preferred, Span (slice) is critical in

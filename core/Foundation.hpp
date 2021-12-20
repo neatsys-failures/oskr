@@ -11,19 +11,40 @@
 
 namespace oscar
 {
+
+using spdlog::debug, spdlog::info, spdlog::warn;
+
+template <typename... Args>
+[[noreturn]] void panic(spdlog::format_string_t<Args...> fmt, Args &&...args)
+{
+    spdlog::error(fmt, std::forward<Args>(args)...);
+    std::abort();
+}
+
+// TODO explore a at-least-equally convinent but better way
+#ifndef OSCAR_NO_RLOGGING
+#define rdebug(fmt, ...) debug("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rinfo(fmt, ...) info("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rwarn(fmt, ...) warn("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rpanic(fmt, ...) panic("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
+#endif
+
 template <typename Buffer, typename Message>
-std::size_t serialize(Buffer &buffer, const Message &message)
+std::size_t bitserySerialize(Buffer &buffer, const Message &message)
 {
     return bitsery::quickSerialization<
         bitsery::OutputBufferAdapter<Buffer>, Message>(buffer, message);
 }
-template <typename Message> void deserialize(const Span &span, Message &message)
+template <typename Message>
+void bitseryDeserialize(const Span &span, Message &message)
 {
     auto state = bitsery::quickDeserialization<
         bitsery::InputBufferAdapter<std::uint8_t *>, Message>(
         {span.data(), span.size()}, message);
     if (state.first != bitsery::ReaderError::NoError || !state.second) {
-        // TODO crash
+        panic(
+            "Deserialize failed: error = {}, completed = {}", state.first,
+            state.second);
     }
 }
 
