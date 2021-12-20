@@ -4,10 +4,6 @@
 #include "transport/Simulated.hpp"
 
 using namespace oscar;
-using bitsery::Deserializer;
-using bitsery::InputBufferAdapter;
-using bitsery::OutputBufferAdapter;
-using bitsery::Serializer;
 
 class SimpleClient : public Client<SimulatedTransport>
 {
@@ -23,14 +19,20 @@ public:
         const typename SimulatedTransport::Address &remote,
         const Span &buffer) override
     {
+        (void)remote;
+        (void)buffer;
     }
 
-    void Invoke(const Data op, InvokeCallback callback) override {}
+    void invoke(const Data op, InvokeCallback callback) override
+    {
+        (void)op;
+        (void)callback;
+    }
 };
 
-TEST(CoreFoundation, ClientId)
+TEST(Misc, ClientId)
 {
-    Config<SimulatedTransport> config{0, {}};
+    Config<SimulatedTransport> config{0, {}, {}};
     SimulatedTransport transport(config);
     SimpleClient client1(transport), client2(transport);
     ASSERT_NE(client1.GetId(), client2.GetId());
@@ -43,13 +45,12 @@ struct SimpleMessage {
     template <typename S> void serialize(S &s) { s(op_number, data); }
 };
 
-TEST(CoreFoundation, Bitsery)
+TEST(Misc, Bitsery)
 {
-    Config<SimulatedTransport> config{0, {}};
+    Config<SimulatedTransport> config{0, {}, {}};
     SimulatedTransport transport(config);
 
     SimpleMessage message{42, {12, 11}};
-    constexpr std::size_t N = SimulatedTransport::BUFFER_SIZE;
     auto write = [message](typename SimulatedTransport::Buffer &buffer) {
         return serialize(buffer, message);
     };

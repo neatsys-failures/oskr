@@ -7,6 +7,7 @@
 namespace oscar
 {
 using OpNumber = std::uint64_t;
+using RequestNumber = std::uint32_t;
 
 using Data = std::vector<std::uint8_t>;
 // although value semantic is preferred, Span (slice) is critical in

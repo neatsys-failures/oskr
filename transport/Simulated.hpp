@@ -61,6 +61,7 @@ public:
         TransportReceiver<SimulatedTransport> &receiver) override
     {
         // TODO
+        (void)receiver;
     }
 
     void sendMessage(

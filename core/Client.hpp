@@ -20,8 +20,8 @@ public:
         client_id = std::uniform_int_distribution<std::uint32_t>()(engine);
     }
 
-    using InvokeCallback = std::function<void(const Data result)>;
-    virtual void Invoke(const Data op, InvokeCallback callback) = 0;
+    using InvokeCallback = std::function<void(Data result)>;
+    virtual void invoke(Data op, InvokeCallback callback) = 0;
 };
 
 } // namespace oscar

@@ -10,7 +10,7 @@ using namespace std::chrono_literals;
 
 TEST(SimulatedTransport, ExternalTimeout)
 {
-    Config<SimulatedTransport> config{0, {}};
+    Config<SimulatedTransport> config{0, {}, {}};
     SimulatedTransport transport(config);
     bool triggered = false;
     transport.scheduleTimeout(0us, [&]() { triggered = true; });
@@ -40,7 +40,7 @@ public:
 
 TEST(SimulatedTransport, OneMessage)
 {
-    Config<SimulatedTransport> config{0, {}};
+    Config<SimulatedTransport> config{0, {}, {}};
     SimulatedTransport transport(config);
     SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
         receiver2("receiver-2");
@@ -86,7 +86,7 @@ public:
 
         Data reply(buffer.begin(), buffer.end());
         reply.push_back(buffer.size());
-        auto write = [reply](std::uint8_t *buffer) {
+        auto write = [reply](typename Transport::Buffer &buffer) {
             std::memcpy(buffer, reply.data(), reply.size());
             return reply.size();
         };
@@ -104,13 +104,16 @@ public:
     void Start()
     {
         transport.sendMessageToAll(
-            *this, [](std::uint8_t *buffer) { return 0; });
+            *this, [](typename Transport::Buffer &buffer) {
+                (void)buffer;
+                return 0;
+            });
     }
 };
 
 TEST(SimulatedTransport, PingPong)
 {
-    Config<SimulatedTransport> config{0, {"ping", "pong"}};
+    Config<SimulatedTransport> config{0, {"ping", "pong"}, {}};
     SimulatedTransport transport(config);
     bool all_done = false;
     auto on_exit = [&](const PingPongReceiver<SimulatedTransport> &receiver) {
@@ -129,7 +132,7 @@ TEST(SimulatedTransport, PingPong)
 
 TEST(SimulatedTransport, PingPongWithTimeout)
 {
-    Config<SimulatedTransport> config{0, {"ping", "pong"}};
+    Config<SimulatedTransport> config{0, {"ping", "pong"}, {}};
     SimulatedTransport transport(config);
     bool all_done = false;
     auto on_exit = [&](const PingPongReceiver<SimulatedTransport> &receiver) {

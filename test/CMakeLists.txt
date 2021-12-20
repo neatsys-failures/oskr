@@ -4,6 +4,14 @@ add_executable(TestSimulatedTransport SimulatedTransport.cpp)
 target_link_libraries(TestSimulatedTransport PRIVATE oscar_core gtest_main)
 gtest_discover_tests(TestSimulatedTransport)
 
-add_executable(TestCoreFoundation CoreFoundation.cpp)
-target_link_libraries(TestCoreFoundation PRIVATE oscar_core gtest_main)
-gtest_discover_tests(TestCoreFoundation)
+add_executable(TestMisc Misc.cpp)
+target_link_libraries(TestMisc PRIVATE oscar_core gtest_main)
+gtest_discover_tests(TestMisc)
+
+add_executable(TestUnreplicated Unreplicated.cpp)
+target_link_libraries(TestUnreplicated PRIVATE oscar_core gtest_main)
+gtest_discover_tests(TestUnreplicated)
+
+add_executable(TestBasicClient BasicClient.cpp)
+target_link_libraries(TestBasicClient PRIVATE oscar_core gtest_main)
+gtest_discover_tests(TestBasicClient)
