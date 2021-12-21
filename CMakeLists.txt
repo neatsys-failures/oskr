@@ -2,11 +2,10 @@ cmake_minimum_required(VERSION 3.18.4)
 project(oscar VERSION 0.1.0 LANGUAGES CXX)
 
 add_subdirectory(dependency/spdlog EXCLUDE_FROM_ALL)
-add_subdirectory(dependency/boost EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 include_directories(./)

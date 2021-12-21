@@ -4,9 +4,6 @@
 [submodule "dependency/spdlog"]
 	path = dependency/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "dependency/boost"]
-	path = dependency/boost
-	url = https://github.com/boostorg/boost
 [submodule "dependency/bitsery"]
 	path = dependency/bitsery
 	url = https://github.com/fraillt/bitsery
