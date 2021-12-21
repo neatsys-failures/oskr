@@ -18,6 +18,6 @@ class Log
 public:
     virtual ~Log() {}
 
-    virtual void commitUpcall(const Entry &entry) {}
+    virtual void commitUpcall(const Entry &entry) { (void)entry; }
 };
 } // namespace oscar

@@ -9,11 +9,6 @@ using ReplicaMessage = std::variant<RequestMessage>;
 using Strategy =
     BasicClient<SimulatedTransport, ReplicaMessage>::Config::Strategy;
 
-template <typename S> void serialize(S &s, ReplicaMessage &message)
-{
-    s(message);
-}
-
 TEST(BasicClient, Noop)
 {
     Config<SimulatedTransport> config{0, {}, {}};

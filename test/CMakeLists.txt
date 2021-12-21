@@ -1,17 +1,19 @@
 include(GoogleTest)
 
-add_executable(TestSimulatedTransport SimulatedTransport.cpp)
-target_link_libraries(TestSimulatedTransport PRIVATE oscar_core gtest_main)
-gtest_discover_tests(TestSimulatedTransport)
+set(OSCAR_TEST_UNITS
+    SimulatedTransport
+    Misc
+    Unreplicated
+    BasicClient
+)
 
-add_executable(TestMisc Misc.cpp)
-target_link_libraries(TestMisc PRIVATE oscar_core gtest_main)
-gtest_discover_tests(TestMisc)
-
-add_executable(TestUnreplicated Unreplicated.cpp)
-target_link_libraries(TestUnreplicated PRIVATE oscar_core gtest_main)
-gtest_discover_tests(TestUnreplicated)
-
-add_executable(TestBasicClient BasicClient.cpp)
-target_link_libraries(TestBasicClient PRIVATE oscar_core gtest_main)
-gtest_discover_tests(TestBasicClient)
+foreach(UNIT ${OSCAR_TEST_UNITS})
+    add_executable(Test${UNIT} ${UNIT}.cpp)
+    target_link_libraries(Test${UNIT} PRIVATE 
+        oscar_core 
+        oscar_common 
+        gtest_main
+    )
+    target_precompile_headers(Test${UNIT} REUSE_FROM oscar_pch)
+    gtest_discover_tests(Test${UNIT})
+endforeach()

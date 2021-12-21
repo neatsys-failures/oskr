@@ -39,6 +39,7 @@ std::size_t bitserySerialize(Buffer &buffer, const Message &message)
     return bitsery::quickSerialization<
         bitsery::OutputBufferAdapter<Buffer>, Message>(buffer, message);
 }
+
 template <typename Message>
 void bitseryDeserialize(const Span &span, Message &message)
 {
@@ -51,7 +52,22 @@ void bitseryDeserialize(const Span &span, Message &message)
             state.second);
     }
 }
-
-// TODO log macro
-
 } // namespace oscar
+
+namespace bitsery
+{
+// should work... i think?
+namespace traits
+{
+template <>
+struct ContainerTraits<oscar::Data>
+    : public StdContainer<oscar::Data, true, true> {
+};
+} // namespace traits
+
+template <typename S> void serialize(S &s, oscar::Data &data)
+{
+    s.container1b(data, 240);
+}
+
+} // namespace bitsery
