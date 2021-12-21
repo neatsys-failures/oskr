@@ -10,5 +10,6 @@ TEST(Unreplicated, Noop)
 {
     Config<SimulatedTransport> config{0, {"replica-0"}, {}};
     SimulatedTransport transport(config);
-    unreplicated::Replica replica(transport);
+    Log log;
+    unreplicated::Replica replica(transport, log);
 }

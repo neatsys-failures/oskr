@@ -15,14 +15,15 @@ class Replica : public TransportReceiver<Transport>
 
     OpNumber op_number;
     ClientTable<Transport, ReplyMessage> client_table;
+    Log &log;
 
     static constexpr auto bitserySerialize =
         oscar::bitserySerialize<typename Transport::Buffer, ReplyMessage>;
 
 public:
-    Replica(Transport &transport) :
+    Replica(Transport &transport, Log &log) :
         TransportReceiver<Transport>(transport.config.replica_address_list[0]),
-        transport(transport)
+        transport(transport), log(log)
     {
         op_number = 0;
     }
