@@ -39,8 +39,9 @@ public:
             if (!record.reply_message) {
                 return [](auto) {};
             }
-            return
-                [&](auto on_reply) { on_reply(remote, *record.reply_message); };
+            return [remote, reply = *record.reply_message](auto on_reply) {
+                on_reply(remote, reply);
+            };
         }
 
         if (request_number != record.request_number + 1) {
@@ -62,7 +63,9 @@ public:
             return [](auto) {};
         }
         iter->second.reply_message = reply;
-        return [&](auto on_reply) { on_reply(iter->second.remote, reply); };
+        return [remote = iter->second.remote, reply](auto on_reply) {
+            on_reply(remote, reply);
+        };
     }
 };
 } // namespace oscar

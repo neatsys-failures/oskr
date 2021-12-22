@@ -15,12 +15,14 @@ class ListLog : public Log<>::List
     OpNumber start_number, commit_number;
 
 public:
-    ListLog(App &app) : Log<Log<>::ListPreset>(app)
+    explicit ListLog(App &app) : Log<Log<>::ListPreset>(app)
     {
         start_number = 0;
         commit_number = 0;
 
+#ifdef OSCAR_BENCHMARK
         block_list.reserve(Log<>::N_RESERVED_ENTRY / Log<>::BLOCK_SIZE);
+#endif
     }
 
     void prepare(OpNumber index, Block block) override
@@ -30,7 +32,7 @@ public:
             commit_number = start_number - 1;
         }
 
-        if (getIndex(index) != block_list.size() + 1) {
+        if (getIndex(index) != block_list.size()) {
             panic(
                 "Unexpected prepare: index = {}, expected = {}", index,
                 start_number + block_list.size());

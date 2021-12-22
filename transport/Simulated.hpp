@@ -4,10 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <spdlog/spdlog.h>
-
-#include "core/Transport.hpp"
-#include "core/TransportReceiver.hpp"
+#include "core/Foundation.hpp"
 
 namespace oscar
 {
@@ -66,6 +63,10 @@ public:
         const TransportReceiver<SimulatedTransport> &sender,
         const Address &dest, Write write) override
     {
+        if (!receiver_table.count(dest)) {
+            panic("Send to unknown destination: sender = {}", sender.address);
+        }
+
         // TODO filter
         Data message(BUFFER_SIZE);
         message.resize(write(*(Buffer<BUFFER_SIZE> *)message.data()));
