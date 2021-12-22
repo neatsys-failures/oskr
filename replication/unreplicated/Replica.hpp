@@ -18,9 +18,6 @@ class Replica : public TransportReceiver<Transport>
     ClientTable<Transport, ReplyMessage> client_table;
     Log<>::List &log;
 
-    static constexpr auto bitserySerialize =
-        oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>;
-
 public:
     Replica(Transport &transport, Log<>::List &log) :
         TransportReceiver<Transport>(transport.config.replica_address_list[0]),
@@ -32,13 +29,11 @@ public:
     void receiveMessage(
         const typename Transport::Address &remote, const Span &span) override
     {
-        using namespace std::placeholders;
+        using std::placeholders::_1;
 
         ReplicaMessage message;
         bitseryDeserialize(span, message);
-        transport.scheduleSequential([this, remote, message] {
-            std::visit(std::bind(&Replica::handle, this, remote, _1), message);
-        });
+        std::visit(std::bind(&Replica::handle, this, remote, _1), message);
     }
 
     void handle(
@@ -51,12 +46,17 @@ void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
     using std::placeholders::_1;
+
     auto send_reply = [this](auto &remote, const ReplyMessage &reply) {
         transport.sendMessage(
-            *this, remote, std::bind(bitserySerialize, _1, reply));
+            *this, remote,
+            std::bind(
+                // C++'s type inference still not as perfect as Rust :|
+                bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>,
+                _1, reply));
     };
 
-    if (auto apply = client_table.checkShortcut(
+    if (auto apply = client_table.check(
             remote, request.client_id, request.request_number)) {
         apply(send_reply);
         return;

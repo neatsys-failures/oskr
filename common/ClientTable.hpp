@@ -20,7 +20,7 @@ public:
     using Apply = std::function<void(
         std::function<void(
             const typename Transport::Address &remote, const ReplyMessage &)>)>;
-    Apply checkShortcut(
+    Apply check(
         const typename Transport::Address &remote, ClientId client_id,
         RequestNumber request_number)
     {
