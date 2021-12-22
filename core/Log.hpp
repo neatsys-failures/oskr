@@ -64,8 +64,9 @@ template <> struct Log<void> {
             int n_entry;
         };
     };
+    using List = Log<ListPreset>;
 
-    struct ChainedPreset {
+    struct ChainPreset {
         using Index = Hash;
         using Block = struct {
             Entry entry_buffer[BLOCK_SIZE];
@@ -73,5 +74,7 @@ template <> struct Log<void> {
             Hash previous;
         };
     };
+    using Chain = Log<ChainPreset>;
 };
+
 } // namespace oscar

@@ -17,19 +17,15 @@ template <typename Transport, typename ReplyMessage> class ClientTable
     std::unordered_map<ClientId, Record> record_table;
 
 public:
-    using Shortcut =
-        std::function<void(std::function<void(const ReplyMessage &)>)>;
-    Shortcut checkShortcut(
+    using Apply = std::function<void(
+        std::function<void(
+            const typename Transport::Address &remote, const ReplyMessage &)>)>;
+    Apply checkShortcut(
         const typename Transport::Address &remote, ClientId client_id,
         RequestNumber request_number)
     {
         auto iter = record_table.find(client_id);
         if (iter == record_table.end()) {
-            if (request_number != 1) { // TODO recover case?
-                panic(
-                    "Request number start from {}: client id = {}",
-                    request_number, client_id);
-            }
             record_table.insert(
                 {client_id, {remote, request_number, std::nullopt}});
             return nullptr;
@@ -37,13 +33,14 @@ public:
 
         auto &record = iter->second;
         if (request_number < record.request_number) {
-            return [](auto on_shortcut) { (void)on_shortcut; };
+            return [](auto) {};
         }
         if (request_number == record.request_number) {
             if (!record.reply_message) {
-                return [](auto on_shortcut) { (void)on_shortcut; };
+                return [](auto) {};
             }
-            return [&](auto on_shortcut) { on_shortcut(*record.reply_message); };
+            return
+                [&](auto on_reply) { on_reply(remote, *record.reply_message); };
         }
 
         if (request_number != record.request_number + 1) {
@@ -55,6 +52,17 @@ public:
         record.request_number = request_number;
         record.reply_message = std::nullopt;
         return nullptr;
+    }
+
+    Apply update(ClientId client_id, ReplyMessage reply)
+    {
+        auto iter = record_table.find(client_id);
+        if (iter == record_table.end()) {
+            warn("No record: client id = {:x}", client_id);
+            return [](auto) {};
+        }
+        iter->second.reply_message = reply;
+        return [&](auto on_reply) { on_reply(iter->second.remote, reply); };
     }
 };
 } // namespace oscar

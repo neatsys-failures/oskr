@@ -163,6 +163,10 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
         return;
     }
 
+    if (reply.view_number > view_number) {
+        view_number = reply.view_number;
+    }
+
     if (config.n_matched > 1) {
         pending->result_table.insert({reply.result, reply.replica_id});
         if (pending->result_table.count(reply.result) < config.n_matched) {
