@@ -13,12 +13,13 @@ using ViewNumber = std::uint32_t;
 using ReplicaId = std::int8_t;
 using ClientId = std::uint32_t;
 
+// for rx
+using Span = std::span<std::uint8_t>;
+// for tx
+template <std::size_t BUFFER_SIZE> using Buffer = std::uint8_t[BUFFER_SIZE];
+// for general storage of opaque things
 // TODO configurable preallocate size
 using Data = boost::container::small_vector<std::uint8_t, 16>;
-// although value semantic is preferred, Span (slice) is critical in
-// accomplishing zero-copy message processing
-// Span for input
-using Span = std::span<std::uint8_t>;
-// Buffer for output
-template <std::size_t BUFFER_SIZE> using Buffer = std::uint8_t[BUFFER_SIZE];
+
+using Hash = std::uint8_t[32]; // SHA256
 } // namespace oscar

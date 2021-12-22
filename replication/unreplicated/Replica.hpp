@@ -1,5 +1,6 @@
 #pragma once
 #include "common/ClientTable.hpp"
+#include "common/ListLog.hpp"
 #include "core/Foundation.hpp"
 #include "replication/unreplicated/Message.hpp"
 
@@ -15,15 +16,15 @@ class Replica : public TransportReceiver<Transport>
 
     OpNumber op_number;
     ClientTable<Transport, ReplyMessage> client_table;
-    // Log &log;
+    Log<Log<>::ListPreset> &log;
 
     static constexpr auto bitserySerialize =
         oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>;
 
 public:
-    Replica(Transport &transport, App &app) :
+    Replica(Transport &transport, Log<Log<>::ListPreset> &log) :
         TransportReceiver<Transport>(transport.config.replica_address_list[0]),
-        transport(transport)
+        transport(transport), log(log)
     {
         op_number = 0;
     }

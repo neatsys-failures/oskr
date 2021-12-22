@@ -12,8 +12,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 include_directories(./)
-# no-exceptions: not really about overhead, mainly hope program crash fast
-# without unwinding, to ease debug with core dump
 add_compile_options(-Wall -Wextra -pedantic)
 enable_testing()
 

@@ -9,18 +9,14 @@ class App
 {
 public:
     virtual Data commit(Data op) = 0;
-    virtual void rollback()
+    virtual void rollback(Data op)
     {
+        (void)op;
         // panic unsupported
     }
 };
 
-template <typename Log> struct LogMeta {
-    // using Index = ...;
-    // using Block = ...;
-};
-
-template <typename Self> class Log
+template <typename Preset = void> class Log
 {
 protected:
     App &app;
@@ -33,17 +29,8 @@ protected:
     }
 
 public:
-    struct Entry {
-        ClientId client_id;
-        RequestNumber request_number;
-        Data op;
-    };
-
-    using Index = typename LogMeta<Self>::Index;
-    using Block = typename LogMeta<Self>::Block;
-    static constexpr std::size_t BLOCK_SIZE = 50; // TODO
-    // expect 600K~1M throughput @ <= 60 seconds
-    static constexpr std::size_t N_RESERVED_ENTRY = 80 * 1000 * 1000;
+    using Index = typename Preset::Index;
+    using Block = typename Preset::Block;
 
     virtual ~Log() {}
 
@@ -58,5 +45,33 @@ public:
     virtual void enableUpcall() = 0;
 
     virtual void disableUpcall() { enable_upcall = false; }
+};
+
+template <> struct Log<void> {
+    using Entry = struct {
+        ClientId client_id;
+        RequestNumber request_number;
+        Data op;
+    };
+    static constexpr std::size_t BLOCK_SIZE = 50; // TODO
+    // expect 600K~1M throughput @ <= 60 seconds
+    static constexpr std::size_t N_RESERVED_ENTRY = 80 * 1000 * 1000;
+
+    struct ListPreset {
+        using Index = OpNumber;
+        using Block = struct {
+            Entry entry_buffer[BLOCK_SIZE];
+            int n_entry;
+        };
+    };
+
+    struct ChainedPreset {
+        using Index = Hash;
+        using Block = struct {
+            Entry entry_buffer[BLOCK_SIZE];
+            int n_entry;
+            Hash previous;
+        };
+    };
 };
 } // namespace oscar
