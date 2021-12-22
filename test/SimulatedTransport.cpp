@@ -22,8 +22,8 @@ template <typename Transport>
 class SimpleReceiver : public TransportReceiver<Transport>
 {
 public:
-    SimpleReceiver(typename Transport::Address address)
-        : TransportReceiver<Transport>(address)
+    SimpleReceiver(typename Transport::Address address) :
+        TransportReceiver<Transport>(address)
     {
     }
 
@@ -69,8 +69,9 @@ public:
     PingPongReceiver(
         typename Transport::Address address, Transport &transport,
         std::function<void(PingPongReceiver<Transport> &)> on_exit,
-        int delay_us)
-        : TransportReceiver<Transport>(address), transport(transport)
+        int delay_us) :
+        TransportReceiver<Transport>(address),
+        transport(transport)
     {
         this->on_exit = on_exit;
         this->delay_us = delay_us;
@@ -86,7 +87,7 @@ public:
 
         Data reply(buffer.begin(), buffer.end());
         reply.push_back(buffer.size());
-        auto write = [reply](typename Transport::Buffer &buffer) {
+        auto write = [reply](auto &buffer) {
             std::memcpy(buffer, reply.data(), reply.size());
             return reply.size();
         };
@@ -103,11 +104,10 @@ public:
 
     void Start()
     {
-        transport.sendMessageToAll(
-            *this, [](typename Transport::Buffer &buffer) {
-                (void)buffer;
-                return 0;
-            });
+        transport.sendMessageToAll(*this, [](auto &buffer) {
+            (void)buffer;
+            return 0;
+        });
     }
 };
 

@@ -13,11 +13,9 @@ namespace oscar
 {
 
 class SimulatedTransport;
-template <> struct AddressTrait<SimulatedTransport> {
-    using Type = std::string;
-};
-template <> struct BufferSizeTrait<SimulatedTransport> {
-    static constexpr std::size_t N = 9000;
+template <> struct TransportMeta<SimulatedTransport> {
+    using Address = std::string;
+    static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
 };
 
 class SimulatedTransport : public Transport<SimulatedTransport>
@@ -38,8 +36,8 @@ class SimulatedTransport : public Transport<SimulatedTransport>
     int concurrent_id;
 
 public:
-    SimulatedTransport(const Config<SimulatedTransport> &config)
-        : Transport(config)
+    SimulatedTransport(const Config<SimulatedTransport> &config) :
+        Transport(config)
     {
         now_us = 0;
     }
@@ -70,7 +68,7 @@ public:
     {
         // TODO filter
         Data message(BUFFER_SIZE);
-        message.resize(write(*(Buffer *)message.data()));
+        message.resize(write(*(Buffer<BUFFER_SIZE> *)message.data()));
         message_queue.insert(
             {{now_us, MessageBox{sender.address, dest, message}}});
     }

@@ -9,11 +9,11 @@
 
 namespace oscar
 {
-template <typename Transport> struct AddressTrait {
-    // using Type = ...
-};
-template <typename Transport> struct BufferSizeTrait {
-    // static constexpr size_t N = ...
+template <typename Transport> struct TransportMeta {
+    // would be better to use concept?
+
+    // using Address = ...;
+    // static constexpr std::size_t BUFFER_SIZE = ...;
 };
 
 template <typename Transport> class TransportReceiver;
@@ -26,7 +26,7 @@ protected:
 public:
     virtual ~Transport() {}
 
-    using Address = typename AddressTrait<Self>::Type;
+    using Address = typename TransportMeta<Self>::Address;
     virtual Address allocateAddress() = 0;
 
     const Config<Self> &config;
@@ -48,9 +48,8 @@ public:
 
     virtual int getConcurrentId() const = 0;
 
-    static constexpr std::size_t BUFFER_SIZE = BufferSizeTrait<Self>::N;
-    using Buffer = oscar::Buffer<BUFFER_SIZE>;
-    using Write = std::function<std::size_t(Buffer &buffer)>;
+    static constexpr std::size_t BUFFER_SIZE = TransportMeta<Self>::BUFFER_SIZE;
+    using Write = std::function<std::size_t(Buffer<BUFFER_SIZE> &buffer)>;
     virtual void sendMessage(
         const TransportReceiver<Self> &sender, const Address &dest,
         Write write) = 0;

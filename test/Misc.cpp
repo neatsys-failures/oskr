@@ -8,8 +8,8 @@ using namespace oscar;
 class SimpleClient : public Client<SimulatedTransport>
 {
 public:
-    SimpleClient(SimulatedTransport &transport)
-        : Client<SimulatedTransport>(transport)
+    SimpleClient(SimulatedTransport &transport) :
+        Client<SimulatedTransport>(transport)
     {
     }
 
@@ -47,14 +47,11 @@ struct SimpleMessage {
 
 TEST(Misc, Bitsery)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
-
     SimpleMessage message{42, {12, 11}};
-    auto write = [message](typename SimulatedTransport::Buffer &buffer) {
+    auto write = [message](auto &buffer) {
         return bitserySerialize(buffer, message);
     };
-    typename SimulatedTransport::Buffer buffer;
+    Buffer<100> buffer;
     std::size_t len = write(buffer);
     ASSERT_GT(len, 0);
 

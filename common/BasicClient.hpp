@@ -80,8 +80,9 @@ public:
             std::bind(&BasicClient::handleReply, this, reply));
     }
 
-    virtual std::size_t serializeRequestMessage(
-        typename Transport::Buffer &buffer, const ReplicaMessage &request)
+    using Buffer = oscar::Buffer<Transport::BUFFER_SIZE>;
+    virtual std::size_t
+    serializeRequestMessage(Buffer &buffer, const ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
     }
@@ -116,7 +117,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     request.client_id = this->client_id;
     request.request_number = pending->request_number;
     request.op = pending->op;
-    auto write = [this, request](typename Transport::Buffer &buffer) {
+    auto write = [this, request](auto &buffer) {
         return serializeRequestMessage(buffer, ReplicaMessage(request));
     };
     auto send_to_primary = [this, write] {

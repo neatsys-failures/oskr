@@ -18,7 +18,7 @@ class Replica : public TransportReceiver<Transport>
     Log &log;
 
     static constexpr auto bitserySerialize =
-        oscar::bitserySerialize<typename Transport::Buffer, ReplyMessage>;
+        oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>;
 
 public:
     Replica(Transport &transport, Log &log) :
