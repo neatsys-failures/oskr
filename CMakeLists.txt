@@ -4,7 +4,9 @@ project(oscar VERSION 0.1.0 LANGUAGES CXX)
 add_subdirectory(dependency/spdlog EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
-find_package(Boost)
+# there is an option to add Boost as submodule as well, but the cloning is too
+# painful
+find_package(Boost REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

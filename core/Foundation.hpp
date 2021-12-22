@@ -10,6 +10,7 @@
 
 #include "core/Client.hpp"
 #include "core/Log.hpp"
+#include "core/Transport.hpp"
 #include "core/TransportReceiver.hpp"
 #include "core/Type.hpp"
 

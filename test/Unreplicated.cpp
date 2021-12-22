@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "app/Null.hpp"
 #include "common/BasicClient.hpp"
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/Simulated.hpp"
@@ -10,6 +11,6 @@ TEST(Unreplicated, Noop)
 {
     Config<SimulatedTransport> config{0, {"replica-0"}, {}};
     SimulatedTransport transport(config);
-    Log log;
-    unreplicated::Replica replica(transport, log);
+    NullApp app;
+    unreplicated::Replica replica(transport, app);
 }

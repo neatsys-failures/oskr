@@ -1,11 +1,10 @@
 #pragma once
-#include "core/Config.hpp"
-#include "core/TransportReceiver.hpp"
-#include "core/Type.hpp"
-
 #include <chrono>
 #include <functional>
 #include <vector>
+
+#include "core/Config.hpp"
+#include "core/Type.hpp"
 
 namespace oscar
 {
