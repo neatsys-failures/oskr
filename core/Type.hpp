@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <span>
-#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -16,7 +15,6 @@ using ClientId = std::uint32_t;
 
 // TODO configurable preallocate size
 using Data = boost::container::small_vector<std::uint8_t, 16>;
-// using Data = std::vector<std::uint8_t>;
 // although value semantic is preferred, Span (slice) is critical in
 // accomplishing zero-copy message processing
 // Span for input

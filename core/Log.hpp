@@ -8,7 +8,6 @@ namespace oscar
 class Log
 {
     struct Entry {
-        OpNumber op_number;
         ClientId client_id;
         RequestNumber request_number;
         Data op;
