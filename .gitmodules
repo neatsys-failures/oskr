@@ -7,3 +7,6 @@
 [submodule "dependency/bitsery"]
 	path = dependency/bitsery
 	url = https://github.com/fraillt/bitsery
+[submodule "dependency/doxygen-awesome-css"]
+	path = dependency/doxygen-awesome-css
+	url = https://github.com/jothepro/doxygen-awesome-css

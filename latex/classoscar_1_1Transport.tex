@@ -1,0 +1,82 @@
+\hypertarget{classoscar_1_1Transport}{}\doxysection{oscar\+::Transport$<$ Self $>$ Class Template Reference}
+\label{classoscar_1_1Transport}\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+
+
+Collaboration diagram for oscar\+::Transport$<$ Self $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=241pt]{classoscar_1_1Transport__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}\label{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}} 
+using {\bfseries Address} = typename \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$ Self $>$\+::Address
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}\label{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}} 
+using {\bfseries Callback} = std\+::function$<$ void()$>$
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}\label{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}} 
+using {\bfseries Write} = std\+::function$<$ std\+::size\+\_\+t(Buffer$<$ BUFFER\+\_\+\+SIZE $>$ \&buffer)$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}\label{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}} 
+virtual Address {\bfseries allocate\+Address} ()=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}\label{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}} 
+virtual void {\bfseries register\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}\label{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}} 
+virtual void {\bfseries register\+Multicast\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}\label{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}} 
+virtual void {\bfseries schedule\+Timeout} (std\+::chrono\+::microseconds delay, Callback callback)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}\label{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}} 
+virtual void {\bfseries schedule\+Sequential} (Callback callback)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}\label{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}} 
+virtual void {\bfseries schedule\+Concurrent} (Callback callback)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}\label{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}} 
+virtual int {\bfseries get\+Concurrent\+Id} () const =0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}\label{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}} 
+virtual void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, const Address \&dest, Write write)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a042e3921a049469877cf7e25f951ce43}\label{classoscar_1_1Transport_a042e3921a049469877cf7e25f951ce43}} 
+void {\bfseries send\+Message\+To\+Replica} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Replica\+Id replica\+\_\+id, Write write)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}\label{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}} 
+void {\bfseries send\+Message\+To\+All} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Write write)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a1b9cb8a32e5d007ad00a6fc3ad46af2b}\label{classoscar_1_1Transport_a1b9cb8a32e5d007ad00a6fc3ad46af2b}} 
+virtual void {\bfseries send\+Message\+To\+Multicast} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Write write)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}\label{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}} 
+const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \& {\bfseries config}
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}\label{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}} 
+static constexpr std\+::size\+\_\+t {\bfseries BUFFER\+\_\+\+SIZE} = \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::BUFFER\+\_\+\+SIZE
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}\label{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}} 
+{\bfseries Transport} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \&config)
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+core/Transport.\+hpp\end{DoxyCompactItemize}

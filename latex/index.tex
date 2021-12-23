@@ -1,0 +1,49 @@
+\label{index_md_README}%
+\Hypertarget{index_md_README}%
+
+
+\doxysubsubsection*{High Performance Distributed Protocols Collection}
+
+{\bfseries{Motivation.}} This is an attempt to improve based on \href{https://github.com/UWSysLab/specpaxos}{\texttt{ specpaxos}}. The detail of consideration is listed in \href{https://sgdxbc.github.io/ideas/2021-12-15/p0}{\texttt{ a piece of blog}}.
+
+{\bfseries{Why named Oscar?}} Because the core of this project is based on a specialized actor model.
+
+{\bfseries{Present issues\+:}}
+\begin{DoxyItemize}
+\item Heavily-\/used template programming causing terrible error reporting.
+\item Heavily-\/used template programming + self-\/contained header result in long compilation time. Because most class in header are templated, precompiled header not help much.
+\item Serialization leverage Bitsery, which is a little bit lack of document.
+\item Some part of interface has cumbersome syntax, because of required {\ttfamily typename} and such.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+
+
+Develop on Ubuntu 21.\+10, with clang version 13. Dependent apt packages\+:
+\begin{DoxyItemize}
+\item {\ttfamily libboost-\/dev}
+\end{DoxyItemize}
+
+Step 1, clone the repo with {\ttfamily -\/-\/recursive}.
+
+Step 2, build CMake project.
+
+{\itshape Work in progress.}
+
+\DoxyHorRuler{0}
+
+
+Project structure\+:
+\begin{DoxyItemize}
+\item {\ttfamily core} classes designed to be inherited, and something essential to those classes.
+\begin{DoxyItemize}
+\item {\ttfamily \mbox{\hyperlink{Foundation_8hpp_source}{Foundation.\+hpp}}} an all-\/in-\/one header for protocol implementation.
+\end{DoxyItemize}
+\item {\ttfamily common} classes designed to be composed.
+\item {\ttfamily app} builtin applications to be supported by protocols.
+\item {\ttfamily transport} runtime implementations that support protocols.
+\item {\ttfamily replication} replication protocols.
+\item {\ttfamily transactional} transactional protocols.
+\item {\ttfamily dependency} git submodule stubs.
+\item {\ttfamily test} flat directory for tests. 
+\end{DoxyItemize}

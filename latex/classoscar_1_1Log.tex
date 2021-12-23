@@ -1,0 +1,61 @@
+\hypertarget{classoscar_1_1Log}{}\doxysection{oscar\+::Log$<$ Preset $>$ Class Template Reference}
+\label{classoscar_1_1Log}\index{oscar::Log$<$ Preset $>$@{oscar::Log$<$ Preset $>$}}
+
+
+Collaboration diagram for oscar\+::Log$<$ Preset $>$\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{classoscar_1_1Log__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a8ceb581099308ae1baf0f39457755af0}\label{classoscar_1_1Log_a8ceb581099308ae1baf0f39457755af0}} 
+using {\bfseries Index} = typename Preset\+::\+Index
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a8977945f72aa7f6ac33da6fb8cd4fa55}\label{classoscar_1_1Log_a8977945f72aa7f6ac33da6fb8cd4fa55}} 
+using {\bfseries Block} = typename Preset\+::\+Block
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a9da08ef62d8b14f3e867a24d50a708a8}\label{classoscar_1_1Log_a9da08ef62d8b14f3e867a24d50a708a8}} 
+using {\bfseries Reply\+Callback} = std\+::function$<$ void(Client\+Id, Request\+Number, Data)$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a8bd67f4b598099a2fb0efe91520f7e41}\label{classoscar_1_1Log_a8bd67f4b598099a2fb0efe91520f7e41}} 
+virtual void {\bfseries prepare} (Index index, Block block)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a1db5eae9465998fe84e0db9259723ced}\label{classoscar_1_1Log_a1db5eae9465998fe84e0db9259723ced}} 
+virtual void {\bfseries commit} (Index index, Reply\+Callback callback)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_adb50144da1ce93c54858d6b214f2050e}\label{classoscar_1_1Log_adb50144da1ce93c54858d6b214f2050e}} 
+virtual void {\bfseries rollback\+To} (Index index)=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_aa5d01724ea21631b636299050bfb5d6f}\label{classoscar_1_1Log_aa5d01724ea21631b636299050bfb5d6f}} 
+virtual void {\bfseries enable\+Upcall} ()=0
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a89475ede6f75b22e38acd80d2617ee95}\label{classoscar_1_1Log_a89475ede6f75b22e38acd80d2617ee95}} 
+virtual void {\bfseries disable\+Upcall} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a41eafe6346f7bb145fe2dc90ff5ae3eb}\label{classoscar_1_1Log_a41eafe6346f7bb145fe2dc90ff5ae3eb}} 
+{\bfseries Log} (\mbox{\hyperlink{classoscar_1_1App}{App}} \&app)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_a3ae23f2076944fe8e0e0f75cecede745}\label{classoscar_1_1Log_a3ae23f2076944fe8e0e0f75cecede745}} 
+\mbox{\hyperlink{classoscar_1_1App}{App}} \& {\bfseries app}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Log_ab5358182f2cca14374a7f51a50f4d090}\label{classoscar_1_1Log_ab5358182f2cca14374a7f51a50f4d090}} 
+bool {\bfseries enable\+\_\+upcall}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+core/Log.\+hpp\end{DoxyCompactItemize}

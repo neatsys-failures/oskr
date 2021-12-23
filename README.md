@@ -1,3 +1,4 @@
+<!-- to prevent Doxygen derive page title -->
 ### High Performance Distributed Protocols Collection
 
 **Motivation.** This is an attempt to improve based on [specpaxos]. The detail 

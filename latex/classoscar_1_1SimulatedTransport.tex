@@ -1,0 +1,62 @@
+\hypertarget{classoscar_1_1SimulatedTransport}{}\doxysection{oscar\+::Simulated\+Transport Class Reference}
+\label{classoscar_1_1SimulatedTransport}\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}}
+
+
+Inheritance diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{classoscar_1_1SimulatedTransport__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{classoscar_1_1SimulatedTransport__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aa9387971a4141a8c51095de42b7a6778}\label{classoscar_1_1SimulatedTransport_aa9387971a4141a8c51095de42b7a6778}} 
+{\bfseries Simulated\+Transport} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&config)
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}\label{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}} 
+Address {\bfseries allocate\+Address} () override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}\label{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}} 
+void {\bfseries register\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}\label{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}} 
+void {\bfseries register\+Multicast\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}\label{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}} 
+void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&sender, const Address \&dest, Write write) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}\label{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}} 
+void {\bfseries schedule\+Timeout} (std\+::chrono\+::microseconds delay, Callback callback) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}\label{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}} 
+void {\bfseries schedule\+Sequential} (Callback callback) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}\label{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}} 
+void {\bfseries schedule\+Concurrent} (Callback callback) override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}\label{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}} 
+int {\bfseries get\+Concurrent\+Id} () const override
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a96bc8b2475130f279148c84e59701b0d}\label{classoscar_1_1SimulatedTransport_a96bc8b2475130f279148c84e59701b0d}} 
+void {\bfseries clear\+Timeout} ()
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aa7cf687e95eb0dff67cd77f99d72a18c}\label{classoscar_1_1SimulatedTransport_aa7cf687e95eb0dff67cd77f99d72a18c}} 
+void {\bfseries run} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+transport/Simulated.\+hpp\end{DoxyCompactItemize}
