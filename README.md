@@ -32,13 +32,16 @@ Step 2, build CMake project.
 ----
 
 Project structure:
-* `core` classes designed to be inherited, and something essential to those 
+* `core`[^1] classes designed to be inherited, and something essential to those 
   classes.
   * `Foundation.hpp` an all-in-one header for protocol implementation.
-* `common` classes designed to be composed.
-* `app` builtin applications to be supported by protocols.
-* `transport` runtime implementations that support protocols.
+* `common`[^1] classes designed to be composed.
+* `app`[^1] builtin applications to be supported by protocols.
+* `transport`[^1] runtime implementations that support protocols.
 * `replication` replication protocols.
 * `transactional` transactional protocols.
 * `dependency` git submodule stubs.
 * `test` flat directory for tests.
+
+[^1]: Document of these source is hosted on [project site][site].
+[site]: https://sgdxbc.github.io/oscar
