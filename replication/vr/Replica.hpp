@@ -165,6 +165,11 @@ void Replica<Transport>::handle(
 
     op_number += 1;
     log.prepare(op_number, prepare.block);
+    for (int i = 0; i < prepare.block.n_entry; i += 1) {
+        auto &entry = prepare.block.entry_buffer[i];
+        client_table.update(entry.client_id, entry.request_number);
+    }
+
     PrepareOkMessage prepare_ok;
     prepare_ok.view_number = view_number;
     prepare_ok.op_number = op_number;

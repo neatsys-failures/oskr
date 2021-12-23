@@ -22,6 +22,8 @@ template <typename Transport> struct TransportMeta {
 
     // using Address = ...;
     // static constexpr std::size_t BUFFER_SIZE = ...;
+
+    // TODO N_CONCURRENT_MAX
 };
 
 template <typename Transport> class TransportReceiver;

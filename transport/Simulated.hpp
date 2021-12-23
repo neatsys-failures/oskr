@@ -129,7 +129,7 @@ void SimulatedTransport::run()
 
             // TODO multicast message
 
-            concurrent_id = 0;
+            concurrent_id = -1;
             receiver_table.at(box.dest).receiveMessage(
                 box.source, Span(box.message.data(), box.message.size()));
             processScheduled();
@@ -141,7 +141,7 @@ void SimulatedTransport::run()
             (message_iter == message_queue.end() ||
              timeout_iter->first < message_iter->first)) {
             now_us = timeout_iter->first;
-            concurrent_id = 0;
+            concurrent_id = -1;
             timeout_iter->second();
             processScheduled();
             timeout_queue.erase(timeout_iter);
