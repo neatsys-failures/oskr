@@ -54,7 +54,7 @@ template <> struct Log<void> {
         RequestNumber request_number;
         Data op;
     };
-    static constexpr std::size_t BLOCK_SIZE = 50; // TODO
+    static constexpr int BLOCK_SIZE = 50; // TODO
     // expect 600K~1M throughput @ <= 60 seconds
     static constexpr std::size_t N_RESERVED_ENTRY = 80 * 1000 * 1000;
 

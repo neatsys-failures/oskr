@@ -36,7 +36,6 @@
 #define _COMMON_QUORUMSET_H_
 
 #include <map>
-#include <optional>
 #include <unordered_map>
 
 #include "core/Foundation.hpp"
@@ -64,19 +63,19 @@ public:
         return messages[vs];
     }
 
-    std::optional<const std::map<ReplicaId, MSGTYPE> &>
-    checkForQuorum(IDTYPE vs)
+    // there is no optional reference in C++ by now
+    const std::map<ReplicaId, MSGTYPE> *checkForQuorum(IDTYPE vs)
     {
         std::map<ReplicaId, MSGTYPE> &vsmessages = messages[vs];
         int count = vsmessages.size();
         if (count >= numRequired) {
-            return vsmessages;
+            return &vsmessages;
         } else {
-            return std::nullopt;
+            return nullptr;
         }
     }
 
-    std::optional<const std::map<ReplicaId, MSGTYPE> &>
+    const std::map<ReplicaId, MSGTYPE> *
     addAndCheckForQuorum(IDTYPE vs, ReplicaId replica_id, const MSGTYPE &msg)
     {
         std::map<ReplicaId, MSGTYPE> &vsmessages = messages[vs];

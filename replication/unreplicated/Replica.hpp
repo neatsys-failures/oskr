@@ -32,9 +32,10 @@ public:
 
         ReplicaMessage message;
         bitseryDeserialize(span, message);
-        std::visit(std::bind(&Replica::handle, this, remote, _1), message);
+        std::visit([&](const auto &m) { handle(remote, m); }, message);
     }
 
+private:
     void handle(
         const typename Transport::Address &remote,
         const RequestMessage &request);
