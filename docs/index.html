@@ -19,7 +19,7 @@
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
-<link href="oscar.css" rel="stylesheet" type="text/css"/>
+<link href="override.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -109,25 +109,26 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <p><em>Work in progress.</em></p>
 <hr  />
 <p>Project structure:</p><ul>
-<li><code>core</code> classes designed to be inherited, and something essential to those classes.<ul>
+<li><code>core</code>[^1] classes designed to be inherited, and something essential to those classes.<ul>
 <li><code><a class="el" href="Foundation_8hpp_source.html">Foundation.hpp</a></code> an all-in-one header for protocol implementation.</li>
 </ul>
 </li>
-<li><code>common</code> classes designed to be composed.</li>
-<li><code>app</code> builtin applications to be supported by protocols.</li>
-<li><code>transport</code> runtime implementations that support protocols.</li>
+<li><code>common</code>[^1] classes designed to be composed.</li>
+<li><code>app</code>[^1] builtin applications to be supported by protocols.</li>
+<li><code>transport</code>[^1] runtime implementations that support protocols.</li>
 <li><code>replication</code> replication protocols.</li>
 <li><code>transactional</code> transactional protocols.</li>
 <li><code>dependency</code> git submodule stubs.</li>
-<li><code>test</code> flat directory for tests. </li>
+<li><code>test</code> flat directory for tests.</li>
 </ul>
+<p>[^1]: Document of these source is hosted on <a href="https://sgdxbc.github.io/oscar">project site</a>. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

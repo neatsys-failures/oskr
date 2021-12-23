@@ -1287,7 +1287,7 @@ HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = \
     dependency/doxygen-awesome-css/doxygen-awesome.css \
     dependency/doxygen-awesome-css/doxygen-awesome-sidebar-only.css \
-    oscar.css
+    override.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note

@@ -19,7 +19,7 @@
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
-<link href="oscar.css" rel="stylesheet" type="text/css"/>
+<link href="override.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('classoscar_1_1SimulatedTransport.html'
 <div class="dynheader">
 Inheritance diagram for oscar::SimulatedTransport:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1SimulatedTransport__inherit__graph.svg" width="250" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1SimulatedTransport__inherit__graph.svg" width="250" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <div class="dynheader">
 Collaboration diagram for oscar::SimulatedTransport:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1SimulatedTransport__coll__graph.svg" width="250" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1SimulatedTransport__coll__graph.svg" width="250" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -118,8 +116,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aeddcd1f72cf9f6de6db0f88ef54b2c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1616f614fb7ed58fbf7e26441b4ef4cf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf">registerMulticastReceiver</a> (<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;receiver) override</td></tr>
 <tr class="separator:a1616f614fb7ed58fbf7e26441b4ef4cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fe3c3e0b49912abccafa0ec74115125"><td class="memItemLeft" align="right" valign="top"><a id="a0fe3c3e0b49912abccafa0ec74115125"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessage</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;dest, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write) override</td></tr>
+<tr class="memitem:a0fe3c3e0b49912abccafa0ec74115125"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a0fe3c3e0b49912abccafa0ec74115125">sendMessage</a> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;dest, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write) override</td></tr>
 <tr class="separator:a0fe3c3e0b49912abccafa0ec74115125"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a77f0f7a8c93c467b36d07adda6d7cec7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7">scheduleTimeout</a> (std::chrono::microseconds delay, <a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a> callback) override</td></tr>
 <tr class="separator:a77f0f7a8c93c467b36d07adda6d7cec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -261,6 +258,65 @@ Additional Inherited Members</h2></td></tr>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="comment">// TODO</span></div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        (void)receiver;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a0fe3c3e0b49912abccafa0ec74115125"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fe3c3e0b49912abccafa0ec74115125">&#9670;&nbsp;</a></span>sendMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::sendMessage </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sender</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;&#160;</td>
+          <td class="paramname"><em>dest</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a>&#160;</td>
+          <td class="paramname"><em>write</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Send a message. The first argument is probably <code>*this</code>.</p>
+<p><a class="el" href="classoscar_1_1Transport.html">Transport</a> implementation promise not to access <code>write</code> after this method return, so the closure can capture references with no worry. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#acd5e8804ec663f74387ad2eb167d8d60">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    {</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordflow">if</span> (!receiver_table.count(dest)) {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            panic(<span class="stringliteral">&quot;Send to unknown destination: sender = {}&quot;</span>, sender.address);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        }</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="comment">// TODO filter</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <a class="code" href="Type_8hpp.html#a2adc86b74828e412128ce70bd950d253">Data</a> message(<a class="code" href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">BUFFER_SIZE</a>);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        message.resize(write(*(Buffer&lt;BUFFER_SIZE&gt; *)message.data()));</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        message_queue.insert(</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            {{now_us, MessageBox{sender.address, dest, message}}});</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
+<div class="ttc" id="aType_8hpp_html_a2adc86b74828e412128ce70bd950d253"><div class="ttname"><a href="Type_8hpp.html#a2adc86b74828e412128ce70bd950d253">oscar::Data</a></div><div class="ttdeci">boost::container::small_vector&lt; std::uint8_t, 16 &gt; Data</div><div class="ttdef"><b>Definition:</b> Type.hpp:29</div></div>
+<div class="ttc" id="aclassoscar_1_1Transport_html_a3ec403efa69791443bcedbd76aed74fc"><div class="ttname"><a href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">oscar::Transport&lt; SimulatedTransport &gt;::BUFFER_SIZE</a></div><div class="ttdeci">static constexpr std::size_t BUFFER_SIZE</div><div class="ttdef"><b>Definition:</b> Transport.hpp:115</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -413,7 +469,7 @@ Additional Inherited Members</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a></li>
-    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

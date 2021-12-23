@@ -1,0 +1,40 @@
+\hypertarget{classoscar_1_1Quorum}{}\doxysection{oscar\+::Quorum$<$ IDTYPE, MSGTYPE $>$ Class Template Reference}
+\label{classoscar_1_1Quorum}\index{oscar::Quorum$<$ IDTYPE, MSGTYPE $>$@{oscar::Quorum$<$ IDTYPE, MSGTYPE $>$}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_a1a1361eca298fb13099683dcd593d966}\label{classoscar_1_1Quorum_a1a1361eca298fb13099683dcd593d966}} 
+{\bfseries Quorum} (int n\+\_\+required)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_ae5f5734dc0813f1b732b109fa5203afb}\label{classoscar_1_1Quorum_ae5f5734dc0813f1b732b109fa5203afb}} 
+void {\bfseries clear} ()
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_a2b69f9cebb625ac2d0ff17a27ba5ec8d}\label{classoscar_1_1Quorum_a2b69f9cebb625ac2d0ff17a27ba5ec8d}} 
+void {\bfseries clear} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_a4f87e7f16a30672537fc4e83fdac54f2}\label{classoscar_1_1Quorum_a4f87e7f16a30672537fc4e83fdac54f2}} 
+Replica\+Id {\bfseries n\+Required} () const
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_aae42cf8883efe470395b2d1d4bb00a2c}\label{classoscar_1_1Quorum_aae42cf8883efe470395b2d1d4bb00a2c}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ \& {\bfseries get\+Messages} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_af214fc8f36ba8df6b7dd9ee8b4877655}\label{classoscar_1_1Quorum_af214fc8f36ba8df6b7dd9ee8b4877655}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ $\ast$ {\bfseries check\+For\+Quorum} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_af816bf67da24562ccb41106a461cc9ac}\label{classoscar_1_1Quorum_af816bf67da24562ccb41106a461cc9ac}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ $\ast$ {\bfseries add\+And\+Check\+For\+Quorum} (IDTYPE vs, Replica\+Id replica\+\_\+id, const MSGTYPE \&msg)
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_a9fdc666143aaf24edc08e8026c9cb9c1}\label{classoscar_1_1Quorum_a9fdc666143aaf24edc08e8026c9cb9c1}} 
+void {\bfseries add} (IDTYPE vs, Replica\+Id replica\+\_\+id, const MSGTYPE \&msg)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1Quorum_a2257fea5d6bd076e9a1c00fe68109f75}\label{classoscar_1_1Quorum_a2257fea5d6bd076e9a1c00fe68109f75}} 
+int {\bfseries num\+Required}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+common/Quorum.\+hpp\end{DoxyCompactItemize}

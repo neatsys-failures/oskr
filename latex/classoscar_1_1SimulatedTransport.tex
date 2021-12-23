@@ -2,8 +2,7 @@
 \label{classoscar_1_1SimulatedTransport}\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}}
 
 
-Inheritance diagram for oscar\+::Simulated\+Transport\+:
-\nopagebreak
+Inheritance diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -12,8 +11,7 @@ Inheritance diagram for oscar\+::Simulated\+Transport\+:
 \end{figure}
 
 
-Collaboration diagram for oscar\+::Simulated\+Transport\+:
-\nopagebreak
+Collaboration diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -32,8 +30,7 @@ void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88e
 \item 
 void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}{register\+Multicast\+Receiver}} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
 \item 
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}\label{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}} 
-void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&sender, const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&dest, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write) override
+void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}{send\+Message}} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&sender, const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&dest, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write) override
 \item 
 void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}{schedule\+Timeout}} (std\+::chrono\+::microseconds delay, \mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback) override
 \item 
@@ -105,6 +102,33 @@ Implements \mbox{\hyperlink{classoscar_1_1Transport_af731a2d5e477c570490d011b693
 \DoxyCodeLine{58         \textcolor{comment}{// TODO}}
 \DoxyCodeLine{59         (void)receiver;}
 \DoxyCodeLine{60     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}\label{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}} 
+\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!sendMessage@{sendMessage}}
+\index{sendMessage@{sendMessage}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
+\doxysubsubsection{\texorpdfstring{sendMessage()}{sendMessage()}}
+{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::send\+Message (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&}]{sender,  }\item[{const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&}]{dest,  }\item[{\mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}}}]{write }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Send a message. The first argument is probably {\ttfamily $\ast$this}.
+
+\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation promise not to access {\ttfamily write} after this method return, so the closure can capture references with no worry. 
+
+Implements \mbox{\hyperlink{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{65     \{}
+\DoxyCodeLine{66         \textcolor{keywordflow}{if} (!receiver\_table.count(dest)) \{}
+\DoxyCodeLine{67             panic(\textcolor{stringliteral}{"{}Send to unknown destination: sender = \{\}"{}}, sender.address);}
+\DoxyCodeLine{68         \}}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70         \textcolor{comment}{// TODO filter}}
+\DoxyCodeLine{71         \mbox{\hyperlink{Type_8hpp_a2adc86b74828e412128ce70bd950d253}{Data}} message(\mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{BUFFER\_SIZE}});}
+\DoxyCodeLine{72         message.resize(write(*(Buffer<BUFFER\_SIZE> *)message.data()));}
+\DoxyCodeLine{73         message\_queue.insert(}
+\DoxyCodeLine{74             \{\{now\_us, MessageBox\{sender.address, dest, message\}\}\});}
+\DoxyCodeLine{75     \}}
 
 \end{DoxyCode}
 \mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}\label{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}} 

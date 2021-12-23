@@ -18,6 +18,7 @@ var hierarchy =
     [ "oscar::Log< void >::ListPreset", "structoscar_1_1Log_3_01void_01_4_1_1ListPreset.html", null ],
     [ "oscar::Log< Preset >", "classoscar_1_1Log.html", null ],
     [ "oscar::Log< void >", "structoscar_1_1Log_3_01void_01_4.html", null ],
+    [ "oscar::Quorum< IDTYPE, MSGTYPE >", "classoscar_1_1Quorum.html", null ],
     [ "oscar::ReplyMessage", "structoscar_1_1ReplyMessage.html", null ],
     [ "oscar::RequestMessage", "structoscar_1_1RequestMessage.html", null ],
     [ "oscar::StatefulTimeout< Transport >", "classoscar_1_1StatefulTimeout.html", null ],

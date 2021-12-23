@@ -19,7 +19,7 @@
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
-<link href="oscar.css" rel="stylesheet" type="text/css"/>
+<link href="override.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('classoscar_1_1Transport.html',''); ini
   <tr class="even"><td class="entry"><a class="el" href="classoscar_1_1Transport.html#a1bfd2706eac30831cd312869b1490bee">scheduleConcurrent</a>(Callback callback)=0</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="classoscar_1_1Transport.html#ada764acb3c30c90bb50dba06a8318f1e">scheduleSequential</a>(Callback callback)</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classoscar_1_1Transport.html#ad3190e3914566e3d9726b36fb79d359a">scheduleTimeout</a>(std::chrono::microseconds delay, Callback callback)=0</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>sendMessage</b>(const TransportReceiver&lt; Self &gt; &amp;sender, const Address &amp;dest, Write write)=0 (defined in <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a>)</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classoscar_1_1Transport.html#acd5e8804ec663f74387ad2eb167d8d60">sendMessage</a>(const TransportReceiver&lt; Self &gt; &amp;sender, const Address &amp;dest, Write write)=0</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classoscar_1_1Transport.html#aa8c10c33c526f3626d04180aec1de4c4">sendMessageToAll</a>(const TransportReceiver&lt; Self &gt; &amp;sender, Write write)</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>sendMessageToMulticast</b>(const TransportReceiver&lt; Self &gt; &amp;sender, Write write) (defined in <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a>)</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>sendMessageToReplica</b>(const TransportReceiver&lt; Self &gt; &amp;sender, ReplicaId replica_id, Write write) (defined in <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a>)</td><td class="entry"><a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; Self &gt;</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
@@ -116,7 +116,7 @@ $(document).ready(function(){initNavTree('classoscar_1_1Transport.html',''); ini
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

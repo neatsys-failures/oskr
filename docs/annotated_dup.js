@@ -20,6 +20,7 @@ var annotated_dup =
       [ "ChainLog", "classoscar_1_1ChainLog.html", null ],
       [ "ClientTable", "classoscar_1_1ClientTable.html", "classoscar_1_1ClientTable" ],
       [ "ListLog", "classoscar_1_1ListLog.html", "classoscar_1_1ListLog" ],
+      [ "Quorum", "classoscar_1_1Quorum.html", "classoscar_1_1Quorum" ],
       [ "StatefulTimeout", "classoscar_1_1StatefulTimeout.html", "classoscar_1_1StatefulTimeout" ],
       [ "MockApp", "classoscar_1_1MockApp.html", "classoscar_1_1MockApp" ],
       [ "NullApp", "classoscar_1_1NullApp.html", "classoscar_1_1NullApp" ],

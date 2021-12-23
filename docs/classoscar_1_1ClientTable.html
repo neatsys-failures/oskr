@@ -19,7 +19,7 @@
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
-<link href="oscar.css" rel="stylesheet" type="text/css"/>
+<link href="override.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -104,13 +104,149 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Apply</b> = std::fun
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a326695a6d4deb0cd3c848cc67526cb6e"><td class="memItemLeft" align="right" valign="top"><a id="a326695a6d4deb0cd3c848cc67526cb6e"></a>
-Apply&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, ClientId client_id, RequestNumber request_number)</td></tr>
+<tr class="memitem:a326695a6d4deb0cd3c848cc67526cb6e"><td class="memItemLeft" align="right" valign="top">Apply&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1ClientTable.html#a326695a6d4deb0cd3c848cc67526cb6e">check</a> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, ClientId client_id, RequestNumber request_number)</td></tr>
 <tr class="separator:a326695a6d4deb0cd3c848cc67526cb6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0a31c0cebc378f7e60670754b7d0570"><td class="memItemLeft" align="right" valign="top"><a id="ae0a31c0cebc378f7e60670754b7d0570"></a>
-Apply&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (ClientId client_id, <a class="el" href="structoscar_1_1ReplyMessage.html">ReplyMessage</a> reply)</td></tr>
-<tr class="separator:ae0a31c0cebc378f7e60670754b7d0570"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4eaa81f1e03ab737c6f285e7a7be487"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1ClientTable.html#ad4eaa81f1e03ab737c6f285e7a7be487">update</a> (ClientId client_id, RequestNumber request_number)</td></tr>
+<tr class="separator:ad4eaa81f1e03ab737c6f285e7a7be487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f88955630e89c55b44d104ac778eb2a"><td class="memItemLeft" align="right" valign="top"><a id="a5f88955630e89c55b44d104ac778eb2a"></a>
+Apply&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (ClientId client_id, RequestNumber request_number, <a class="el" href="structoscar_1_1ReplyMessage.html">ReplyMessage</a> reply)</td></tr>
+<tr class="separator:a5f88955630e89c55b44d104ac778eb2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a326695a6d4deb0cd3c848cc67526cb6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a326695a6d4deb0cd3c848cc67526cb6e">&#9670;&nbsp;</a></span>check()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport , typename ReplyMessage &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Apply <a class="el" href="classoscar_1_1ClientTable.html">oscar::ClientTable</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a>, <a class="el" href="structoscar_1_1ReplyMessage.html">ReplyMessage</a> &gt;::check </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;&#160;</td>
+          <td class="paramname"><em>remote</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ClientId&#160;</td>
+          <td class="paramname"><em>client_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RequestNumber&#160;</td>
+          <td class="paramname"><em>request_number</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>On direct request from client. </p>
+<div class="fragment"><div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        <span class="keyword">auto</span> iter = record_table.find(client_id);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        <span class="keywordflow">if</span> (iter == record_table.end()) {</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;            record_table.insert(</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                {client_id, {remote, request_number, std::nullopt}});</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        }</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <span class="keyword">auto</span> &amp;record = iter-&gt;second;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordflow">if</span> (request_number &lt; record.request_number) {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <span class="keywordflow">return</span> [](<span class="keyword">auto</span>) {};</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keywordflow">if</span> (request_number == record.request_number) {</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            <span class="keywordflow">if</span> (!record.reply_message) {</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                <span class="keywordflow">return</span> [](<span class="keyword">auto</span>) {};</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;            }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;            <span class="keywordflow">return</span> [remote, reply = *record.reply_message](<span class="keyword">auto</span> on_reply) {</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                on_reply(remote, reply);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;            };</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        }</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordflow">if</span> (request_number != record.request_number + 1) {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            panic(</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                <span class="stringliteral">&quot;Not continuous request number: client id = {}, {} -&gt; {}&quot;</span>,</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                client_id, record.request_number, request_number);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        }</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        record.request_number = request_number;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        record.reply_message = std::nullopt;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ad4eaa81f1e03ab737c6f285e7a7be487"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4eaa81f1e03ab737c6f285e7a7be487">&#9670;&nbsp;</a></span>update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport , typename ReplyMessage &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classoscar_1_1ClientTable.html">oscar::ClientTable</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a>, <a class="el" href="structoscar_1_1ReplyMessage.html">ReplyMessage</a> &gt;::update </td>
+          <td>(</td>
+          <td class="paramtype">ClientId&#160;</td>
+          <td class="paramname"><em>client_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RequestNumber&#160;</td>
+          <td class="paramname"><em>request_number</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>On relayed request message. </p>
+<div class="fragment"><div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    {</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keyword">auto</span> iter = record_table.find(client_id);</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordflow">if</span> (iter == record_table.end()) {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            record_table.insert(</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                {client_id, {std::nullopt, request_number, std::nullopt}});</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        }</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordflow">if</span> (iter-&gt;second.request_number &gt;= request_number) {</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            warn(</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                <span class="stringliteral">&quot;Ignore late update (request): client id = {:x}, request &quot;</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                <span class="stringliteral">&quot;number = {}, recorded request = {}&quot;</span>,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                client_id, request_number, iter-&gt;second.request_number);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        }</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        iter-&gt;second.request_number = request_number;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        iter-&gt;second.reply_message.reset();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>common/<a class="el" href="ClientTable_8hpp_source.html">ClientTable.hpp</a></li>
 </ul>
@@ -120,7 +256,7 @@ Apply&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (ClientId
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1ClientTable.html">ClientTable</a></li>
-    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

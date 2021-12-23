@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['scheduleconcurrent_31',['scheduleConcurrent',['../classoscar_1_1Transport.html#a1bfd2706eac30831cd312869b1490bee',1,'oscar::Transport::scheduleConcurrent()'],['../classoscar_1_1SimulatedTransport.html#ad2b031b4b5db0f9f6c9e077b8aa9f045',1,'oscar::SimulatedTransport::scheduleConcurrent()']]],
-  ['schedulesequential_32',['scheduleSequential',['../classoscar_1_1Transport.html#ada764acb3c30c90bb50dba06a8318f1e',1,'oscar::Transport::scheduleSequential()'],['../classoscar_1_1SimulatedTransport.html#a8e0b4f1b213d603d93d379b6e978c27e',1,'oscar::SimulatedTransport::scheduleSequential()']]],
-  ['scheduletimeout_33',['scheduleTimeout',['../classoscar_1_1Transport.html#ad3190e3914566e3d9726b36fb79d359a',1,'oscar::Transport::scheduleTimeout()'],['../classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7',1,'oscar::SimulatedTransport::scheduleTimeout()']]],
-  ['sendmessagetoall_34',['sendMessageToAll',['../classoscar_1_1Transport.html#aa8c10c33c526f3626d04180aec1de4c4',1,'oscar::Transport']]],
-  ['set_20up_20for_20benchmarking_35',['Set up for benchmarking',['../setup-benchmark.html',1,'article']]],
-  ['simulatedtransport_36',['SimulatedTransport',['../classoscar_1_1SimulatedTransport.html',1,'oscar']]],
-  ['span_37',['Span',['../Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a',1,'oscar']]],
-  ['statefultimeout_38',['StatefulTimeout',['../classoscar_1_1StatefulTimeout.html',1,'oscar']]]
+  ['receivemessage_27',['receiveMessage',['../classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660',1,'oscar::TransportReceiver::receiveMessage()'],['../classoscar_1_1BasicClient.html#ae334dce1c0e1cf43b446fa51bfda8ddd',1,'oscar::BasicClient::receiveMessage()']]],
+  ['receivemulticastmessage_28',['receiveMulticastMessage',['../classoscar_1_1TransportReceiver.html#a86a4e9c3c26f205a8173e1f3f1b99129',1,'oscar::TransportReceiver']]],
+  ['registermulticastreceiver_29',['registerMulticastReceiver',['../classoscar_1_1Transport.html#af731a2d5e477c570490d011b693cb5de',1,'oscar::Transport::registerMulticastReceiver()'],['../classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf',1,'oscar::SimulatedTransport::registerMulticastReceiver()']]],
+  ['registerreceiver_30',['registerReceiver',['../classoscar_1_1Transport.html#a6cef04d770422df78860c682c0278c6e',1,'oscar::Transport::registerReceiver()'],['../classoscar_1_1SimulatedTransport.html#aeddcd1f72cf9f6de6db0f88ef54b2c46',1,'oscar::SimulatedTransport::registerReceiver()']]],
+  ['replymessage_31',['ReplyMessage',['../structoscar_1_1ReplyMessage.html',1,'oscar']]],
+  ['requestmessage_32',['RequestMessage',['../structoscar_1_1RequestMessage.html',1,'oscar']]]
 ];

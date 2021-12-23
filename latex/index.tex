@@ -35,15 +35,17 @@ Step 2, build CMake project.
 
 Project structure\+:
 \begin{DoxyItemize}
-\item {\ttfamily core} classes designed to be inherited, and something essential to those classes.
+\item {\ttfamily core}\mbox{[}$^\wedge$1\mbox{]} classes designed to be inherited, and something essential to those classes.
 \begin{DoxyItemize}
 \item {\ttfamily \mbox{\hyperlink{Foundation_8hpp_source}{Foundation.\+hpp}}} an all-\/in-\/one header for protocol implementation.
 \end{DoxyItemize}
-\item {\ttfamily common} classes designed to be composed.
-\item {\ttfamily app} builtin applications to be supported by protocols.
-\item {\ttfamily transport} runtime implementations that support protocols.
+\item {\ttfamily common}\mbox{[}$^\wedge$1\mbox{]} classes designed to be composed.
+\item {\ttfamily app}\mbox{[}$^\wedge$1\mbox{]} builtin applications to be supported by protocols.
+\item {\ttfamily transport}\mbox{[}$^\wedge$1\mbox{]} runtime implementations that support protocols.
 \item {\ttfamily replication} replication protocols.
 \item {\ttfamily transactional} transactional protocols.
 \item {\ttfamily dependency} git submodule stubs.
-\item {\ttfamily test} flat directory for tests. 
+\item {\ttfamily test} flat directory for tests.
 \end{DoxyItemize}
+
+\mbox{[}$^\wedge$1\mbox{]}\+: Document of these source is hosted on \href{https://sgdxbc.github.io/oscar}{\texttt{ project site}}. 

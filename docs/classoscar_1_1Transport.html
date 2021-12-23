@@ -19,7 +19,7 @@
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
-<link href="oscar.css" rel="stylesheet" type="text/css"/>
+<link href="override.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -102,8 +102,7 @@ $(document).ready(function(){initNavTree('classoscar_1_1Transport.html',''); ini
 <div class="dynheader">
 Collaboration diagram for oscar::Transport&lt; Self &gt;:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1Transport__coll__graph.svg" width="226" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classoscar_1_1Transport__coll__graph.svg" width="226" height="127"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
@@ -131,8 +130,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a1bfd2706eac30831cd312869b1490bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bd8e5bd990724c95ea591450c09f14e"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#a8bd8e5bd990724c95ea591450c09f14e">getConcurrentId</a> () const =0</td></tr>
 <tr class="separator:a8bd8e5bd990724c95ea591450c09f14e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd5e8804ec663f74387ad2eb167d8d60"><td class="memItemLeft" align="right" valign="top"><a id="acd5e8804ec663f74387ad2eb167d8d60"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessage</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; Self &gt; &amp;sender, const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;dest, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)=0</td></tr>
+<tr class="memitem:acd5e8804ec663f74387ad2eb167d8d60"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#acd5e8804ec663f74387ad2eb167d8d60">sendMessage</a> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; Self &gt; &amp;sender, const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;dest, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)=0</td></tr>
 <tr class="separator:acd5e8804ec663f74387ad2eb167d8d60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a042e3921a049469877cf7e25f951ce43"><td class="memItemLeft" align="right" valign="top"><a id="a042e3921a049469877cf7e25f951ce43"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToReplica</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; Self &gt; &amp;sender, ReplicaId replica_id, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)</td></tr>
@@ -484,6 +482,54 @@ template&lt;typename Self &gt; </div>
 
 </div>
 </div>
+<a id="acd5e8804ec663f74387ad2eb167d8d60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd5e8804ec663f74387ad2eb167d8d60">&#9670;&nbsp;</a></span>sendMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Self &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="classoscar_1_1Transport.html">oscar::Transport</a>&lt; Self &gt;::sendMessage </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; Self &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sender</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;&#160;</td>
+          <td class="paramname"><em>dest</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a>&#160;</td>
+          <td class="paramname"><em>write</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Send a message. The first argument is probably <code>*this</code>.</p>
+<p><a class="el" href="classoscar_1_1Transport.html">Transport</a> implementation promise not to access <code>write</code> after this method return, so the closure can capture references with no worry. </p>
+
+<p>Implemented in <a class="el" href="classoscar_1_1SimulatedTransport.html#a0fe3c3e0b49912abccafa0ec74115125">oscar::SimulatedTransport</a>.</p>
+
+</div>
+</div>
 <a id="aa8c10c33c526f3626d04180aec1de4c4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8c10c33c526f3626d04180aec1de4c4">&#9670;&nbsp;</a></span>sendMessageToAll()</h2>
 
@@ -520,13 +566,14 @@ template&lt;typename Self &gt; </div>
 </table>
 </div><div class="memdoc">
 <p>The default implementation is mainly for illustration purpose. <a class="el" href="classoscar_1_1Transport.html">Transport</a> should provide a more efficient version that only serialize once. </p>
-<div class="fragment"><div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    {</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> address : <a class="code" href="classoscar_1_1Transport.html#a8b9ecf7c01c870e14abadf0c252b4a7e">config</a>.replica_address_list) {</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;            <span class="keywordflow">if</span> (address != sender.address) {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;                sendMessage(sender, address, write);</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            }</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        }</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    }</div>
+<div class="fragment"><div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    {</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> address : <a class="code" href="classoscar_1_1Transport.html#a8b9ecf7c01c870e14abadf0c252b4a7e">config</a>.replica_address_list) {</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;            <span class="keywordflow">if</span> (address != sender.address) {</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;                <a class="code" href="classoscar_1_1Transport.html#acd5e8804ec663f74387ad2eb167d8d60">sendMessage</a>(sender, address, write);</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;            }</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        }</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    }</div>
+<div class="ttc" id="aclassoscar_1_1Transport_html_acd5e8804ec663f74387ad2eb167d8d60"><div class="ttname"><a href="classoscar_1_1Transport.html#acd5e8804ec663f74387ad2eb167d8d60">oscar::Transport::sendMessage</a></div><div class="ttdeci">virtual void sendMessage(const TransportReceiver&lt; Self &gt; &amp;sender, const Address &amp;dest, Write write)=0</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -582,7 +629,7 @@ template&lt;typename Self &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1Transport.html">Transport</a></li>
-    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>
