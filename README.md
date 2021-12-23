@@ -44,4 +44,5 @@ Project structure:
 * `test` flat directory for tests.
 
 [^1]: Document of these source is hosted on [project site][site].
+
 [site]: https://sgdxbc.github.io/oscar

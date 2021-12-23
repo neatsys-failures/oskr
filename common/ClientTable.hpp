@@ -9,7 +9,7 @@ namespace oscar
 template <typename Transport, typename ReplyMessage> class ClientTable
 {
     struct Record {
-        typename Transport::Address remote;
+        std::optional<typename Transport::Address> remote;
         RequestNumber request_number;
         std::optional<ReplyMessage> reply_message;
     };
@@ -20,6 +20,9 @@ public:
     using Apply = std::function<void(
         std::function<void(
             const typename Transport::Address &remote, const ReplyMessage &)>)>;
+
+    //! On direct request from client.
+    //!
     Apply check(
         const typename Transport::Address &remote, ClientId client_id,
         RequestNumber request_number)
@@ -55,15 +58,62 @@ public:
         return nullptr;
     }
 
-    Apply update(ClientId client_id, ReplyMessage reply)
+    //! On relayed request message.
+    //!
+    void update(ClientId client_id, RequestNumber request_number)
+    {
+        auto iter = record_table.find(client_id);
+        if (iter == record_table.end()) {
+            record_table.insert(
+                {client_id, {std::nullopt, request_number, std::nullopt}});
+            return;
+        }
+
+        if (iter->second.request_number >= request_number) {
+            warn(
+                "Ignore late update (request): client id = {:x}, request "
+                "number = {}, recorded request = {}",
+                client_id, request_number, iter->second.request_number);
+            return;
+        }
+
+        iter->second.request_number = request_number;
+        iter->second.reply_message.reset();
+    }
+
+    Apply
+    update(ClientId client_id, RequestNumber request_number, ReplyMessage reply)
     {
         auto iter = record_table.find(client_id);
         if (iter == record_table.end()) {
             warn("No record: client id = {:x}", client_id);
+            record_table.insert(
+                {client_id, {std::nullopt, request_number, reply}});
             return [](auto) {};
         }
+
+        if (iter->second.request_number > request_number) {
+            warn(
+                "Ignore late update: client id = {:x}, request number = {}, "
+                "recorded request = {}",
+                client_id, request_number, iter->second.request_number);
+            return [](auto) {};
+        }
+        if (iter->second.request_number < request_number) {
+            warn(
+                "Outdated local record: client id = {:x}, request number = {}, "
+                "recorded request = {}",
+                client_id, request_number, iter->second.request_number);
+            iter->second.request_number = request_number;
+        }
+
         iter->second.reply_message = reply;
-        return [remote = iter->second.remote, reply](auto on_reply) {
+        if (!iter->second.remote) {
+            debug("Client address not recorded: id = {:x}", client_id);
+            return [](auto) {};
+        }
+
+        return [remote = *iter->second.remote, reply](auto on_reply) {
             on_reply(remote, reply);
         };
     }

@@ -73,9 +73,8 @@ void Replica<Transport>::handle(
             reply.request_number = request_number;
             reply.result = result;
             // we don't need to set other thing
-            if (auto apply = client_table.update(client_id, reply)) {
-                apply(send_reply);
-            }
+
+            client_table.update(client_id, request_number, reply)(send_reply);
         });
 }
 
