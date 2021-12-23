@@ -22,7 +22,7 @@ template <typename Transport>
 class SimpleReceiver : public TransportReceiver<Transport>
 {
 public:
-    SimpleReceiver(typename Transport::Address address) :
+    explicit SimpleReceiver(typename Transport::Address address) :
         TransportReceiver<Transport>(address)
     {
     }

@@ -5,6 +5,7 @@ set(OSCAR_TEST_UNITS
     Misc
     Unreplicated
     BasicClient
+    VR
 )
 
 foreach(UNIT ${OSCAR_TEST_UNITS})
@@ -18,3 +19,4 @@ foreach(UNIT ${OSCAR_TEST_UNITS})
 endforeach()
 
 target_link_libraries(TestUnreplicated PRIVATE oscar_replication_unreplicated)
+target_link_libraries(TestVR PRIVATE oscar_replication_vr)

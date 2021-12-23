@@ -8,7 +8,7 @@ using namespace oscar;
 class SimpleClient : public Client<SimulatedTransport>
 {
 public:
-    SimpleClient(SimulatedTransport &transport) :
+    explicit SimpleClient(SimulatedTransport &transport) :
         Client<SimulatedTransport>(transport)
     {
     }

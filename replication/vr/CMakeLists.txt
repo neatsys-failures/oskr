@@ -1,0 +1,1 @@
+add_library(oscar_replication_vr INTERFACE)
