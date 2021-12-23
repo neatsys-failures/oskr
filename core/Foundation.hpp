@@ -55,17 +55,17 @@ void bitseryDeserialize(const Span span, Message &message)
 }
 } // namespace oscar
 
-namespace bitsery
+namespace bitsery::traits
 {
 // should work... i think?
-namespace traits
-{
 template <>
 struct ContainerTraits<oscar::Data>
     : public StdContainer<oscar::Data, true, true> {
 };
-} // namespace traits
+} // namespace bitsery::traits
 
+namespace bitsery
+{
 template <typename S> void serialize(S &s, oscar::Data &data)
 {
     s.container1b(data, 240);

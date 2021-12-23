@@ -18,6 +18,8 @@ public:
 template <typename Preset = void> class Log
 {
 protected:
+    // we don't have requirement to access `app` from outside after init
+    // currently, but we still need polymorphism on it
     App &app;
     bool enable_upcall;
 

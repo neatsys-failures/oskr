@@ -16,3 +16,5 @@ foreach(UNIT ${OSCAR_TEST_UNITS})
     )
     gtest_discover_tests(Test${UNIT})
 endforeach()
+
+target_link_libraries(TestUnreplicated PRIVATE oscar_replication_unreplicated)
