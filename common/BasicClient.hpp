@@ -121,7 +121,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     };
     auto send_to_primary = [this, write] {
         transport.sendMessageToReplica(
-            *this, transport.config.primary_id(view_number), write);
+            *this, transport.config.primaryId(view_number), write);
     };
     auto send_to_all = [this, write] {
         transport.sendMessageToAll(*this, write);

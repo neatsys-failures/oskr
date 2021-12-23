@@ -118,6 +118,11 @@ public:
     //! serialize message into `buffer`, and return message length. The returned
     //! value must not exceed `BUFFER_SIZE`.
     using Write = std::function<std::size_t(Buffer<BUFFER_SIZE> &buffer)>;
+
+    //! Send a message. The first argument is probably `*this`.
+    //!
+    //! Transport implementation promise not to access `write` after this method
+    //! return, so the closure can capture references with no worry.
     virtual void sendMessage(
         const TransportReceiver<Self> &sender, const Address &dest,
         Write write) = 0;

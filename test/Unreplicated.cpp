@@ -110,7 +110,9 @@ TEST_F(Unreplicated, TenClientOneSecond)
             }
             transport.scheduleTimeout(
                 std::chrono::milliseconds(dist(engine)), [&, i] {
-                    debug("i = {}, client[i] = {}", i, (void *)&client[i]);
+                    debug(
+                        "i = {}, client[i] = {}", i,
+                        reinterpret_cast<void *>(&client[i]));
                     client[i].invoke(Data(), [&, i](auto) {
                         n_completed += 1;
                         close_loop[i]();

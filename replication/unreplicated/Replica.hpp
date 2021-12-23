@@ -32,9 +32,10 @@ public:
 
         ReplicaMessage message;
         bitseryDeserialize(span, message);
-        std::visit(std::bind(&Replica::handle, this, remote, _1), message);
+        std::visit([&](const auto &m) { handle(remote, m); }, message);
     }
 
+private:
     void handle(
         const typename Transport::Address &remote,
         const RequestMessage &request);
@@ -73,9 +74,8 @@ void Replica<Transport>::handle(
             reply.request_number = request_number;
             reply.result = result;
             // we don't need to set other thing
-            if (auto apply = client_table.update(client_id, reply)) {
-                apply(send_reply);
-            }
+
+            client_table.update(client_id, request_number, reply)(send_reply);
         });
 }
 
