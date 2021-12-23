@@ -15,19 +15,12 @@ public:
 
     std::uint32_t GetId() const { return client_id; }
 
-    void receiveMessage(
-        const typename SimulatedTransport::Address &remote,
-        const Span &buffer) override
+    void
+    receiveMessage(const typename SimulatedTransport::Address &, Span) override
     {
-        (void)remote;
-        (void)buffer;
     }
 
-    void invoke(const Data op, InvokeCallback callback) override
-    {
-        (void)op;
-        (void)callback;
-    }
+    void invoke(Data, InvokeCallback) override {}
 };
 
 TEST(Misc, ClientId)

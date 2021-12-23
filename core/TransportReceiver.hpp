@@ -10,12 +10,12 @@ public:
     TransportReceiver(typename Transport::Address address) : address(address) {}
     virtual ~TransportReceiver() {}
 
-    virtual void receiveMessage(
-        const typename Transport::Address &remote, const Span &span) = 0;
+    virtual void
+    receiveMessage(const typename Transport::Address &remote, Span span) = 0;
 
     // the codebase assume at most one multicast address present
     virtual void receiveMulticastMessage(
-        const typename Transport::Address &remote, const Span &span)
+        const typename Transport::Address &remote, Span span)
     {
         receiveMessage(remote, span);
     }

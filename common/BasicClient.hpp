@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <optional>
+#include <set>
 
 #include "core/Foundation.hpp"
 
@@ -53,7 +54,7 @@ private:
     struct PendingRequest {
         RequestNumber request_number;
         Data op;
-        std::multimap<Data, ReplicaId> result_table;
+        std::map<Data, std::set<ReplicaId>> result_table;
         typename BasicClient::InvokeCallback callback;
     };
     std::optional<PendingRequest> pending;
@@ -70,10 +71,8 @@ public:
     void
     invoke(Data op, typename BasicClient::InvokeCallback callback) override;
 
-    void receiveMessage(
-        const typename Transport::Address &remote, const Span &span) override
+    void receiveMessage(const typename Transport::Address &, Span span) override
     {
-        (void)remote;
         ReplyMessage reply;
         deserializeReplyMessage(span, reply);
         transport.scheduleSequential(
@@ -127,6 +126,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     auto send_to_all = [this, write] {
         transport.sendMessageToAll(*this, write);
     };
+
     switch (config.strategy) {
     case Config::Strategy::ALL:
         send_to_all();
@@ -168,8 +168,8 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
     }
 
     if (config.n_matched > 1) {
-        pending->result_table.insert({reply.result, reply.replica_id});
-        if (pending->result_table.count(reply.result) < config.n_matched) {
+        pending->result_table[reply.result].insert(reply.replica_id);
+        if (pending->result_table.at(reply.result).size() < config.n_matched) {
             return;
         }
     }

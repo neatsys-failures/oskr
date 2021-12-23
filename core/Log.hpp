@@ -9,9 +9,8 @@ class App
 {
 public:
     virtual Data commit(Data op) = 0;
-    virtual void rollback(Data op)
+    virtual void rollback(Data)
     {
-        (void)op;
         // panic unsupported
     }
 };

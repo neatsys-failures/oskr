@@ -31,7 +31,7 @@ public:
     Data latest_message;
 
     void receiveMessage(
-        const typename Transport::Address &remote, const Span &buffer) override
+        const typename Transport::Address &remote, Span buffer) override
     {
         latest_remote = remote;
         latest_message = Data(buffer.begin(), buffer.end());
@@ -78,15 +78,15 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, const Span &buffer) override
+        const typename Transport::Address &remote, Span span) override
     {
-        if (buffer.size() == 100) {
+        if (span.size() == 100) {
             on_exit(*this);
             return;
         }
 
-        Data reply(buffer.begin(), buffer.end());
-        reply.push_back(buffer.size());
+        Data reply(span.begin(), span.end());
+        reply.push_back(span.size());
         auto write = [reply](auto &buffer) {
             std::memcpy(buffer, reply.data(), reply.size());
             return reply.size();
@@ -104,10 +104,7 @@ public:
 
     void Start()
     {
-        transport.sendMessageToAll(*this, [](auto &buffer) {
-            (void)buffer;
-            return 0;
-        });
+        transport.sendMessageToAll(*this, [](auto &) { return 0; });
     }
 };
 

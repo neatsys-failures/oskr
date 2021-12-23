@@ -14,7 +14,7 @@ using ReplicaId = std::int8_t;
 using ClientId = std::uint32_t;
 
 // for rx
-using Span = std::span<std::uint8_t>;
+using Span = const std::span<std::uint8_t>;
 // for tx
 template <std::size_t BUFFER_SIZE> using Buffer = std::uint8_t[BUFFER_SIZE];
 // for general storage of opaque things

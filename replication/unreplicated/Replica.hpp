@@ -26,7 +26,7 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, const Span &span) override
+        const typename Transport::Address &remote, Span span) override
     {
         using std::placeholders::_1;
 
