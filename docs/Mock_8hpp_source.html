@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -89,21 +90,21 @@ $(document).ready(function(){initNavTree('Mock_8hpp_source.html',''); initResiza
 <div class="title">Mock.hpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">vector</span><span class="preprocessor">&gt;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;core/Foundation.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Foundation.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace </span>oscar</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace</span> oscar</div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;{</div>
-<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="classoscar_1_1MockApp.html">    8</a></span>&#160;<span class="keyword">class </span><a class="code" href="classoscar_1_1MockApp.html">MockApp</a> : <span class="keyword">public</span> <a class="code" href="classoscar_1_1App.html">App</a></div>
+<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="classoscar_1_1MockApp.html">    8</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classoscar_1_1MockApp.html">MockApp</a> : <span class="keyword">public</span> <a class="code" href="classoscar_1_1App.html">App</a></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;{</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    std::function&lt;Data(Data)&gt; make_reply;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    std::vector&lt;Data&gt; op_list;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <a class="code" href="classoscar_1_1MockApp.html">MockApp</a>(std::function&lt;Data(Data)&gt; make_reply = <span class="keyword">nullptr</span>)</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    MockApp(std::function&lt;Data(Data)&gt; make_reply = <span class="keywordtype">nullptr</span>)</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    {</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;        <span class="keywordflow">if</span> (!make_reply) {</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;            make_reply = [](Data op) {</div>
@@ -112,25 +113,23 @@ $(document).ready(function(){initNavTree('Mock_8hpp_source.html',''); initResiza
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;                <span class="keywordflow">return</span> Data(reply_string.begin(), reply_string.end());</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            };</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        }</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        this-&gt;make_reply = make_reply;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="keyword">this</span>-&gt;make_reply = make_reply;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    }</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    Data commit(Data op)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    Data commit(Data op) <span class="keyword">override</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    {</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;        op_list.push_back(op);</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        <span class="keywordflow">return</span> make_reply(op);</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    }</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;} <span class="comment">// namespace oscar</span></div>
-<div class="ttc" id="aclassoscar_1_1App_html"><div class="ttname"><a href="classoscar_1_1App.html">oscar::App</a></div><div class="ttdef"><b>Definition:</b> Log.hpp:9</div></div>
-<div class="ttc" id="aclassoscar_1_1MockApp_html"><div class="ttname"><a href="classoscar_1_1MockApp.html">oscar::MockApp</a></div><div class="ttdef"><b>Definition:</b> Mock.hpp:9</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_d422163b96683743ed3963d4aac17747.html">app</a></li><li class="navelem"><b>Mock.hpp</b></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:14:54 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

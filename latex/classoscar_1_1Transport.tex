@@ -2,7 +2,12 @@
 \label{classoscar_1_1Transport}\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
 
 
-Collaboration diagram for oscar\+::Transport$<$ Self $>$\+:\nopagebreak
+{\ttfamily \#include $<$Transport.\+hpp$>$}
+
+
+
+Collaboration diagram for oscar\+::Transport$<$ Self $>$\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -12,70 +17,237 @@ Collaboration diagram for oscar\+::Transport$<$ Self $>$\+:\nopagebreak
 \doxysubsection*{Public Types}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}\label{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}} 
-using {\bfseries Address} = typename \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$ Self $>$\+::Address
+using \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} = typename \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$ Self $>$\+::\mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}\label{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}} 
-using {\bfseries Callback} = std\+::function$<$ void()$>$
+using \mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} = std\+::function$<$ void()$>$
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}\label{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}} 
-using {\bfseries Write} = std\+::function$<$ std\+::size\+\_\+t(Buffer$<$ BUFFER\+\_\+\+SIZE $>$ \&buffer)$>$
+using \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} = std\+::function$<$ std\+::size\+\_\+t(\mbox{\hyperlink{Type_8hpp_ad579d39e03ab201f4c20e80e3ee8f80b}{Buffer}}$<$ \mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{BUFFER\+\_\+\+SIZE}} $>$ \&buffer)$>$
 \end{DoxyCompactItemize}
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}\label{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}} 
-virtual Address {\bfseries allocate\+Address} ()=0
+virtual \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \mbox{\hyperlink{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}{allocate\+Address}} ()=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}\label{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}} 
-virtual void {\bfseries register\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
+virtual void \mbox{\hyperlink{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}{register\+Receiver}} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}\label{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}} 
-virtual void {\bfseries register\+Multicast\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
+virtual void \mbox{\hyperlink{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}{register\+Multicast\+Receiver}} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&receiver)=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}\label{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}} 
-virtual void {\bfseries schedule\+Timeout} (std\+::chrono\+::microseconds delay, Callback callback)=0
+virtual void \mbox{\hyperlink{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}{schedule\+Timeout}} (std\+::chrono\+::microseconds delay, \mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback)=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}\label{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}} 
-virtual void {\bfseries schedule\+Sequential} (Callback callback)
+virtual void \mbox{\hyperlink{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}{schedule\+Sequential}} (\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback)
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}\label{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}} 
-virtual void {\bfseries schedule\+Concurrent} (Callback callback)=0
+virtual void \mbox{\hyperlink{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}{schedule\+Concurrent}} (\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback)=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}\label{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}} 
-virtual int {\bfseries get\+Concurrent\+Id} () const =0
+virtual int \mbox{\hyperlink{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}{get\+Concurrent\+Id}} () const =0
 \item 
 \mbox{\Hypertarget{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}\label{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}} 
-virtual void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, const Address \&dest, Write write)=0
+virtual void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&dest, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write)=0
 \item 
 \mbox{\Hypertarget{classoscar_1_1Transport_a042e3921a049469877cf7e25f951ce43}\label{classoscar_1_1Transport_a042e3921a049469877cf7e25f951ce43}} 
-void {\bfseries send\+Message\+To\+Replica} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Replica\+Id replica\+\_\+id, Write write)
+void {\bfseries send\+Message\+To\+Replica} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Replica\+Id replica\+\_\+id, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write)
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}\label{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}} 
-void {\bfseries send\+Message\+To\+All} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Write write)
+void \mbox{\hyperlink{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}{send\+Message\+To\+All}} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write)
 \item 
 \mbox{\Hypertarget{classoscar_1_1Transport_a1b9cb8a32e5d007ad00a6fc3ad46af2b}\label{classoscar_1_1Transport_a1b9cb8a32e5d007ad00a6fc3ad46af2b}} 
-virtual void {\bfseries send\+Message\+To\+Multicast} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, Write write)
+virtual void {\bfseries send\+Message\+To\+Multicast} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&sender, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write)
 \end{DoxyCompactItemize}
 \doxysubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}\label{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}} 
-const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \& {\bfseries config}
+const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \& \mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}}
 \end{DoxyCompactItemize}
 \doxysubsection*{Static Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}\label{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}} 
-static constexpr std\+::size\+\_\+t {\bfseries BUFFER\+\_\+\+SIZE} = \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::BUFFER\+\_\+\+SIZE
+static constexpr std\+::size\+\_\+t \mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{BUFFER\+\_\+\+SIZE}} = \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::BUFFER\+\_\+\+SIZE
 \end{DoxyCompactItemize}
 \doxysubsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}\label{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}} 
-{\bfseries Transport} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \&config)
+\mbox{\hyperlink{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}{Transport}} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \&\mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}})
 \end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Self$>$\newline
+class oscar\+::\+Transport$<$ Self $>$}
+
+General supporting runtime for {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}}, the sending half of the actor model (and more).
+
+The base class takes curiously recurring template pattern. The subclass {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} is passed as template argument to {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}}, as well as {\ttfamily \mbox{\hyperlink{structoscar_1_1Config}{Config}}}, {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}}, etc.
+
+Besides of all interfaces defined here, a {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} implementation probably wants to provide a {\ttfamily run} method to start main loop. 
+
+\doxysubsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}\label{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!Address@{Address}}
+\index{Address@{Address}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{Address}{Address}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+using \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::\mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} =  typename \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::\mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}}}
+
+Value-\/semantic address type. Possible choices include plain string, {\ttfamily socketaddr\+\_\+in}, or more customized ones. \mbox{\Hypertarget{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}\label{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!Callback@{Callback}}
+\index{Callback@{Callback}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{Callback}{Callback}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+using \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} =  std\+::function$<$void()$>$}
+
+General task closure. Receiver can keep things inside it alive between working steps. \mbox{\Hypertarget{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}\label{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!Write@{Write}}
+\index{Write@{Write}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{Write}{Write}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+using \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::\mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} =  std\+::function$<$std\+::size\+\_\+t(\mbox{\hyperlink{Type_8hpp_ad579d39e03ab201f4c20e80e3ee8f80b}{Buffer}}$<$\mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{BUFFER\+\_\+\+SIZE}}$>$ \&buffer)$>$}
+
+Argument for {\ttfamily send\+Message$\ast$} methods. The lambda should in-\/place serialize message into {\ttfamily buffer}, and return message length. The returned value must not exceed {\ttfamily BUFFER\+\_\+\+SIZE}. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}\label{classoscar_1_1Transport_ad1a6c7d4d468f61851d7c480df858e5e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!Transport@{Transport}}
+\index{Transport@{Transport}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{Transport()}{Transport()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+\mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ Self $>$ \&}]{config }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+Construct base class with global configuration. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{44 : \mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}}(\mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}}) \{\}}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}\label{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!allocateAddress@{allocateAddress}}
+\index{allocateAddress@{allocateAddress}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{allocateAddress()}{allocateAddress()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::allocate\+Address (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Dynamically allocate free address, mainly for construct {\ttfamily \mbox{\hyperlink{classoscar_1_1Client}{Client}}}. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}\label{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!registerReceiver@{registerReceiver}}
+\index{registerReceiver@{registerReceiver}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{registerReceiver()}{registerReceiver()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::register\+Receiver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&}]{receiver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Register a receiver. The caller ensures that receiver\textquotesingle{}s reference will be valid as long as message get received on receiver\textquotesingle{}s address, which probably happens through the rest of {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}}\textquotesingle{}s lifetime. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}\label{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!registerMulticastReceiver@{registerMulticastReceiver}}
+\index{registerMulticastReceiver@{registerMulticastReceiver}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{registerMulticastReceiver()}{registerMulticastReceiver()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::register\+Multicast\+Receiver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&}]{receiver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Register a receiver that listens to multicast messages. \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation may require receiver to call {\ttfamily register\+Receiver} first. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}\label{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!scheduleTimeout@{scheduleTimeout}}
+\index{scheduleTimeout@{scheduleTimeout}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{scheduleTimeout()}{scheduleTimeout()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::schedule\+Timeout (\begin{DoxyParamCaption}\item[{std\+::chrono\+::microseconds}]{delay,  }\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Schedule a one-\/time timeout. {\ttfamily callback} will be called after {\ttfamily delay}, cannot be canceled.
+
+Unlike receiving message, timeout is non-\/direction, i.\+e., does not have a {\ttfamily receiver}. The behavior depends on {\ttfamily callback}\textquotesingle{}s capturing.
+
+Timeout\textquotesingle{}s {\ttfamily callback} is always executed sequentially. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}\label{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!scheduleSequential@{scheduleSequential}}
+\index{scheduleSequential@{scheduleSequential}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{scheduleSequential()}{scheduleSequential()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::schedule\+Sequential (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Schedule a sequential task. Sequential task is promised to be executed one by one without concurrency, so different sequential tasks can share states without locking. However, it is not guaranteed that all sequential tasks will be executed by the same thread.
+
+A default implementation is provided mainly for implying that timeout is sequential task by default, so there is no need for calling {\ttfamily schedule\+Sequential} inside timeout callback. 
+
+Reimplemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}{oscar\+::\+Simulated\+Transport}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{93     \{}
+\DoxyCodeLine{94         \mbox{\hyperlink{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}{scheduleTimeout}}(std::chrono::microseconds(0), callback);}
+\DoxyCodeLine{95     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}\label{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!scheduleConcurrent@{scheduleConcurrent}}
+\index{scheduleConcurrent@{scheduleConcurrent}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{scheduleConcurrent()}{scheduleConcurrent()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::schedule\+Concurrent (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Schedule a concurrent task. Multiple concurrent tasks may be executed with temporal overlapping, so they would better to be stateless. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}\label{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!getConcurrentId@{getConcurrentId}}
+\index{getConcurrentId@{getConcurrentId}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{getConcurrentId()}{getConcurrentId()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+virtual int \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::get\+Concurrent\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Every concurrent task get assigned to a concurrent id, which can be queried by calling {\ttfamily get\+Concurrent\+Id} during execution. Concurrent id is unsigned and bounded.
+
+\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation promise that all concurrent tasks that get assigned to the same concurrent id will be sequentially executed. So it is safe to reuse pre-\/allocated memory \char`\"{}slot\char`\"{} among those tasks.
+
+\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} may set concurrent id to {\ttfamily -\/1} for sequential tasks, but it is encouraged to determine sequential tasks by themselves. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}{oscar\+::\+Simulated\+Transport}}.
+
+\mbox{\Hypertarget{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}\label{classoscar_1_1Transport_aa8c10c33c526f3626d04180aec1de4c4}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!sendMessageToAll@{sendMessageToAll}}
+\index{sendMessageToAll@{sendMessageToAll}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{sendMessageToAll()}{sendMessageToAll()}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+void \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::send\+Message\+To\+All (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ Self $>$ \&}]{sender,  }\item[{\mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}}}]{write }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+The default implementation is mainly for illustration purpose. \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} should provide a more efficient version that only serialize once. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{135     \{}
+\DoxyCodeLine{136         \textcolor{keywordflow}{for} (\textcolor{keyword}{auto} address : \mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}}.replica\_address\_list) \{}
+\DoxyCodeLine{137             \textcolor{keywordflow}{if} (address != sender.address) \{}
+\DoxyCodeLine{138                 sendMessage(sender, address, write);}
+\DoxyCodeLine{139             \}}
+\DoxyCodeLine{140         \}}
+\DoxyCodeLine{141     \}}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}\label{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!config@{config}}
+\index{config@{config}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{config}{config}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$Self$>$\& \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::config}
+
+Configuration for {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} instance, along with all registered receivers. \mbox{\Hypertarget{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}\label{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}} 
+\index{oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}!BUFFER\_SIZE@{BUFFER\_SIZE}}
+\index{BUFFER\_SIZE@{BUFFER\_SIZE}!oscar::Transport$<$ Self $>$@{oscar::Transport$<$ Self $>$}}
+\doxysubsubsection{\texorpdfstring{BUFFER\_SIZE}{BUFFER\_SIZE}}
+{\footnotesize\ttfamily template$<$typename Self $>$ \\
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$ Self $>$\+::BUFFER\+\_\+\+SIZE = \mbox{\hyperlink{structoscar_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::BUFFER\+\_\+\+SIZE\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [constexpr]}}
+
+The size of buffer of tx message. May be helpful in assertion. 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

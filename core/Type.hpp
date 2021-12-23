@@ -1,3 +1,5 @@
+//! @file
+
 #pragma once
 #include <cstdint>
 #include <span>
@@ -14,10 +16,15 @@ using ReplicaId = std::int8_t;
 using ClientId = std::uint32_t;
 
 // for rx
+//! Unlike `Buffer`, `Span` does not own represented slice, so using `Span` with
+//! value semantic actually behaves as pass reference.
 using Span = const std::span<std::uint8_t>;
 // for tx
+//! The thing similar to `Span` is `Buffer &`, and use `auto &` in lambdas.
+//!
 template <std::size_t BUFFER_SIZE> using Buffer = std::uint8_t[BUFFER_SIZE];
-// for general storage of opaque things
+//! For general storage of opaque things
+//!
 // TODO configurable preallocate size
 using Data = boost::container::small_vector<std::uint8_t, 16>;
 

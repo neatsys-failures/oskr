@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -109,31 +110,24 @@ Collaboration diagram for oscar::SimulatedTransport:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aa9387971a4141a8c51095de42b7a6778"><td class="memItemLeft" align="right" valign="top"><a id="aa9387971a4141a8c51095de42b7a6778"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SimulatedTransport</b> (const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;config)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SimulatedTransport</b> (const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;<a class="el" href="classoscar_1_1Transport.html#a8b9ecf7c01c870e14abadf0c252b4a7e">config</a>)</td></tr>
 <tr class="separator:aa9387971a4141a8c51095de42b7a6778"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a91137243944fcb38ab609bae623cbe"><td class="memItemLeft" align="right" valign="top"><a id="a8a91137243944fcb38ab609bae623cbe"></a>
-Address&#160;</td><td class="memItemRight" valign="bottom"><b>allocateAddress</b> () override</td></tr>
+<tr class="memitem:a8a91137243944fcb38ab609bae623cbe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a8a91137243944fcb38ab609bae623cbe">allocateAddress</a> () override</td></tr>
 <tr class="separator:a8a91137243944fcb38ab609bae623cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeddcd1f72cf9f6de6db0f88ef54b2c46"><td class="memItemLeft" align="right" valign="top"><a id="aeddcd1f72cf9f6de6db0f88ef54b2c46"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>registerReceiver</b> (<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;receiver) override</td></tr>
+<tr class="memitem:aeddcd1f72cf9f6de6db0f88ef54b2c46"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#aeddcd1f72cf9f6de6db0f88ef54b2c46">registerReceiver</a> (<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;receiver) override</td></tr>
 <tr class="separator:aeddcd1f72cf9f6de6db0f88ef54b2c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1616f614fb7ed58fbf7e26441b4ef4cf"><td class="memItemLeft" align="right" valign="top"><a id="a1616f614fb7ed58fbf7e26441b4ef4cf"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>registerMulticastReceiver</b> (<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;receiver) override</td></tr>
+<tr class="memitem:a1616f614fb7ed58fbf7e26441b4ef4cf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf">registerMulticastReceiver</a> (<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;receiver) override</td></tr>
 <tr class="separator:a1616f614fb7ed58fbf7e26441b4ef4cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fe3c3e0b49912abccafa0ec74115125"><td class="memItemLeft" align="right" valign="top"><a id="a0fe3c3e0b49912abccafa0ec74115125"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessage</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, const Address &amp;dest, Write write) override</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessage</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> &amp;dest, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write) override</td></tr>
 <tr class="separator:a0fe3c3e0b49912abccafa0ec74115125"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77f0f7a8c93c467b36d07adda6d7cec7"><td class="memItemLeft" align="right" valign="top"><a id="a77f0f7a8c93c467b36d07adda6d7cec7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduleTimeout</b> (std::chrono::microseconds delay, Callback callback) override</td></tr>
+<tr class="memitem:a77f0f7a8c93c467b36d07adda6d7cec7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7">scheduleTimeout</a> (std::chrono::microseconds delay, <a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a> callback) override</td></tr>
 <tr class="separator:a77f0f7a8c93c467b36d07adda6d7cec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e0b4f1b213d603d93d379b6e978c27e"><td class="memItemLeft" align="right" valign="top"><a id="a8e0b4f1b213d603d93d379b6e978c27e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduleSequential</b> (Callback callback) override</td></tr>
+<tr class="memitem:a8e0b4f1b213d603d93d379b6e978c27e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a8e0b4f1b213d603d93d379b6e978c27e">scheduleSequential</a> (<a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a> callback) override</td></tr>
 <tr class="separator:a8e0b4f1b213d603d93d379b6e978c27e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2b031b4b5db0f9f6c9e077b8aa9f045"><td class="memItemLeft" align="right" valign="top"><a id="ad2b031b4b5db0f9f6c9e077b8aa9f045"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduleConcurrent</b> (Callback callback) override</td></tr>
+<tr class="memitem:ad2b031b4b5db0f9f6c9e077b8aa9f045"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#ad2b031b4b5db0f9f6c9e077b8aa9f045">scheduleConcurrent</a> (<a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a> callback) override</td></tr>
 <tr class="separator:ad2b031b4b5db0f9f6c9e077b8aa9f045"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a36c65db760fb9579088720254a150628"><td class="memItemLeft" align="right" valign="top"><a id="a36c65db760fb9579088720254a150628"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>getConcurrentId</b> () const override</td></tr>
+<tr class="memitem:a36c65db760fb9579088720254a150628"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1SimulatedTransport.html#a36c65db760fb9579088720254a150628">getConcurrentId</a> () const override</td></tr>
 <tr class="separator:a36c65db760fb9579088720254a150628"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a96bc8b2475130f279148c84e59701b0d"><td class="memItemLeft" align="right" valign="top"><a id="a96bc8b2475130f279148c84e59701b0d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clearTimeout</b> ()</td></tr>
@@ -143,40 +137,273 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> ()</td></tr>
 <tr class="separator:aa7cf687e95eb0dff67cd77f99d72a18c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classoscar_1_1Transport"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classoscar_1_1Transport')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; SimulatedTransport &gt;</a></td></tr>
 <tr class="memitem:a042e3921a049469877cf7e25f951ce43 inherit pub_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="a042e3921a049469877cf7e25f951ce43"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToReplica</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, ReplicaId replica_id, Write write)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToReplica</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, ReplicaId replica_id, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)</td></tr>
 <tr class="separator:a042e3921a049469877cf7e25f951ce43 inherit pub_methods_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8c10c33c526f3626d04180aec1de4c4 inherit pub_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="aa8c10c33c526f3626d04180aec1de4c4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToAll</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, Write write)</td></tr>
+<tr class="memitem:aa8c10c33c526f3626d04180aec1de4c4 inherit pub_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#aa8c10c33c526f3626d04180aec1de4c4">sendMessageToAll</a> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)</td></tr>
 <tr class="separator:aa8c10c33c526f3626d04180aec1de4c4 inherit pub_methods_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b9cb8a32e5d007ad00a6fc3ad46af2b inherit pub_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="a1b9cb8a32e5d007ad00a6fc3ad46af2b"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToMulticast</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, Write write)</td></tr>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>sendMessageToMulticast</b> (const <a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;sender, <a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> write)</td></tr>
 <tr class="separator:a1b9cb8a32e5d007ad00a6fc3ad46af2b inherit pub_methods_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pub_types_classoscar_1_1Transport"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classoscar_1_1Transport')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; SimulatedTransport &gt;</a></td></tr>
-<tr class="memitem:aff91396b76146595e391b69f5e22b93e inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="aff91396b76146595e391b69f5e22b93e"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Address</b> = typename <a class="el" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt;::Address</td></tr>
+<tr class="memitem:aff91396b76146595e391b69f5e22b93e inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> = typename <a class="el" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt;::<a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a></td></tr>
 <tr class="separator:aff91396b76146595e391b69f5e22b93e inherit pub_types_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3d533e280f8ecbf3fcd4556ca4d1c96 inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="aa3d533e280f8ecbf3fcd4556ca4d1c96"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Callback</b> = std::function&lt; void()&gt;</td></tr>
+<tr class="memitem:aa3d533e280f8ecbf3fcd4556ca4d1c96 inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a> = std::function&lt; void()&gt;</td></tr>
 <tr class="separator:aa3d533e280f8ecbf3fcd4556ca4d1c96 inherit pub_types_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a11e02eceec229ca9da406625e319a7 inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="a6a11e02eceec229ca9da406625e319a7"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> = std::function&lt; std::size_t(Buffer&lt; BUFFER_SIZE &gt; &amp;buffer)&gt;</td></tr>
+<tr class="memitem:a6a11e02eceec229ca9da406625e319a7 inherit pub_types_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#a6a11e02eceec229ca9da406625e319a7">Write</a> = std::function&lt; std::size_t(<a class="el" href="Type_8hpp.html#ad579d39e03ab201f4c20e80e3ee8f80b">Buffer</a>&lt; <a class="el" href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">BUFFER_SIZE</a> &gt; &amp;buffer)&gt;</td></tr>
 <tr class="separator:a6a11e02eceec229ca9da406625e319a7 inherit pub_types_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classoscar_1_1Transport"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classoscar_1_1Transport')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; SimulatedTransport &gt;</a></td></tr>
-<tr class="memitem:a8b9ecf7c01c870e14abadf0c252b4a7e inherit pub_attribs_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="a8b9ecf7c01c870e14abadf0c252b4a7e"></a>
-const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>config</b></td></tr>
+<tr class="memitem:a8b9ecf7c01c870e14abadf0c252b4a7e inherit pub_attribs_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#a8b9ecf7c01c870e14abadf0c252b4a7e">config</a></td></tr>
 <tr class="separator:a8b9ecf7c01c870e14abadf0c252b4a7e inherit pub_attribs_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_static_attribs_classoscar_1_1Transport"><td colspan="2" onclick="javascript:toggleInherit('pub_static_attribs_classoscar_1_1Transport')"><img src="closed.png" alt="-"/>&#160;Static Public Attributes inherited from <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; SimulatedTransport &gt;</a></td></tr>
-<tr class="memitem:a3ec403efa69791443bcedbd76aed74fc inherit pub_static_attribs_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="a3ec403efa69791443bcedbd76aed74fc"></a>
-static constexpr std::size_t&#160;</td><td class="memItemRight" valign="bottom"><b>BUFFER_SIZE</b></td></tr>
+<tr class="memitem:a3ec403efa69791443bcedbd76aed74fc inherit pub_static_attribs_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">static constexpr std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">BUFFER_SIZE</a></td></tr>
 <tr class="separator:a3ec403efa69791443bcedbd76aed74fc inherit pub_static_attribs_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classoscar_1_1Transport"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classoscar_1_1Transport')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classoscar_1_1Transport.html">oscar::Transport&lt; SimulatedTransport &gt;</a></td></tr>
-<tr class="memitem:ad1a6c7d4d468f61851d7c480df858e5e inherit pro_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top"><a id="ad1a6c7d4d468f61851d7c480df858e5e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Transport</b> (const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;config)</td></tr>
+<tr class="memitem:ad1a6c7d4d468f61851d7c480df858e5e inherit pro_methods_classoscar_1_1Transport"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1Transport.html#ad1a6c7d4d468f61851d7c480df858e5e">Transport</a> (const <a class="el" href="structoscar_1_1Config.html">Config</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;<a class="el" href="classoscar_1_1Transport.html#a8b9ecf7c01c870e14abadf0c252b4a7e">config</a>)</td></tr>
 <tr class="separator:ad1a6c7d4d468f61851d7c480df858e5e inherit pro_methods_classoscar_1_1Transport"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a8a91137243944fcb38ab609bae623cbe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a91137243944fcb38ab609bae623cbe">&#9670;&nbsp;</a></span>allocateAddress()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> oscar::SimulatedTransport::allocateAddress </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Dynamically allocate free address, mainly for construct <code><a class="el" href="classoscar_1_1Client.html">Client</a></code>. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#ab3d5558ee3d5b5b986b3fd7acfbb0f00">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    {</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <a class="code" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Address</a> addr(<span class="stringliteral">&quot;client-&quot;</span>);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        addr.push_back(<span class="charliteral">&#39;A&#39;</span> + (<span class="keywordtype">char</span>)receiver_table.size());</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> addr;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
+<div class="ttc" id="aclassoscar_1_1Transport_html_aff91396b76146595e391b69f5e22b93e"><div class="ttname"><a href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">oscar::Transport&lt; SimulatedTransport &gt;::Address</a></div><div class="ttdeci">typename TransportMeta&lt; SimulatedTransport &gt;::Address Address</div><div class="ttdef"><b>Definition:</b> Transport.hpp:51</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="aeddcd1f72cf9f6de6db0f88ef54b2c46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeddcd1f72cf9f6de6db0f88ef54b2c46">&#9670;&nbsp;</a></span>registerReceiver()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::registerReceiver </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>receiver</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Register a receiver. The caller ensures that receiver's reference will be valid as long as message get received on receiver's address, which probably happens through the rest of <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code>'s lifetime. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#a6cef04d770422df78860c682c0278c6e">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        receiver_table.insert({{receiver.address, receiver}});</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a1616f614fb7ed58fbf7e26441b4ef4cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1616f614fb7ed58fbf7e26441b4ef4cf">&#9670;&nbsp;</a></span>registerMulticastReceiver()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::registerMulticastReceiver </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>receiver</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Register a receiver that listens to multicast messages. <a class="el" href="classoscar_1_1Transport.html">Transport</a> implementation may require receiver to call <code>registerReceiver</code> first. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#af731a2d5e477c570490d011b693cb5de">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    {</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="comment">// TODO</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        (void)receiver;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a77f0f7a8c93c467b36d07adda6d7cec7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77f0f7a8c93c467b36d07adda6d7cec7">&#9670;&nbsp;</a></span>scheduleTimeout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::scheduleTimeout </td>
+          <td>(</td>
+          <td class="paramtype">std::chrono::microseconds&#160;</td>
+          <td class="paramname"><em>delay</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a>&#160;</td>
+          <td class="paramname"><em>callback</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Schedule a one-time timeout. <code>callback</code> will be called after <code>delay</code>, cannot be canceled.</p>
+<p>Unlike receiving message, timeout is non-direction, i.e., does not have a <code>receiver</code>. The behavior depends on <code>callback</code>'s capturing.</p>
+<p>Timeout's <code>callback</code> is always executed sequentially. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#ad3190e3914566e3d9726b36fb79d359a">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    {</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        timeout_queue.insert({{now_us + delay.count(), callback}});</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a8e0b4f1b213d603d93d379b6e978c27e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e0b4f1b213d603d93d379b6e978c27e">&#9670;&nbsp;</a></span>scheduleSequential()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::scheduleSequential </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a>&#160;</td>
+          <td class="paramname"><em>callback</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Schedule a sequential task. Sequential task is promised to be executed one by one without concurrency, so different sequential tasks can share states without locking. However, it is not guaranteed that all sequential tasks will be executed by the same thread.</p>
+<p>A default implementation is provided mainly for implying that timeout is sequential task by default, so there is no need for calling <code>scheduleSequential</code> inside timeout callback. </p>
+
+<p>Reimplemented from <a class="el" href="classoscar_1_1Transport.html#ada764acb3c30c90bb50dba06a8318f1e">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        sequential_queue.push(callback);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ad2b031b4b5db0f9f6c9e077b8aa9f045"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2b031b4b5db0f9f6c9e077b8aa9f045">&#9670;&nbsp;</a></span>scheduleConcurrent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void oscar::SimulatedTransport::scheduleConcurrent </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classoscar_1_1Transport.html#aa3d533e280f8ecbf3fcd4556ca4d1c96">Callback</a>&#160;</td>
+          <td class="paramname"><em>callback</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Schedule a concurrent task. Multiple concurrent tasks may be executed with temporal overlapping, so they would better to be stateless. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#a1bfd2706eac30831cd312869b1490bee">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    {</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        concurrent_queue.push(callback);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a36c65db760fb9579088720254a150628"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36c65db760fb9579088720254a150628">&#9670;&nbsp;</a></span>getConcurrentId()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int oscar::SimulatedTransport::getConcurrentId </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Every concurrent task get assigned to a concurrent id, which can be queried by calling <code>getConcurrentId</code> during execution. Concurrent id is unsigned and bounded.</p>
+<p><a class="el" href="classoscar_1_1Transport.html">Transport</a> implementation promise that all concurrent tasks that get assigned to the same concurrent id will be sequentially executed. So it is safe to reuse pre-allocated memory "slot" among those tasks.</p>
+<p><a class="el" href="classoscar_1_1Transport.html">Transport</a> may set concurrent id to <code>-1</code> for sequential tasks, but it is encouraged to determine sequential tasks by themselves. </p>
+
+<p>Implements <a class="el" href="classoscar_1_1Transport.html#a8bd8e5bd990724c95ea591450c09f14e">oscar::Transport&lt; SimulatedTransport &gt;</a>.</p>
+<div class="fragment"><div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;{ <span class="keywordflow">return</span> concurrent_id; }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>transport/<a class="el" href="Simulated_8hpp_source.html">Simulated.hpp</a></li>
 </ul>
@@ -186,7 +413,7 @@ static constexpr std::size_t&#160;</td><td class="memItemRight" valign="bottom">
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

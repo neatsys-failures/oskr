@@ -1,3 +1,13 @@
 .contents img, .contents .center, .contents center {
     overflow: auto
 }
+.memberdecls .memItemLeft, .memberdecls .memItemRight, .memtemplate, 
+.memTemplParams, .memTemplItemLeft, .memTemplItemRight {
+    font-family: var(--font-family-monospace);
+}
+.title, .textblock h3, .dynheader {
+    font-family: var(--font-family-monospace);
+}
+h2.groupheader {
+    margin-top: 1em;
+}

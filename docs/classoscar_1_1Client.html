@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -110,7 +111,7 @@ Collaboration diagram for oscar::Client&lt; Transport &gt;:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:a19608f98bcb172c5314224b9d1547351"><td class="memItemLeft" align="right" valign="top"><a id="a19608f98bcb172c5314224b9d1547351"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>InvokeCallback</b> = std::function&lt; void(Data result)&gt;</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>InvokeCallback</b> = std::function&lt; void(<a class="el" href="Type_8hpp.html#a2adc86b74828e412128ce70bd950d253">Data</a> result)&gt;</td></tr>
 <tr class="separator:a19608f98bcb172c5314224b9d1547351"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -119,17 +120,14 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Client</b> (<a class="el" href="classoscar_1_1Transport.html">Transport</a> &amp;transport)</td></tr>
 <tr class="separator:a4d3fa483e37e4e451a5038a06579a3bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae058255bd06fd043f74b1554669130d1"><td class="memItemLeft" align="right" valign="top"><a id="ae058255bd06fd043f74b1554669130d1"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>invoke</b> (Data op, InvokeCallback callback)=0</td></tr>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>invoke</b> (<a class="el" href="Type_8hpp.html#a2adc86b74828e412128ce70bd950d253">Data</a> op, InvokeCallback callback)=0</td></tr>
 <tr class="separator:ae058255bd06fd043f74b1554669130d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classoscar_1_1TransportReceiver"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classoscar_1_1TransportReceiver')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver&lt; Transport &gt;</a></td></tr>
-<tr class="memitem:ab3ec24f467c6c0f1d8d6ac5971460a58 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top"><a id="ab3ec24f467c6c0f1d8d6ac5971460a58"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TransportReceiver</b> (typename Transport::Address address)</td></tr>
+<tr class="memitem:ab3ec24f467c6c0f1d8d6ac5971460a58 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#ab3ec24f467c6c0f1d8d6ac5971460a58">TransportReceiver</a> (typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> <a class="el" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a>)</td></tr>
 <tr class="separator:ab3ec24f467c6c0f1d8d6ac5971460a58 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b0c5c2930b59b63106b2351b288a660 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top"><a id="a4b0c5c2930b59b63106b2351b288a660"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>receiveMessage</b> (const typename Transport::Address &amp;remote, Span span)=0</td></tr>
+<tr class="memitem:a4b0c5c2930b59b63106b2351b288a660 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">receiveMessage</a> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, <a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a> span)=0</td></tr>
 <tr class="separator:a4b0c5c2930b59b63106b2351b288a660 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86a4e9c3c26f205a8173e1f3f1b99129 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top"><a id="a86a4e9c3c26f205a8173e1f3f1b99129"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>receiveMulticastMessage</b> (const typename Transport::Address &amp;remote, Span span)</td></tr>
+<tr class="memitem:a86a4e9c3c26f205a8173e1f3f1b99129 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#a86a4e9c3c26f205a8173e1f3f1b99129">receiveMulticastMessage</a> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, <a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a> span)</td></tr>
 <tr class="separator:a86a4e9c3c26f205a8173e1f3f1b99129 inherit pub_methods_classoscar_1_1TransportReceiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
@@ -141,8 +139,7 @@ ClientId&#160;</td><td class="memItemRight" valign="bottom"><b>client_id</b></td
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pub_attribs_classoscar_1_1TransportReceiver"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classoscar_1_1TransportReceiver')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver&lt; Transport &gt;</a></td></tr>
-<tr class="memitem:abb9092fcd505439395e31973ea8ced2f inherit pub_attribs_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top"><a id="abb9092fcd505439395e31973ea8ced2f"></a>
-const Transport::Address&#160;</td><td class="memItemRight" valign="bottom"><b>address</b></td></tr>
+<tr class="memitem:abb9092fcd505439395e31973ea8ced2f inherit pub_attribs_classoscar_1_1TransportReceiver"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a></td></tr>
 <tr class="separator:abb9092fcd505439395e31973ea8ced2f inherit pub_attribs_classoscar_1_1TransportReceiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
@@ -154,7 +151,7 @@ const Transport::Address&#160;</td><td class="memItemRight" valign="bottom"><b>a
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1Client.html">Client</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

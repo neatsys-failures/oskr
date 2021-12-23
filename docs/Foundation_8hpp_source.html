@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -89,23 +90,23 @@ $(document).ready(function(){initNavTree('Foundation_8hpp_source.html',''); init
 <div class="title">Foundation.hpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;variant&gt;</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">variant</span><span class="preprocessor">&gt;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;bitsery/adapter/buffer.h&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;bitsery/bitsery.h&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;bitsery/brief_syntax.h&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;bitsery/brief_syntax/variant.h&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;bitsery/brief_syntax/vector.h&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;spdlog/spdlog.h&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">bitsery</span><span class="preprocessor">/</span><span class="preprocessor">adapter</span><span class="preprocessor">/</span><span class="preprocessor">buffer</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">bitsery</span><span class="preprocessor">/</span><span class="preprocessor">bitsery</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">bitsery</span><span class="preprocessor">/</span><span class="preprocessor">brief_syntax</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">bitsery</span><span class="preprocessor">/</span><span class="preprocessor">brief_syntax</span><span class="preprocessor">/</span><span class="preprocessor">variant</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">bitsery</span><span class="preprocessor">/</span><span class="preprocessor">brief_syntax</span><span class="preprocessor">/</span><span class="preprocessor">vector</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">spdlog</span><span class="preprocessor">/</span><span class="preprocessor">spdlog</span><span class="preprocessor">.</span><span class="preprocessor">h</span><span class="preprocessor">&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;core/Client.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;core/Log.hpp&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;core/Transport.hpp&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;core/TransportReceiver.hpp&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;core/Type.hpp&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Client.hpp&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Log.hpp&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Transport.hpp&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/TransportReceiver.hpp&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Type.hpp&quot;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace </span>oscar</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace</span> oscar</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;{</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">using</span> spdlog::debug, spdlog::info, spdlog::warn;</div>
@@ -118,12 +119,12 @@ $(document).ready(function(){initNavTree('Foundation_8hpp_source.html',''); init
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;}</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">// TODO explore a at-least-equally convinent but better way</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#ifndef OSCAR_NO_RLOGGING</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#define rdebug(fmt, ...) debug(&quot;[%d] &quot;</span> fmt, this-&gt;replica_id, ##__VA_ARGS__)</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#define rinfo(fmt, ...) info(&quot;[%d] &quot;</span> fmt, this-&gt;replica_id, ##__VA_ARGS__)</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#define rwarn(fmt, ...) warn(&quot;[%d] &quot;</span> fmt, this-&gt;replica_id, ##__VA_ARGS__)</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define rpanic(fmt, ...) panic(&quot;[%d] &quot;</span> fmt, this-&gt;replica_id, ##__VA_ARGS__)</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">ifndef</span> <span class="preprocessor">OSCAR_NO_RLOGGING</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">rdebug</span><span class="preprocessor">(</span><span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="preprocessor">...</span><span class="preprocessor">)</span> <span class="preprocessor">debug</span><span class="preprocessor">(</span><span class="stringliteral">&quot;[%d] &quot;</span> <span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="keyword">this</span><span class="preprocessor">-&gt;</span><span class="preprocessor">replica_id</span><span class="preprocessor">,</span> <span class="preprocessor">##</span><span class="preprocessor">__VA_ARGS__</span><span class="preprocessor">)</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">rinfo</span><span class="preprocessor">(</span><span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="preprocessor">...</span><span class="preprocessor">)</span> <span class="preprocessor">info</span><span class="preprocessor">(</span><span class="stringliteral">&quot;[%d] &quot;</span> <span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="keyword">this</span><span class="preprocessor">-&gt;</span><span class="preprocessor">replica_id</span><span class="preprocessor">,</span> <span class="preprocessor">##</span><span class="preprocessor">__VA_ARGS__</span><span class="preprocessor">)</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">rwarn</span><span class="preprocessor">(</span><span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="preprocessor">...</span><span class="preprocessor">)</span> <span class="preprocessor">warn</span><span class="preprocessor">(</span><span class="stringliteral">&quot;[%d] &quot;</span> <span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="keyword">this</span><span class="preprocessor">-&gt;</span><span class="preprocessor">replica_id</span><span class="preprocessor">,</span> <span class="preprocessor">##</span><span class="preprocessor">__VA_ARGS__</span><span class="preprocessor">)</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">rpanic</span><span class="preprocessor">(</span><span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="preprocessor">...</span><span class="preprocessor">)</span> <span class="preprocessor">panic</span><span class="preprocessor">(</span><span class="stringliteral">&quot;[%d] &quot;</span> <span class="preprocessor">fmt</span><span class="preprocessor">,</span> <span class="keyword">this</span><span class="preprocessor">-&gt;</span><span class="preprocessor">replica_id</span><span class="preprocessor">,</span> <span class="preprocessor">##</span><span class="preprocessor">__VA_ARGS__</span><span class="preprocessor">)</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">endif</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Buffer, <span class="keyword">typename</span> Message&gt;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;std::size_t bitserySerialize(Buffer &amp;buffer, <span class="keyword">const</span> Message &amp;message)</div>
@@ -146,16 +147,16 @@ $(document).ready(function(){initNavTree('Foundation_8hpp_source.html',''); init
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;} <span class="comment">// namespace oscar</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">namespace </span>bitsery::traits</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">namespace</span> bitsery::traits</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;{</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">// should work... i think?</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keyword">template</span> &lt;&gt;</div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structbitsery_1_1traits_1_1ContainerTraits_3_01oscar_1_1Data_01_4.html">   62</a></span>&#160;<span class="keyword">struct </span>ContainerTraits&lt;oscar::Data&gt;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    : <span class="keyword">public</span> StdContainer&lt;oscar::Data, true, true&gt; {</div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structbitsery_1_1traits_1_1ContainerTraits_3_01oscar_1_1Data_01_4.html">   62</a></span>&#160;<span class="keyword">struct</span> ContainerTraits&lt;oscar::Data&gt;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    : <span class="keyword">public</span> StdContainer&lt;oscar::Data, <span class="keyword">true</span>, <span class="keyword">true</span>&gt; {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;};</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;} <span class="comment">// namespace bitsery::traits</span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">namespace </span>bitsery</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">namespace</span> bitsery</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;{</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> S&gt; <span class="keywordtype">void</span> serialize(S &amp;s, oscar::Data &amp;data)</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;{</div>
@@ -169,7 +170,7 @@ $(document).ready(function(){initNavTree('Foundation_8hpp_source.html',''); init
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_4270bfced15e0e73154b13468c7c9ad9.html">core</a></li><li class="navelem"><b>Foundation.hpp</b></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:15:01 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

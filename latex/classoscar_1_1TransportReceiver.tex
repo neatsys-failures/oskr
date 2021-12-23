@@ -2,7 +2,12 @@
 \label{classoscar_1_1TransportReceiver}\index{oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}}
 
 
-Inheritance diagram for oscar\+::Transport\+Receiver$<$ Transport $>$\+:\nopagebreak
+{\ttfamily \#include $<$Transport\+Receiver.\+hpp$>$}
+
+
+
+Inheritance diagram for oscar\+::Transport\+Receiver$<$ Transport $>$\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -12,22 +17,83 @@ Inheritance diagram for oscar\+::Transport\+Receiver$<$ Transport $>$\+:\nopageb
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1TransportReceiver_ab3ec24f467c6c0f1d8d6ac5971460a58}\label{classoscar_1_1TransportReceiver_ab3ec24f467c6c0f1d8d6ac5971460a58}} 
-{\bfseries Transport\+Receiver} (typename Transport\+::\+Address address)
+\mbox{\hyperlink{classoscar_1_1TransportReceiver_ab3ec24f467c6c0f1d8d6ac5971460a58}{Transport\+Receiver}} (typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \mbox{\hyperlink{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}{address}})
 \item 
-\mbox{\Hypertarget{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}\label{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}} 
-virtual void {\bfseries receive\+Message} (const typename Transport\+::\+Address \&remote, Span span)=0
+virtual void \mbox{\hyperlink{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}{receive\+Message}} (const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&remote, \mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}} span)=0
 \item 
-\mbox{\Hypertarget{classoscar_1_1TransportReceiver_a86a4e9c3c26f205a8173e1f3f1b99129}\label{classoscar_1_1TransportReceiver_a86a4e9c3c26f205a8173e1f3f1b99129}} 
-virtual void {\bfseries receive\+Multicast\+Message} (const typename Transport\+::\+Address \&remote, Span span)
+virtual void \mbox{\hyperlink{classoscar_1_1TransportReceiver_a86a4e9c3c26f205a8173e1f3f1b99129}{receive\+Multicast\+Message}} (const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&remote, \mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}} span)
 \end{DoxyCompactItemize}
 \doxysubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}\label{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}} 
-const Transport\+::\+Address {\bfseries address}
+const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \mbox{\hyperlink{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}{address}}
 \end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Transport$>$\newline
+class oscar\+::\+Transport\+Receiver$<$ Transport $>$}
+
+The base class for packet-\/listeners, i.\+e., all participants of protocols. The receiving half of the actor model.
+
+Each instance of {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}} has a static address throughout its lifetime. It also can only work with one specific {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} type.
+
+After registered to a {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} instance, virtual method {\ttfamily receive\+Message} will be called whenever messages arrives receiver\textquotesingle{}s address.
+
+The {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}} itself does not make any assumption on how to process received message, but a subclass will probably want to call {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} methods to send message and schedule timeout. So it is conventional to ask for a reference of {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} instance when constructing subclass. Because the {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} base class follows CRTP, {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} \&} is basically equals to {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$\mbox{\hyperlink{classoscar_1_1Transport}{Transport}}$>$ \&} in every situation. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classoscar_1_1TransportReceiver_ab3ec24f467c6c0f1d8d6ac5971460a58}\label{classoscar_1_1TransportReceiver_ab3ec24f467c6c0f1d8d6ac5971460a58}} 
+\index{oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}!TransportReceiver@{TransportReceiver}}
+\index{TransportReceiver@{TransportReceiver}!oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}}
+\doxysubsubsection{\texorpdfstring{TransportReceiver()}{TransportReceiver()}}
+{\footnotesize\ttfamily template$<$typename Transport $>$ \\
+\mbox{\hyperlink{classoscar_1_1TransportReceiver}{oscar\+::\+Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} $>$\+::\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}} (\begin{DoxyParamCaption}\item[{typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}}}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Construct receiver base class with address. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{32 : \mbox{\hyperlink{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}{address}}(\mbox{\hyperlink{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}{address}}) \{\}}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}\label{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}} 
+\index{oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}!receiveMessage@{receiveMessage}}
+\index{receiveMessage@{receiveMessage}!oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}}
+\doxysubsubsection{\texorpdfstring{receiveMessage()}{receiveMessage()}}
+{\footnotesize\ttfamily template$<$typename Transport $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1TransportReceiver}{oscar\+::\+Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} $>$\+::receive\+Message (\begin{DoxyParamCaption}\item[{const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&}]{remote,  }\item[{\mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}}}]{span }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Handle received raw message. The underlying memory that backs {\ttfamily span} will go out of lifetime after this method returns, so receiver need to own everything necessary for later processing. 
+
+Implemented in \mbox{\hyperlink{classoscar_1_1BasicClient_ae334dce1c0e1cf43b446fa51bfda8ddd}{oscar\+::\+Basic\+Client$<$ Transport, Replica\+Message $>$}}.
+
+\mbox{\Hypertarget{classoscar_1_1TransportReceiver_a86a4e9c3c26f205a8173e1f3f1b99129}\label{classoscar_1_1TransportReceiver_a86a4e9c3c26f205a8173e1f3f1b99129}} 
+\index{oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}!receiveMulticastMessage@{receiveMulticastMessage}}
+\index{receiveMulticastMessage@{receiveMulticastMessage}!oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}}
+\doxysubsubsection{\texorpdfstring{receiveMulticastMessage()}{receiveMulticastMessage()}}
+{\footnotesize\ttfamily template$<$typename Transport $>$ \\
+virtual void \mbox{\hyperlink{classoscar_1_1TransportReceiver}{oscar\+::\+Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} $>$\+::receive\+Multicast\+Message (\begin{DoxyParamCaption}\item[{const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&}]{remote,  }\item[{\mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}}}]{span }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+If receiver is registered to multicast as well, multicast message will be sent to here. This gives receiver a chance to determine multicast messages. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{47     \{}
+\DoxyCodeLine{48         \mbox{\hyperlink{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}{receiveMessage}}(remote, span);}
+\DoxyCodeLine{49     \}}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}\label{classoscar_1_1TransportReceiver_abb9092fcd505439395e31973ea8ced2f}} 
+\index{oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}!address@{address}}
+\index{address@{address}!oscar::TransportReceiver$<$ Transport $>$@{oscar::TransportReceiver$<$ Transport $>$}}
+\doxysubsubsection{\texorpdfstring{address}{address}}
+{\footnotesize\ttfamily template$<$typename Transport $>$ \\
+const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \mbox{\hyperlink{classoscar_1_1TransportReceiver}{oscar\+::\+Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} $>$\+::address}
+
+Static receiving address of the receiver. Must be unique across the whole system. 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

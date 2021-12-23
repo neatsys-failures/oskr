@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -93,6 +94,8 @@ $(document).ready(function(){initNavTree('classoscar_1_1TransportReceiver.html',
 <div class="title">oscar::TransportReceiver&lt; Transport &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for oscar::TransportReceiver&lt; Transport &gt;:</div>
 <div class="dyncontent">
@@ -102,22 +105,161 @@ Inheritance diagram for oscar::TransportReceiver&lt; Transport &gt;:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab3ec24f467c6c0f1d8d6ac5971460a58"><td class="memItemLeft" align="right" valign="top"><a id="ab3ec24f467c6c0f1d8d6ac5971460a58"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TransportReceiver</b> (typename Transport::Address address)</td></tr>
+<tr class="memitem:ab3ec24f467c6c0f1d8d6ac5971460a58"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#ab3ec24f467c6c0f1d8d6ac5971460a58">TransportReceiver</a> (typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> <a class="el" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a>)</td></tr>
 <tr class="separator:ab3ec24f467c6c0f1d8d6ac5971460a58"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b0c5c2930b59b63106b2351b288a660"><td class="memItemLeft" align="right" valign="top"><a id="a4b0c5c2930b59b63106b2351b288a660"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>receiveMessage</b> (const typename Transport::Address &amp;remote, Span span)=0</td></tr>
+<tr class="memitem:a4b0c5c2930b59b63106b2351b288a660"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">receiveMessage</a> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, <a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a> span)=0</td></tr>
 <tr class="separator:a4b0c5c2930b59b63106b2351b288a660"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86a4e9c3c26f205a8173e1f3f1b99129"><td class="memItemLeft" align="right" valign="top"><a id="a86a4e9c3c26f205a8173e1f3f1b99129"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>receiveMulticastMessage</b> (const typename Transport::Address &amp;remote, Span span)</td></tr>
+<tr class="memitem:a86a4e9c3c26f205a8173e1f3f1b99129"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#a86a4e9c3c26f205a8173e1f3f1b99129">receiveMulticastMessage</a> (const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;remote, <a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a> span)</td></tr>
 <tr class="separator:a86a4e9c3c26f205a8173e1f3f1b99129"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abb9092fcd505439395e31973ea8ced2f"><td class="memItemLeft" align="right" valign="top"><a id="abb9092fcd505439395e31973ea8ced2f"></a>
-const Transport::Address&#160;</td><td class="memItemRight" valign="bottom"><b>address</b></td></tr>
+<tr class="memitem:abb9092fcd505439395e31973ea8ced2f"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a></td></tr>
 <tr class="separator:abb9092fcd505439395e31973ea8ced2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><h3>template&lt;typename Transport&gt;<br />
+class oscar::TransportReceiver&lt; Transport &gt;</h3>
+
+<p>The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the actor model.</p>
+<p>Each instance of <code><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></code> has a static address throughout its lifetime. It also can only work with one specific <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> type.</p>
+<p>After registered to a <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> instance, virtual method <code>receiveMessage</code> will be called whenever messages arrives receiver's address.</p>
+<p>The <code><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></code> itself does not make any assumption on how to process received message, but a subclass will probably want to call <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> methods to send message and schedule timeout. So it is conventional to ask for a reference of <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> instance when constructing subclass. Because the <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> base class follows CRTP, <code><a class="el" href="classoscar_1_1Transport.html">Transport</a> &amp;</code> is basically equals to <code><a class="el" href="classoscar_1_1Transport.html">oscar::Transport</a>&lt;<a class="el" href="classoscar_1_1Transport.html">Transport</a>&gt; &amp;</code> in every situation. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ab3ec24f467c6c0f1d8d6ac5971460a58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3ec24f467c6c0f1d8d6ac5971460a58">&#9670;&nbsp;</a></span>TransportReceiver()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a> &gt;::<a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a> </td>
+          <td>(</td>
+          <td class="paramtype">typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a>&#160;</td>
+          <td class="paramname"><em>address</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Construct receiver base class with address. </p>
+<div class="fragment"><div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;: <a class="code" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a>(<a class="code" href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">address</a>) {}</div>
+<div class="ttc" id="aclassoscar_1_1TransportReceiver_html_abb9092fcd505439395e31973ea8ced2f"><div class="ttname"><a href="classoscar_1_1TransportReceiver.html#abb9092fcd505439395e31973ea8ced2f">oscar::TransportReceiver::address</a></div><div class="ttdeci">const Transport::Address address</div><div class="ttdef"><b>Definition:</b> TransportReceiver.hpp:28</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a4b0c5c2930b59b63106b2351b288a660"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b0c5c2930b59b63106b2351b288a660">&#9670;&nbsp;</a></span>receiveMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a> &gt;::receiveMessage </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;&#160;</td>
+          <td class="paramname"><em>remote</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a>&#160;</td>
+          <td class="paramname"><em>span</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Handle received raw message. The underlying memory that backs <code>span</code> will go out of lifetime after this method returns, so receiver need to own everything necessary for later processing. </p>
+
+<p>Implemented in <a class="el" href="classoscar_1_1BasicClient.html#ae334dce1c0e1cf43b446fa51bfda8ddd">oscar::BasicClient&lt; Transport, ReplicaMessage &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a86a4e9c3c26f205a8173e1f3f1b99129"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86a4e9c3c26f205a8173e1f3f1b99129">&#9670;&nbsp;</a></span>receiveMulticastMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a> &gt;::receiveMulticastMessage </td>
+          <td>(</td>
+          <td class="paramtype">const typename <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> &amp;&#160;</td>
+          <td class="paramname"><em>remote</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a">Span</a>&#160;</td>
+          <td class="paramname"><em>span</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>If receiver is registered to multicast as well, multicast message will be sent to here. This gives receiver a chance to determine multicast messages. </p>
+<div class="fragment"><div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    {</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">receiveMessage</a>(remote, span);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    }</div>
+<div class="ttc" id="aclassoscar_1_1TransportReceiver_html_a4b0c5c2930b59b63106b2351b288a660"><div class="ttname"><a href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">oscar::TransportReceiver::receiveMessage</a></div><div class="ttdeci">virtual void receiveMessage(const typename Transport::Address &amp;remote, Span span)=0</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="abb9092fcd505439395e31973ea8ced2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb9092fcd505439395e31973ea8ced2f">&#9670;&nbsp;</a></span>address</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Transport &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classoscar_1_1Transport.html#aff91396b76146595e391b69f5e22b93e">Transport::Address</a> <a class="el" href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver</a>&lt; <a class="el" href="classoscar_1_1Transport.html">Transport</a> &gt;::address</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Static receiving address of the receiver. Must be unique across the whole system. </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>core/<a class="el" href="Transport_8hpp_source.html">Transport.hpp</a></li>
 <li>core/<a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a></li>
@@ -128,7 +270,7 @@ const Transport::Address&#160;</td><td class="memItemRight" valign="bottom"><b>a
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

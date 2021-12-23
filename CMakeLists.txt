@@ -18,6 +18,7 @@ set(CMAKE_CXX_CLANG_TIDY clang-tidy
     --use-color
     "-header-filter=-${CMAKE_SOURCE_DIR}/dependency"
 )
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # useful when need to create source-less target that requires at least one
 # source file

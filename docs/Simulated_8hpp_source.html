@@ -29,6 +29,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Oscar
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
   </td>
@@ -89,29 +90,29 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="title">Simulated.hpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;map&gt;</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;queue&gt;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;unordered_map&gt;</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">map</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">queue</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">string</span><span class="preprocessor">&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&lt;</span><span class="preprocessor">unordered_map</span><span class="preprocessor">&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;core/Foundation.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Foundation.hpp&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span>oscar</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace</span> oscar</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;{</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class </span>SimulatedTransport;</div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structoscar_1_1TransportMeta_3_01SimulatedTransport_01_4.html">   13</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; {</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class</span> <a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>;</div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structoscar_1_1TransportMeta_3_01SimulatedTransport_01_4.html">   13</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct</span> <a class="code" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; {</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keyword">using</span> Address = std::string;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keyword">static</span> constexpr std::size_t BUFFER_SIZE = 9000; <span class="comment">// TODO configurable</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keyword">static</span> <span class="keyword">constexpr</span> std::size_t BUFFER_SIZE = 9000; <span class="comment">// TODO configurable</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;};</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html">   18</a></span>&#160;<span class="keyword">class </span><a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> : <span class="keyword">public</span> <a class="code" href="classoscar_1_1Transport.html">Transport</a>&lt;SimulatedTransport&gt;</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html">   18</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a> : <span class="keyword">public</span> <a class="code" href="classoscar_1_1Transport.html">Transport</a>&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;{</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    std::unordered_map&lt;Address, TransportReceiver&lt;SimulatedTransport&gt; &amp;&gt;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    std::unordered_map&lt;Address, TransportReceiver&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; &amp;&gt;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        receiver_table;</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">struct </span>MessageBox {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">struct</span> MessageBox {</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        Address source, dest;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        Data message;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    };</div>
@@ -124,64 +125,64 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">int</span> concurrent_id;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>(<span class="keyword">const</span> <a class="code" href="structoscar_1_1Config.html">Config&lt;SimulatedTransport&gt;</a> &amp;config) :</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <a class="code" href="classoscar_1_1Transport.html">Transport</a>(config)</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    SimulatedTransport(<span class="keyword">const</span> <a class="code" href="structoscar_1_1Config.html">Config</a>&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; &amp;config) :</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <a class="code" href="classoscar_1_1Transport.html">Transport</a><a class="code" href="classoscar_1_1Transport.html#ad1a6c7d4d468f61851d7c480df858e5e">(</a>config<a class="code" href="classoscar_1_1Transport.html#ad1a6c7d4d468f61851d7c480df858e5e">)</a></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    {</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        now_us = 0;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    }</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    Address allocateAddress()<span class="keyword"> override</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#a8a91137243944fcb38ab609bae623cbe">   42</a></span>&#160;    Address <a class="code" href="classoscar_1_1SimulatedTransport.html#a8a91137243944fcb38ab609bae623cbe">allocateAddress</a>() <span class="keyword">override</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    {</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        Address addr(<span class="stringliteral">&quot;client-&quot;</span>);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        addr.push_back(<span class="charliteral">&#39;A&#39;</span> + (<span class="keywordtype">char</span>)receiver_table.size());</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        addr.push_back(<span class="stringliteral">&#39;A&#39;</span> + (<span class="keywordtype">char</span>)receiver_table.size());</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> addr;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    registerReceiver(<a class="code" href="classoscar_1_1TransportReceiver.html">TransportReceiver&lt;SimulatedTransport&gt;</a> &amp;receiver)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#aeddcd1f72cf9f6de6db0f88ef54b2c46">   50</a></span>&#160;    <a class="code" href="classoscar_1_1SimulatedTransport.html#aeddcd1f72cf9f6de6db0f88ef54b2c46">registerReceiver</a>(TransportReceiver&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; &amp;receiver) <span class="keyword">override</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    {</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        receiver_table.insert({{receiver.address, receiver}});</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    }</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">void</span> registerMulticastReceiver(</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <a class="code" href="classoscar_1_1TransportReceiver.html">TransportReceiver&lt;SimulatedTransport&gt;</a> &amp;receiver)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf">   55</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf">registerMulticastReceiver</a>(</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        TransportReceiver&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; &amp;receiver) <span class="keyword">override</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    {</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="comment">// TODO</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        (void)receiver;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        (<span class="keywordtype">void</span>)receiver;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordtype">void</span> sendMessage(</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keyword">const</span> <a class="code" href="classoscar_1_1TransportReceiver.html">TransportReceiver&lt;SimulatedTransport&gt;</a> &amp;sender,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keyword">const</span> Address &amp;dest, Write write)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keyword">const</span> TransportReceiver&lt;<a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>&gt; &amp;sender,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keyword">const</span> Address &amp;dest, Write write) <span class="keyword">override</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    {</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordflow">if</span> (!receiver_table.count(dest)) {</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            panic(<span class="stringliteral">&quot;Send to unknown destination: sender = {}&quot;</span>, sender.address);</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        }</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="comment">// TODO filter</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        Data message(BUFFER_SIZE);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        message.resize(write(*(Buffer&lt;BUFFER_SIZE&gt; *)message.data()));</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        Data message(<a class="code" href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">BUFFER_SIZE</a>);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        message.resize(write(*(Buffer&lt;<a class="code" href="classoscar_1_1Transport.html#a3ec403efa69791443bcedbd76aed74fc">BUFFER_SIZE</a>&gt; *)message.data()));</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        message_queue.insert(</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            {{now_us, MessageBox{sender.address, dest, message}}});</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    scheduleTimeout(std::chrono::microseconds delay, Callback callback)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7">   78</a></span>&#160;    <a class="code" href="classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7">scheduleTimeout</a>(std::chrono::microseconds delay, Callback callback) <span class="keyword">override</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        timeout_queue.insert({{now_us + delay.count(), callback}});</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">void</span> scheduleSequential(Callback callback)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#a8e0b4f1b213d603d93d379b6e978c27e">   83</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1SimulatedTransport.html#a8e0b4f1b213d603d93d379b6e978c27e">scheduleSequential</a>(Callback callback) <span class="keyword">override</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    {</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        sequential_queue.push(callback);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">void</span> scheduleConcurrent(Callback callback)<span class="keyword"> override</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keyword">    </span>{</div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#ad2b031b4b5db0f9f6c9e077b8aa9f045">   88</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1SimulatedTransport.html#ad2b031b4b5db0f9f6c9e077b8aa9f045">scheduleConcurrent</a>(Callback callback) <span class="keyword">override</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    {</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        concurrent_queue.push(callback);</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    }</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordtype">int</span> getConcurrentId()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> concurrent_id; }</div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="classoscar_1_1SimulatedTransport.html#a36c65db760fb9579088720254a150628">   93</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classoscar_1_1SimulatedTransport.html#a36c65db760fb9579088720254a150628">getConcurrentId</a>() <span class="keyword">const</span> <span class="keyword">override</span> { <span class="keywordflow">return</span> concurrent_id; }</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordtype">void</span> processScheduled();</div>
@@ -192,7 +193,7 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordtype">void</span> run();</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;};</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keywordtype">void</span> SimulatedTransport::processScheduled()</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keywordtype">void</span> <a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>::processScheduled()</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;{</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        <span class="keywordflow">if</span> (!concurrent_queue.empty()) {</div>
@@ -209,7 +210,7 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    }</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;}</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="keywordtype">void</span> SimulatedTransport::run()</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="keywordtype">void</span> <a class="code" href="classoscar_1_1SimulatedTransport.html">SimulatedTransport</a>::run()</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;{</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keyword">auto</span> message_iter = message_queue.begin();</div>
@@ -221,8 +222,8 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;            <span class="comment">// TODO multicast message</span></div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            concurrent_id = 0;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            receiver_table.at(box.dest).receiveMessage(</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                box.source, Span(box.message.data(), box.message.size()));</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            receiver_table.at(box.dest)<a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">.</a><a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">receiveMessage</a><a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">(</a></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                box.source<a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">,</a> Span(box.message.data(), box.message.size())<a class="code" href="classoscar_1_1TransportReceiver.html#a4b0c5c2930b59b63106b2351b288a660">)</a>;</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            processScheduled();</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            message_iter = message_queue.begin();</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        }</div>
@@ -245,18 +246,13 @@ $(document).ready(function(){initNavTree('Simulated_8hpp_source.html',''); initR
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;}</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;} <span class="comment">// namespace oscar</span></div>
-<div class="ttc" id="aclassoscar_1_1SimulatedTransport_html"><div class="ttname"><a href="classoscar_1_1SimulatedTransport.html">oscar::SimulatedTransport</a></div><div class="ttdef"><b>Definition:</b> Simulated.hpp:19</div></div>
-<div class="ttc" id="aclassoscar_1_1TransportReceiver_html"><div class="ttname"><a href="classoscar_1_1TransportReceiver.html">oscar::TransportReceiver</a></div><div class="ttdef"><b>Definition:</b> TransportReceiver.hpp:7</div></div>
-<div class="ttc" id="aclassoscar_1_1Transport_html"><div class="ttname"><a href="classoscar_1_1Transport.html">oscar::Transport</a></div><div class="ttdef"><b>Definition:</b> Transport.hpp:21</div></div>
-<div class="ttc" id="astructoscar_1_1Config_html"><div class="ttname"><a href="structoscar_1_1Config.html">oscar::Config</a></div><div class="ttdef"><b>Definition:</b> Config.hpp:8</div></div>
-<div class="ttc" id="astructoscar_1_1TransportMeta_html"><div class="ttname"><a href="structoscar_1_1TransportMeta.html">oscar::TransportMeta</a></div><div class="ttdef"><b>Definition:</b> Transport.hpp:11</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_c1ce99697cbd6b458d23ed598f5ca49b.html">transport</a></li><li class="navelem"><b>Simulated.hpp</b></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Thu Dec 23 2021 16:15:03 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

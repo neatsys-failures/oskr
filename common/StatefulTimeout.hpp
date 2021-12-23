@@ -32,7 +32,7 @@ public:
     {
         timeout_id += 1;
         current_id = timeout_id;
-        transport.scheduleTimeout(delay, [this, current_id] {
+        transport.scheduleTimeout(delay, [this, current_id = this->current_id] {
             if (this->current_id != current_id) {
                 return;
             }
