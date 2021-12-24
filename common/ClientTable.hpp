@@ -36,8 +36,8 @@ public:
         const typename Transport::Address &remote, ClientId client_id,
         RequestNumber request_number);
 
-    //! On handling relayed request message.
-    //!
+    //! On handling relayed request message. Caller assumes `request_number`
+    //! corresponding to an currently outstanding request.
     void update(ClientId client_id, RequestNumber request_number);
 
     //! On committing.

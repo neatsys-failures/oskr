@@ -18,10 +18,10 @@ class Replica : public TransportReceiver<Transport>
     ReplicaId replica_id;
     int batch_size;
 
-    enum State {
+    enum Status {
         NORMAL,
         VIEW_CHANGE,
-    } state;
+    } status;
     ViewNumber view_number;
     OpNumber op_number, commit_number;
 
@@ -44,7 +44,7 @@ public:
 
         this->replica_id = replica_id;
         this->batch_size = batch_size;
-        state = State::NORMAL;
+        status = Status::NORMAL;
         view_number = 0;
         op_number = commit_number = 0;
         batch.n_entry = 0;
@@ -70,9 +70,6 @@ private:
         return transport.config.primaryId(view_number) == replica_id;
     }
 
-    template <typename M> void handle(const typename Transport::Address &, M &)
-    {
-    }
     void handle(
         const typename Transport::Address &remote,
         const RequestMessage &request);
@@ -93,6 +90,10 @@ private:
     // void handle(
     //     const typename Transport::Address &remote,
     //     const StartViewMessage &start_view);
+    template <typename M> void handle(const typename Transport::Address &, M &)
+    {
+        rpanic("Unreachable");
+    }
 
     void
     send(const ReplyMessage &reply, const typename Transport::Address &remote);
@@ -105,7 +106,7 @@ template <typename Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
-    if (state != State::NORMAL || !isPrimary()) {
+    if (status != Status::NORMAL || !isPrimary()) {
         return;
     }
 
@@ -143,7 +144,7 @@ template <typename Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareMessage &prepare)
 {
-    if (view_number > prepare.view_number) {
+    if (status != Status::NORMAL || view_number > prepare.view_number) {
         return;
     }
     if (view_number < prepare.view_number) {
@@ -187,7 +188,7 @@ template <typename Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareOkMessage &prepare_ok)
 {
-    if (prepare_ok.view_number < view_number) {
+    if (status != Status::NORMAL || prepare_ok.view_number < view_number) {
         return;
     }
     if (prepare_ok.view_number > view_number) {
@@ -229,7 +230,7 @@ template <typename Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const CommitMessage &commit)
 {
-    if (commit.view_number < view_number) {
+    if (status != Status::NORMAL || commit.view_number < view_number) {
         return;
     }
     if (commit.view_number > view_number) {

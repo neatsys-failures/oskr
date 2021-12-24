@@ -20,12 +20,15 @@ actor model.
 
 ----
 
-Develop on Ubuntu 21.10, with clang version 13. Dependent apt packages:
+Develop on Ubuntu 21.10, with clang version 13. Required apt packages:
+* `cmake`
+* `clang`
+* `clang-tidy`
 * `libboost-dev`
 
 Step 1, clone the repo with `--recursive`.
 
-Step 2, build CMake project.
+Step 2, build CMake project as usual.
 
 *Work in progress.*
 
