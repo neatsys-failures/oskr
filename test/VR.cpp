@@ -5,9 +5,8 @@
 #include "replication/vr/Replica.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;
-using namespace oscar::vr;
-using namespace std::literals::chrono_literals;
+using namespace oscar;     // NOLINT
+using namespace oscar::vr; // NOLINT
 
 TEST(VR, Noop)
 {

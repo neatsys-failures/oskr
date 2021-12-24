@@ -5,8 +5,7 @@
 
 #include "transport/Simulated.hpp"
 
-using namespace oscar;
-using namespace std::chrono_literals;
+using namespace oscar; // NOLINT
 
 TEST(SimulatedTransport, ExternalTimeout)
 {

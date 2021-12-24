@@ -61,7 +61,7 @@ public:
 private:
     static constexpr auto _1 = std::placeholders::_1;
     static constexpr auto _2 = std::placeholders::_2;
-    template <typename Message>
+    template <typename Message = ReplicaMessage>
     static constexpr auto bitserySerialize =
         oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, Message>;
 
@@ -132,9 +132,7 @@ template <typename Transport> void Replica<Transport>::closeBatch()
     prepare.op_number = op_number;
     prepare.block = batch;
     transport.sendMessageToAll(
-        *this,
-        std::bind(
-            bitserySerialize<ReplicaMessage>, _1, ReplicaMessage(prepare)));
+        *this, std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare)));
 
     if (prepare_set.checkForQuorum(op_number)) {
         commitUpTo(op_number);
@@ -178,8 +176,7 @@ void Replica<Transport>::handle(
     prepare_ok.replica_id = replica_id;
     transport.sendMessageToReplica(
         *this, transport.config.primaryId(view_number),
-        std::bind(
-            bitserySerialize<ReplicaMessage>, _1, ReplicaMessage(prepare_ok)));
+        std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare_ok)));
 
     if (prepare.commit_number > commit_number) {
         commitUpTo(prepare.commit_number);

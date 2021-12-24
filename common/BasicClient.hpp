@@ -30,8 +30,8 @@ struct ReplyMessage {
     }
 };
 
-template <typename Transport, typename ReplicaMessage>
-class BasicClient : public Client<Transport>
+template <typename Transport, typename ReplicaMessage> class BasicClient;
+template <> class BasicClient<void, void>
 {
 public:
     struct Config {
@@ -43,6 +43,13 @@ public:
         std::chrono::microseconds resend_interval;
         std::size_t n_matched;
     };
+};
+
+template <typename Transport = void, typename ReplicaMessage = void>
+class BasicClient : public Client<Transport>
+{
+public:
+    using Config = BasicClient<>::Config;
 
 private:
     Transport &transport;

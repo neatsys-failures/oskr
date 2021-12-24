@@ -9,11 +9,8 @@
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;
-using namespace oscar::unreplicated;
-using namespace std::literals::chrono_literals;
-using Strategy =
-    BasicClient<SimulatedTransport, ReplicaMessage>::Config::Strategy;
+using namespace oscar;               // NOLINT
+using namespace oscar::unreplicated; // NOLINT
 
 class Unreplicated : public testing::Test
 {
@@ -38,7 +35,8 @@ protected:
         client.reserve(n_client);
         for (int i = 0; i < n_client; i += 1) {
             client.push_back(BasicClient<SimulatedTransport, ReplicaMessage>(
-                transport, {Strategy::PRIMARY_FIRST, 1000ms, 1}));
+                transport,
+                {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1}));
             transport.registerReceiver(client.back());
         }
     }

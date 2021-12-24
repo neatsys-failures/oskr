@@ -16,6 +16,9 @@
 
 namespace oscar
 {
+using //
+    std::literals::chrono_literals::operator""ms,
+    std::literals::chrono_literals::operator""us;
 
 using spdlog::debug, spdlog::info, spdlog::warn;
 

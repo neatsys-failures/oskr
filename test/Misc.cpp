@@ -3,7 +3,7 @@
 #include "core/Foundation.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;
+using namespace oscar; // NOLINT
 
 class SimpleClient : public Client<SimulatedTransport>
 {
