@@ -7,3 +7,6 @@
 [submodule "dependency/bitsery"]
 	path = dependency/bitsery
 	url = https://github.com/fraillt/bitsery
+[submodule "dependency/dpdk"]
+	path = dependency/dpdk
+	url = https://dpdk.org/git/dpdk

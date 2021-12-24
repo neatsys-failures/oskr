@@ -29,11 +29,16 @@ Develop on Ubuntu 21.10, with clang version 13. Required apt packages:
 * `cmake`
 * `clang`
 * `clang-tidy`
+* `meson`
+* `ninja-build`
+* `python3-pyelftools`
 * `libboost-dev`
 
 Step 1, clone the repo with `--recursive`.
 
-Step 2, build CMake project as usual.
+Step 2, build CMake project as usual. Initial configuration will build a DPDK, 
+which takes some time. Notable targets:
+* `Client` benchmark client, executable at `<build>/benchmark/Client`.
 
 *Work in progress.*
 

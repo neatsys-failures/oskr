@@ -3,6 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
+                "${workspaceFolder}/dependency/dpdk/lib/eal/linux/include",
                 "${workspaceFolder}/**"
             ],
             "defines": [],
