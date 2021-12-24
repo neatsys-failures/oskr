@@ -35,7 +35,7 @@ class SimulatedTransport : public Transport<SimulatedTransport>
 public:
     using microseconds = std::chrono::microseconds;
     // we do not provide message content here, because serialized message is
-    // too hard to inspect
+    // normally hard to inspect
     using Filter = std::function<bool(
         const Address &source, const Address &dest, microseconds &delay)>;
 
