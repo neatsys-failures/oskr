@@ -21,17 +21,20 @@ template <typename Transport>
 class SimpleReceiver : public TransportReceiver<Transport>
 {
 public:
+    typename Transport::Address latest_remote;
+    Data latest_message;
+    int n_message;
+
     explicit SimpleReceiver(typename Transport::Address address) :
         TransportReceiver<Transport>(address)
     {
+        n_message = 0;
     }
-
-    typename Transport::Address latest_remote;
-    Data latest_message;
 
     void receiveMessage(
         const typename Transport::Address &remote, Span buffer) override
     {
+        n_message += 1;
         latest_remote = remote;
         latest_message = Data(buffer.begin(), buffer.end());
     }
@@ -46,11 +49,10 @@ TEST(SimulatedTransport, OneMessage)
     transport.registerReceiver(receiver1);
     Data message{0, 1, 2, 3};
     transport.scheduleTimeout(0us, [&]() {
-        transport.sendMessage(
-            receiver2, "receiver-1", [&](std::uint8_t *buffer) {
-                std::memcpy(buffer, message.data(), message.size());
-                return message.size();
-            });
+        transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
+            std::copy(message.begin(), message.end(), buffer);
+            return message.size();
+        });
     });
     transport.run();
     ASSERT_EQ(receiver1.latest_remote, "receiver-2");
@@ -62,13 +64,13 @@ class PingPongReceiver : public TransportReceiver<Transport>
 {
     Transport &transport;
     std::function<void(PingPongReceiver<Transport> &)> on_exit;
-    int delay_us;
+    std::chrono::microseconds delay_us;
 
 public:
     PingPongReceiver(
         typename Transport::Address address, Transport &transport,
         std::function<void(PingPongReceiver<Transport> &)> on_exit,
-        int delay_us) :
+        std::chrono::microseconds delay_us) :
         TransportReceiver<Transport>(address),
         transport(transport)
     {
@@ -91,13 +93,12 @@ public:
             return reply.size();
         };
 
-        if (delay_us == 0) {
+        if (delay_us == 0us) {
             transport.sendMessage(*this, remote, write);
         } else {
-            transport.scheduleTimeout(
-                std::chrono::microseconds(delay_us), [this, remote, write] {
-                    transport.sendMessage(*this, remote, write);
-                });
+            transport.scheduleTimeout(delay_us, [this, remote, write] {
+                transport.sendMessage(*this, remote, write);
+            });
         }
     }
 
@@ -116,8 +117,8 @@ TEST(SimulatedTransport, PingPong)
         all_done = true;
         ASSERT_EQ(receiver.address, "pong");
     };
-    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 0);
-    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 0);
+    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 0us);
+    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 0us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
     transport.scheduleTimeout(0us, [&] { ping.Start(); });
@@ -135,11 +136,55 @@ TEST(SimulatedTransport, PingPongWithTimeout)
         all_done = true;
         ASSERT_EQ(receiver.address, "pong");
     };
-    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 1);
-    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 2);
+    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 1us);
+    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 2us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
     transport.scheduleTimeout(0us, [&] { ping.Start(); });
+    bool checked = false;
+    transport.scheduleTimeout(200us, [&] {
+        ASSERT_TRUE(all_done);
+        checked = true;
+    });
     transport.run();
-    ASSERT_TRUE(all_done);
+    ASSERT_TRUE(checked);
+}
+
+TEST(SimulatedTransport, DropMessage)
+{
+    Config<SimulatedTransport> config{0, {}};
+    SimulatedTransport transport(config);
+    SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
+        receiver2("receiver-2");
+    transport.registerReceiver(receiver1);
+    transport.registerReceiver(receiver2);
+
+    for (auto i = 0us; i < 10us; i += 1us) {
+        transport.scheduleTimeout(i, [&]() {
+            transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
+                std::string message("Bad network");
+                std::copy(message.begin(), message.end(), buffer);
+                return message.size();
+            });
+        });
+        transport.scheduleTimeout(i, [&]() {
+            transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
+                std::string message("Good network");
+                std::copy(message.begin(), message.end(), buffer);
+                return message.size();
+            });
+        });
+    }
+    transport.addFilter(1, [](const auto &, const auto &dest, auto &) {
+        return dest != "receiver-1";
+    });
+    bool checked = false;
+    transport.scheduleTimeout(20us, [&] {
+        ASSERT_EQ(receiver1.n_message, 0);
+        ASSERT_EQ(receiver2.n_message, 10);
+        checked = true;
+    });
+
+    transport.run();
+    ASSERT_TRUE(checked);
 }

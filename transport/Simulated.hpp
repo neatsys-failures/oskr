@@ -33,6 +33,16 @@ class SimulatedTransport : public Transport<SimulatedTransport>
     int concurrent_id;
 
 public:
+    using microseconds = std::chrono::microseconds;
+    // we do not provide message content here, because serialized message is
+    // too hard to inspect
+    using Filter = std::function<bool(
+        const Address &source, const Address &dest, microseconds &delay)>;
+
+private:
+    std::map<int, Filter> filter_table;
+
+public:
     SimulatedTransport(const Config<SimulatedTransport> &config) :
         Transport(config)
     {
@@ -61,21 +71,9 @@ public:
 
     void sendMessage(
         const TransportReceiver<SimulatedTransport> &sender,
-        const Address &dest, Write write) override
-    {
-        if (!receiver_table.count(dest)) {
-            panic("Send to unknown destination: sender = {}", sender.address);
-        }
+        const Address &dest, Write write) override;
 
-        // TODO filter
-        Data message(BUFFER_SIZE);
-        message.resize(write(*(Buffer<BUFFER_SIZE> *)message.data()));
-        message_queue.insert(
-            {{now_us, MessageBox{sender.address, dest, message}}});
-    }
-
-    void
-    scheduleTimeout(std::chrono::microseconds delay, Callback callback) override
+    void scheduleTimeout(microseconds delay, Callback callback) override
     {
         timeout_queue.insert({{now_us + delay.count(), callback}});
     }
@@ -98,8 +96,40 @@ private:
 public:
     void clearTimeout() { timeout_queue.clear(); }
 
-    void run();
+    void run(microseconds time_limit = 10 * 1000ms);
+
+    void addFilter(int filter_id, Filter filter)
+    {
+        filter_table.insert({filter_id, filter});
+    }
+
+    void removeFilter(int removed_id) { filter_table.erase(removed_id); }
 };
+
+void SimulatedTransport::sendMessage(
+    const TransportReceiver<SimulatedTransport> &sender, const Address &dest,
+    Write write)
+{
+    if (!receiver_table.count(dest)) {
+        panic("Send to unknown destination: sender = {}", sender.address);
+    }
+
+    microseconds delay = 0us;
+    for (auto pair : filter_table) {
+        if (!pair.second(sender.address, dest, delay)) {
+            info("Message dropped: filter id = {}", pair.first);
+            return;
+        }
+    }
+    if (delay != 0us) {
+        info("Message delayed: {}us", delay.count());
+    }
+
+    Data message(BUFFER_SIZE);
+    message.resize(write(*(Buffer<BUFFER_SIZE> *)message.data()));
+    message_queue.insert(
+        {{now_us + delay.count(), MessageBox{sender.address, dest, message}}});
+}
 
 void SimulatedTransport::processScheduled()
 {
@@ -118,9 +148,15 @@ void SimulatedTransport::processScheduled()
     }
 }
 
-void SimulatedTransport::run()
+void SimulatedTransport::run(microseconds time_limit)
 {
     while (true) {
+        if (microseconds(now_us) >= time_limit) {
+            panic(
+                "Hard time limit reached: {}ms",
+                double(time_limit.count()) / 1000);
+        }
+
         auto message_iter = message_queue.begin();
         while (message_iter != message_queue.end() &&
                message_iter->first == now_us) {
