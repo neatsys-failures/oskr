@@ -1,4 +1,9 @@
-### High Performance Distributed Protocols Collection
+## High Performance Distributed Protocols Collection
+![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oscar)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oscar)
+![Lines of code](https://img.shields.io/tokei/lines/github/sgdxbc/oscar)
+![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oscar)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oscar)
 
 **Motivation.** This is an attempt to improve based on [specpaxos]. The detail 
 of consideration is listed in [a piece of blog][sgd-blog].

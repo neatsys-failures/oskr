@@ -188,3 +188,49 @@ TEST(SimulatedTransport, DropMessage)
     transport.run();
     ASSERT_TRUE(checked);
 }
+
+TEST(SimulatedTransport, DelayMessage)
+{
+    Config<SimulatedTransport> config{0, {}};
+    SimulatedTransport transport(config);
+    SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
+        receiver2("receiver-2");
+    transport.registerReceiver(receiver1);
+    transport.registerReceiver(receiver2);
+
+    for (auto i = 0us; i < 10us; i += 1us) {
+        transport.scheduleTimeout(i, [&]() {
+            transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
+                std::string message("Slow network");
+                std::copy(message.begin(), message.end(), buffer);
+                return message.size();
+            });
+        });
+        transport.scheduleTimeout(i, [&]() {
+            transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
+                std::string message("Good network");
+                std::copy(message.begin(), message.end(), buffer);
+                return message.size();
+            });
+        });
+    }
+    transport.addFilter(1, [](const auto &, const auto &dest, auto &delay) {
+        if (dest == "receiver-1") {
+            delay += 50us;
+        }
+        return true;
+    });
+    bool checked = false;
+    transport.scheduleTimeout(20us, [&] {
+        ASSERT_EQ(receiver1.n_message, 0);
+        ASSERT_EQ(receiver2.n_message, 10);
+        transport.scheduleTimeout(80us, [&] {
+            ASSERT_EQ(receiver1.n_message, 10);
+            ASSERT_EQ(receiver2.n_message, 10);
+            checked = true;
+        });
+    });
+
+    transport.run();
+    ASSERT_TRUE(checked);
+}
