@@ -4,3 +4,9 @@ target_link_libraries(oscar_core INTERFACE
     Bitsery::bitsery
     Boost::boost
 )
+
+add_library(oscar_pch STATIC ${OSCAR_DUMMY_SOURCE})
+target_link_libraries(oscar_pch PRIVATE oscar_core)
+target_precompile_headers(oscar_pch PRIVATE
+    Foundation.hpp
+)

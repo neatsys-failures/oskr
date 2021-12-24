@@ -25,7 +25,7 @@ public:
     //!
     //! If returned `Apply` is truthy, the request processing should be omit:
     //! ```
-    //! if (auto apply = 
+    //! if (auto apply =
     //!         client_table.apply(remote, client_id, request_number)) {
     //!     apply([&](auto &remote, auto &reply) { /* ... */ });
     //!     return;
@@ -57,6 +57,10 @@ auto ClientTable<Transport, ReplyMessage>::check(
         record_table.insert(
             {client_id, {remote, request_number, std::nullopt}});
         return nullptr;
+    }
+
+    if (!iter->second.remote) {
+        iter->second.remote = remote;
     }
 
     auto &record = iter->second;

@@ -36,8 +36,7 @@ public:
         int batch_size) :
         TransportReceiver<Transport>(
             transport.config.replica_address_list[replica_id]),
-        transport(transport), log(log),
-        prepare_set(transport.config.n_fault + 1)
+        transport(transport), log(log), prepare_set(transport.config.n_fault)
     {
         if (batch_size > Log<>::BLOCK_SIZE) {
             panic("Batch size too large");
@@ -99,7 +98,6 @@ private:
     send(const ReplyMessage &reply, const typename Transport::Address &remote);
 
     void closeBatch();
-    void addPrepareOk(const PrepareOkMessage &prepare_ok);
     void commitUpTo(OpNumber op_number);
 };
 
@@ -137,6 +135,10 @@ template <typename Transport> void Replica<Transport>::closeBatch()
         *this,
         std::bind(
             bitserySerialize<ReplicaMessage>, _1, ReplicaMessage(prepare)));
+
+    if (prepare_set.checkForQuorum(op_number)) {
+        commitUpTo(op_number);
+    }
 }
 
 template <typename Transport>
@@ -201,17 +203,11 @@ void Replica<Transport>::handle(
     if (prepare_ok.op_number <= commit_number) {
         return;
     }
-    addPrepareOk(prepare_ok);
-}
 
-template <typename Transport>
-void Replica<Transport>::addPrepareOk(const PrepareOkMessage &prepare_ok)
-{
-    if (!prepare_set.addAndCheckForQuorum(
+    if (prepare_set.addAndCheckForQuorum(
             prepare_ok.op_number, prepare_ok.replica_id, prepare_ok)) {
-        return;
+        commitUpTo(prepare_ok.op_number);
     }
-    commitUpTo(prepare_ok.op_number);
 }
 
 template <typename Transport>
