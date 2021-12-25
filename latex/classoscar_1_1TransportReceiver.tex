@@ -2,6 +2,11 @@
 \label{classoscar_1_1TransportReceiver}\index{TransportReceiver$<$ Transport $>$@{TransportReceiver$<$ Transport $>$}}
 
 
+The base class for packet-\/listeners, i.\+e., all participants of protocols. The receiving half of the actor model.  
+
+
+
+
 {\ttfamily \#include \char`\"{}core/\+Transport\+Receiver.\+hpp\char`\"{}}
 
 
@@ -32,7 +37,7 @@ const \mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d
 \subsubsection*{template$<$typename Transport$>$\newline
 class oscar\+::\+Transport\+Receiver$<$ Transport $>$}
 
-The base class for packet-\/listeners, i.\+e., all participants of protocols. The receiving half of the actor model.
+The base class for packet-\/listeners, i.\+e., all participants of protocols. The receiving half of the actor model. 
 
 Each instance of {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}} has a static address throughout its lifetime. It also can only work with one specific {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} type.
 
@@ -40,7 +45,7 @@ After registered to a {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Trans
 
 The {\ttfamily \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}} itself does not make any assumption on how to process received message, but a subclass will probably want to call {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} methods to send message and schedule timeout. So it is conventional to ask for a reference of {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} instance when constructing subclass. Because the {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}} base class follows CRTP, {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} \&} is basically equals to {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{oscar\+::\+Transport}}$<$\mbox{\hyperlink{classoscar_1_1Transport}{Transport}}$>$ \&} in every situation. 
 
-Definition at line 23 of file Transport\+Receiver.\+hpp.
+Definition at line 22 of file Transport\+Receiver.\+hpp.
 
 
 
@@ -53,11 +58,11 @@ Definition at line 23 of file Transport\+Receiver.\+hpp.
 
 Construct receiver base class with address. 
 
-Definition at line 32 of file Transport\+Receiver.\+hpp.
+Definition at line 31 of file Transport\+Receiver.\+hpp.
 
 
 \begin{DoxyCode}{0}
-\DoxyCodeLine{32 : \mbox{\hyperlink{classoscar_1_1TransportReceiver_aabf5601802c72ede99d2b0eae083d00c}{address}}(\mbox{\hyperlink{classoscar_1_1TransportReceiver_aabf5601802c72ede99d2b0eae083d00c}{address}}) \{\}}
+\DoxyCodeLine{31 : \mbox{\hyperlink{classoscar_1_1TransportReceiver_aabf5601802c72ede99d2b0eae083d00c}{address}}(\mbox{\hyperlink{classoscar_1_1TransportReceiver_aabf5601802c72ede99d2b0eae083d00c}{address}}) \{\}}
 
 \end{DoxyCode}
 
@@ -80,7 +85,7 @@ Handle received raw message. The underlying memory that backs {\ttfamily span} w
 
 Static receiving address of the receiver. Must be unique across the whole system. 
 
-Definition at line 28 of file Transport\+Receiver.\+hpp.
+Definition at line 27 of file Transport\+Receiver.\+hpp.
 
 
 

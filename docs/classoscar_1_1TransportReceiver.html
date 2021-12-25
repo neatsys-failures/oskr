@@ -95,13 +95,16 @@ $(document).ready(function(){initNavTree('classoscar_1_1TransportReceiver.html',
 </div><!--header-->
 <div class="contents">
 
+<p>The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the actor model.  
+ <a href="classoscar_1_1TransportReceiver.html#details">More...</a></p>
+
 <p><code>#include &quot;<a class="el" href="TransportReceiver_8hpp_source.html">core/TransportReceiver.hpp</a>&quot;</code></p>
 <div class="dynheader">
 Inheritance diagram for TransportReceiver&lt; Transport &gt;:</div>
 <div class="dyncontent">
 <div class="center"><img src="classoscar_1_1TransportReceiver__inherit__graph.png" border="0" usemap="#aTransportReceiver_3_01Transport_01_4_inherit__map" alt="Inheritance graph"/></div>
 <map name="aTransportReceiver_3_01Transport_01_4_inherit__map" id="aTransportReceiver_3_01Transport_01_4_inherit__map">
-<area shape="rect" title=" " alt="" coords="242,5,445,52"/>
+<area shape="rect" title="The base class for packet&#45;listeners, i.e., all participants of protocols. The receiving half of the a..." alt="" coords="242,5,445,52"/>
 <area shape="rect" href="classoscar_1_1Client.html" title=" " alt="" coords="50,109,213,138"/>
 <area shape="rect" href="classoscar_1_1Client.html" title=" " alt="" coords="237,109,449,138"/>
 <area shape="rect" href="classoscar_1_1TransportMulticastReceiver.html" title=" " alt="" coords="473,100,755,147"/>
@@ -125,12 +128,12 @@ Public Attributes</h2></td></tr>
 <div class="textblock"><h3>template&lt;typename Transport&gt;<br />
 class oscar::TransportReceiver&lt; Transport &gt;</h3>
 
-<p>The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the actor model.</p>
-<p>Each instance of <code><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></code> has a static address throughout its lifetime. It also can only work with one specific <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> type.</p>
-<p>After registered to a <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> instance, virtual method <code>receiveMessage</code> will be called whenever messages arrives receiver's address.</p>
-<p>The <code><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></code> itself does not make any assumption on how to process received message, but a subclass will probably want to call <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> methods to send message and schedule timeout. So it is conventional to ask for a reference of <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> instance when constructing subclass. Because the <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code> base class follows CRTP, <code><a class="el" href="classoscar_1_1Transport.html">Transport</a> &amp;</code> is basically equals to <code><a class="el" href="classoscar_1_1Transport.html">oscar::Transport</a>&lt;<a class="el" href="classoscar_1_1Transport.html">Transport</a>&gt; &amp;</code> in every situation. </p>
+<p>The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the actor model. </p>
+<p>Each instance of <code><a class="el" href="classoscar_1_1TransportReceiver.html" title="The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the a...">TransportReceiver</a></code> has a static address throughout its lifetime. It also can only work with one specific <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code> type.</p>
+<p>After registered to a <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code> instance, virtual method <code>receiveMessage</code> will be called whenever messages arrives receiver's address.</p>
+<p>The <code><a class="el" href="classoscar_1_1TransportReceiver.html" title="The base class for packet-listeners, i.e., all participants of protocols. The receiving half of the a...">TransportReceiver</a></code> itself does not make any assumption on how to process received message, but a subclass will probably want to call <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code> methods to send message and schedule timeout. So it is conventional to ask for a reference of <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code> instance when constructing subclass. Because the <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code> base class follows CRTP, <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a> &amp;</code> is basically equals to <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">oscar::Transport</a>&lt;<a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a>&gt; &amp;</code> in every situation. </p>
 
-<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00023">23</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00022">22</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a7a709fe1009cb24201825e855d3fbf58"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7a709fe1009cb24201825e855d3fbf58">&#9670;&nbsp;</a></span>TransportReceiver()</h2>
@@ -157,9 +160,9 @@ class oscar::TransportReceiver&lt; Transport &gt;</h3>
 </div><div class="memdoc">
 <p>Construct receiver base class with address. </p>
 
-<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00032">32</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
-<div class="fragment"><div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;: <a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>(<a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>) {}</div>
-<div class="ttc" id="aclassoscar_1_1TransportReceiver_html_aabf5601802c72ede99d2b0eae083d00c"><div class="ttname"><a href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">oscar::TransportReceiver::address</a></div><div class="ttdeci">const Transport::Address address</div><div class="ttdef"><b>Definition:</b> <a href="TransportReceiver_8hpp_source.html#l00028">TransportReceiver.hpp:28</a></div></div>
+<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00031">31</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
+<div class="fragment"><div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;: <a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>(<a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>) {}</div>
+<div class="ttc" id="aclassoscar_1_1TransportReceiver_html_aabf5601802c72ede99d2b0eae083d00c"><div class="ttname"><a href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">oscar::TransportReceiver::address</a></div><div class="ttdeci">const Transport::Address address</div><div class="ttdef"><b>Definition:</b> <a href="TransportReceiver_8hpp_source.html#l00027">TransportReceiver.hpp:27</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,7 +218,7 @@ class oscar::TransportReceiver&lt; Transport &gt;</h3>
 </div><div class="memdoc">
 <p>Static receiving address of the receiver. Must be unique across the whole system. </p>
 
-<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00028">28</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="TransportReceiver_8hpp_source.html#l00027">27</a> of file <a class="el" href="TransportReceiver_8hpp_source.html">TransportReceiver.hpp</a>.</p>
 
 </div>
 </div>
@@ -229,7 +232,7 @@ class oscar::TransportReceiver&lt; Transport &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="classoscar_1_1TransportReceiver.html">TransportReceiver</a></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:47:35 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Sat Dec 25 2021 12:57:06 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

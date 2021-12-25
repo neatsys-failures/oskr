@@ -21,7 +21,7 @@ public:
         std::function<void(
             const typename Transport::Address &remote, const ReplyMessage &)>)>;
 
-    //! On hanlding direct request from client.
+    //! On handling direct request from client.
     //!
     //! If returned `Apply` is truthy, the request processing should be omit:
     //! ```

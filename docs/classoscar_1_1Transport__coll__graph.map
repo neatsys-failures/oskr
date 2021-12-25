@@ -1,4 +1,4 @@
 <map id="Transport&lt; Self &gt;" name="Transport&lt; Self &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,100,197,129"/>
+<area shape="rect" id="node1" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more)." alt="" coords="5,100,197,129"/>
 <area shape="rect" id="node2" href="$structoscar_1_1Config.html" title=" " alt="" coords="20,5,183,35"/>
 </map>

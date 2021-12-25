@@ -91,12 +91,15 @@ $(document).ready(function(){initNavTree('structoscar_1_1TransportMeta.html','')
 </div><!--header-->
 <div class="contents">
 
+<p>A struct required by C++, so <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code>'s subclass can define essentials ahead of instantiating base class.  
+ <a href="structoscar_1_1TransportMeta.html#details">More...</a></p>
+
 <p><code>#include &quot;<a class="el" href="Transport_8hpp_source.html">core/Transport.hpp</a>&quot;</code></p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Transport&gt;<br />
 struct oscar::TransportMeta&lt; Transport &gt;</h3>
 
-<p>A struct required by C++, so <code><a class="el" href="classoscar_1_1Transport.html">Transport</a></code>'s subclass can define essentials ahead of instantiating base class.</p>
+<p>A struct required by C++, so <code><a class="el" href="classoscar_1_1Transport.html" title="General supporting runtime for TransportReceiver, the sending half of the actor model (and more).">Transport</a></code>'s subclass can define essentials ahead of instantiating base class. </p>
 <p>Each specialization must include:</p><ul>
 <li>Associated type <code>Address</code>. It is assumed to be suitable for value semantic.</li>
 <li>Compile-time constant <code>std::size_t</code> expression <code>BUFFER_SIZE</code>, the maximum length of serialized tx message. Sender's message length is bounded by this so transport do not need to provide dynamic allocated buffer. </li>
@@ -112,7 +115,7 @@ struct oscar::TransportMeta&lt; Transport &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>oscar</b></li><li class="navelem"><a class="el" href="structoscar_1_1TransportMeta.html">TransportMeta</a></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:47:35 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Sat Dec 25 2021 12:57:06 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

@@ -8,8 +8,8 @@
 
 namespace oscar
 {
-/*! A struct required by C++, so `Transport`'s subclass can define essentials
-ahead of instantiating base class.
+/*! @brief A struct required by C++, so `Transport`'s subclass can define
+essentials ahead of instantiating base class.
 
 Each specialization must include:
 + Associated type `Address`. It is assumed to be suitable for value semantic.
@@ -29,8 +29,8 @@ template <typename Transport> struct TransportMeta {
 template <typename Transport> class TransportReceiver;
 template <typename Transport> class TransportMulticastReceiver;
 
-/*! General supporting runtime for `TransportReceiver`, the sending half of the
-actor model (and more).
+/*! @brief General supporting runtime for `TransportReceiver`, the sending half
+of the actor model (and more).
 
 The base class takes curiously recurring template pattern. The subclass
 `Transport` is passed as template argument to `Transport`, as well as `Config`,

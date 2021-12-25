@@ -3,9 +3,8 @@
 
 namespace oscar
 {
-
-/*! The base class for packet-listeners, i.e., all participants of protocols.
-The receiving half of the actor model.
+/*! @brief The base class for packet-listeners, i.e., all participants of
+protocols. The receiving half of the actor model.
 
 Each instance of `TransportReceiver` has a static address throughout its
 lifetime. It also can only work with one specific `Transport` type.
