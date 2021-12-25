@@ -37,16 +37,18 @@ public:
     //! own everything necessary for later processing.
     virtual void
     receiveMessage(const typename Transport::Address &remote, Span span) = 0;
+};
 
-    //! If receiver is registered to multicast as well, multicast message will
-    //! be sent to here. This gives receiver a chance to determine multicast
-    //! messages.
-    // the codebase assume at most one multicast address present
-    virtual void receiveMulticastMessage(
-        const typename Transport::Address &remote, Span span)
-    {
-        receiveMessage(remote, span);
-    }
+/*! Although theoretically a multicast receiver is not required to be
+addressable if it does not listen to any unicast, the situation not present for
+known protocols (or can be easily workaround-ed by assigning a dummy address),
+and we try to avoid multi-inheritance here.
+*/
+// the codebase assume at most one multicast address present
+template <typename Transport>
+class TransportMulticastReceiver : public TransportReceiver<Transport>
+{
+    // TODO define methods
 };
 
 } // namespace oscar

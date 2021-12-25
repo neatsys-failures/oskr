@@ -19,6 +19,9 @@ actor model.
 * Serialization leverage Bitsery, which is a little bit lack of document.
 * Some part of interface has cumbersome syntax, because of required `typename`
   and such.
+* CMake makes me feel good, meson makes me feel better, but at the end of the
+  day I have to use CMake because of the supportness of most dependencies. This
+  causes the setup of DPDK a little bit hacky and maybe fragile.
 
 [specpaxos]: https://github.com/UWSysLab/specpaxos
 [sgd-blog]: https://sgdxbc.github.io/ideas/2021-12-15/p0

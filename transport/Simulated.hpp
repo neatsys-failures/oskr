@@ -19,6 +19,9 @@ class SimulatedTransport : public Transport<SimulatedTransport>
 {
     std::unordered_map<Address, TransportReceiver<SimulatedTransport> &>
         receiver_table;
+    template <typename T> using ref_wrapper = std::reference_wrapper<T>;
+    std::vector<ref_wrapper<TransportMulticastReceiver<SimulatedTransport>>>
+        multicast_receiver_list;
 
     struct MessageBox {
         Address source, dest;
@@ -63,10 +66,9 @@ public:
     }
 
     void registerMulticastReceiver(
-        TransportReceiver<SimulatedTransport> &receiver) override
+        TransportMulticastReceiver<SimulatedTransport> &receiver) override
     {
-        // TODO
-        (void)receiver;
+        multicast_receiver_list.push_back(receiver);
     }
 
     void sendMessage(
@@ -163,7 +165,9 @@ void SimulatedTransport::run(microseconds time_limit)
             auto box = message_iter->second;
             message_queue.erase(message_iter);
 
-            // TODO multicast message
+            if (box.dest == config.multicast_address) {
+                panic("TODO");
+            }
 
             concurrent_id = -1;
             receiver_table.at(box.dest).receiveMessage(
