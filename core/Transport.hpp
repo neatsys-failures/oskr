@@ -22,6 +22,8 @@ template <typename Transport> struct TransportMeta {
 
     // using Address = ...;
     // static constexpr std::size_t BUFFER_SIZE = ...;
+
+    // TODO N_CONCURRENT_MAX
 };
 
 template <typename Transport> class TransportReceiver;
@@ -65,7 +67,7 @@ public:
     //! Register a receiver that listens to multicast messages. Transport
     //! implementation may require receiver to call `registerReceiver` first.
     virtual void
-    registerMulticastReceiver(TransportReceiver<Self> &receiver) = 0;
+    registerMulticastReceiver(TransportMulticastReceiver<Self> &receiver) = 0;
 
     //! General task closure. Receiver can keep things inside it alive between
     //! working steps.
@@ -136,7 +138,8 @@ public:
 
     //! The default implementation is mainly for illustration purpose. Transport
     //! should provide a more efficient version that only serialize once.
-    void sendMessageToAll(const TransportReceiver<Self> &sender, Write write)
+    virtual void
+    sendMessageToAll(const TransportReceiver<Self> &sender, Write write)
     {
         for (auto address : config.replica_address_list) {
             if (address != sender.address) {

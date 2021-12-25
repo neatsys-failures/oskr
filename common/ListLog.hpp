@@ -7,11 +7,13 @@ namespace oscar
 {
 class ListLog : public Log<>::List
 {
-    struct BlockBox {
-        Block block;
+    struct FlattenBlock {
+        std::size_t offset;
+        int n_entry;
         bool committed;
     };
-    std::vector<BlockBox> block_list;
+    std::vector<FlattenBlock> block_list;
+    std::vector<Log<>::Entry> entry_list;
     OpNumber start_number, commit_number;
 
 public:
@@ -21,29 +23,36 @@ public:
         commit_number = 0;
 
 #ifdef OSCAR_BENCHMARK
-        block_list.reserve(Log<>::N_RESERVED_ENTRY / Log<>::BLOCK_SIZE);
+        // guess what batch size will be used?
+        // benchmark env should feel well even preallocate for no batch :)
+        block_list.reserve(Log<>::N_RESERVED_ENTRY);
+        entry_list.reserve(Log<>::N_RESERVED_ENTRY);
 #endif
     }
 
     void prepare(OpNumber index, Block block) override
     {
         if (start_number == 0) {
+            info("Log init: start number = {}", index);
             start_number = index;
             commit_number = start_number - 1;
         }
 
-        if (getIndex(index) != block_list.size()) {
+        if (blockOffset(index) != block_list.size()) {
             panic(
                 "Unexpected prepare: index = {}, expected = {}", index,
                 start_number + block_list.size());
         }
 
-        block_list.push_back({block, false});
+        block_list.push_back({entry_list.size(), block.n_entry, false});
+        entry_list.insert(
+            entry_list.end(), block.entry_buffer,
+            block.entry_buffer + block.n_entry);
     }
 
     void commit(OpNumber index, ReplyCallback callback) override
     {
-        block_list[getIndex(index)].committed = true;
+        block_list[blockOffset(index)].committed = true;
         if (!enable_upcall) {
             return;
         }
@@ -57,10 +66,13 @@ public:
         }
         if (index < start_number) {
             block_list.clear();
+            entry_list.clear();
             return;
         }
+        std::size_t offset = block_list[blockOffset(index)].offset;
         block_list.erase(
-            block_list.begin() + getIndex(index), block_list.end());
+            block_list.begin() + blockOffset(index), block_list.end());
+        entry_list.erase(entry_list.begin() + offset, entry_list.end());
     }
 
     void enableUpcall() override
@@ -70,22 +82,22 @@ public:
     }
 
 private:
-    std::size_t getIndex(OpNumber op_number)
+    std::size_t blockOffset(OpNumber op_number)
     {
         if (start_number == 0) {
-            panic("Cannot get index when start_number not set");
+            panic("Cannot get block offset when start number not set");
         }
         return op_number - start_number;
     }
 
     void makeUpcall(ReplyCallback callback)
     {
-        while (getIndex(commit_number + 1) < block_list.size() &&
-               block_list[getIndex(commit_number + 1)].committed) {
+        while (blockOffset(commit_number + 1) < block_list.size() &&
+               block_list[blockOffset(commit_number + 1)].committed) {
             commit_number += 1;
-            auto &block = block_list[getIndex(commit_number)].block;
+            auto &block = block_list[blockOffset(commit_number)];
             for (int i = 0; i < block.n_entry; i += 1) {
-                auto &entry = block.entry_buffer[i];
+                auto &entry = entry_list[block.offset + i];
                 auto reply = app.commit(entry.op);
                 callback(entry.client_id, entry.request_number, reply);
             }

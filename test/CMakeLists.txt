@@ -10,6 +10,7 @@ set(OSCAR_TEST_UNITS
 
 foreach(UNIT ${OSCAR_TEST_UNITS})
     add_executable(Test${UNIT} ${UNIT}.cpp)
+    target_precompile_headers(Test${UNIT} REUSE_FROM oscar_pch)
     target_link_libraries(Test${UNIT} PRIVATE 
         oscar_core 
         oscar_common 

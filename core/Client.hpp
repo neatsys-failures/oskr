@@ -3,6 +3,7 @@
 #include <random>
 
 #include "core/TransportReceiver.hpp"
+#include "core/Utility.hpp"
 
 namespace oscar
 {
@@ -12,12 +13,10 @@ protected:
     ClientId client_id;
 
 public:
-    Client(Transport &transport)
-        : TransportReceiver<Transport>(transport.allocateAddress())
+    Client(Transport &transport) :
+        TransportReceiver<Transport>(transport.allocateAddress())
     {
-        std::random_device rand;
-        std::default_random_engine engine(rand());
-        client_id = std::uniform_int_distribution<ClientId>()(engine);
+        client_id = std::uniform_int_distribution<ClientId>()(random_engine());
     }
 
     using InvokeCallback = std::function<void(Data result)>;

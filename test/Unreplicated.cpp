@@ -9,11 +9,8 @@
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;
-using namespace oscar::unreplicated;
-using namespace std::literals::chrono_literals;
-using Strategy =
-    BasicClient<SimulatedTransport, ReplicaMessage>::Config::Strategy;
+using namespace oscar;               // NOLINT
+using namespace oscar::unreplicated; // NOLINT
 
 class Unreplicated : public testing::Test
 {
@@ -25,7 +22,7 @@ protected:
     Replica<SimulatedTransport> replica;
 
     Unreplicated() :
-        config{0, {"replica-0"}, {}}, transport(config), log(app),
+        config{0, {"replica-0"}}, transport(config), log(app),
         replica(transport, log)
     {
         transport.registerReceiver(replica);
@@ -38,7 +35,8 @@ protected:
         client.reserve(n_client);
         for (int i = 0; i < n_client; i += 1) {
             client.push_back(BasicClient<SimulatedTransport, ReplicaMessage>(
-                transport, {Strategy::PRIMARY_FIRST, 1000ms, 1}));
+                transport,
+                {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1}));
             transport.registerReceiver(client.back());
         }
     }
@@ -96,8 +94,6 @@ TEST_F(Unreplicated, TenClientOneRequest)
 TEST_F(Unreplicated, TenClientOneSecond)
 {
     spawnClient(10);
-    std::random_device r;
-    std::default_random_engine engine(r());
     std::uniform_int_distribution dist(0, 50);
 
     bool time_up = false;
@@ -109,7 +105,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
                 return;
             }
             transport.scheduleTimeout(
-                std::chrono::milliseconds(dist(engine)), [&, i] {
+                std::chrono::milliseconds(dist(random_engine())), [&, i] {
                     debug(
                         "i = {}, client[i] = {}", i,
                         reinterpret_cast<void *>(&client[i]));
@@ -126,4 +122,38 @@ TEST_F(Unreplicated, TenClientOneSecond)
     transport.run();
     ASSERT_EQ(app.op_list.size(), n_completed);
     ASSERT_GE(app.op_list.size(), 10 * 20);
+}
+
+TEST_F(Unreplicated, ResendUndone)
+{
+    spawnClient(1);
+    bool completed = false;
+    transport.scheduleTimeout(0us, [&] {
+        transport.addFilter(1, [](auto, auto, auto) { return false; });
+    });
+    transport.scheduleTimeout(10us, [&] {
+        client[0].invoke(Data(), [&](auto) { completed = true; });
+    });
+    transport.scheduleTimeout(20us, [&] { transport.removeFilter(1); });
+    transport.run();
+    ASSERT_TRUE(completed);
+}
+
+TEST_F(Unreplicated, ResendDuplicated)
+{
+    spawnClient(1);
+    bool completed = false;
+    transport.scheduleTimeout(0us, [&] {
+        transport.addFilter(1, [&](const auto &source, auto, auto) {
+            return source != config.replica_address_list[0];
+        });
+    });
+    transport.scheduleTimeout(10us, [&] {
+        client[0].invoke(Data(), [&](auto) { completed = true; });
+    });
+    transport.scheduleTimeout(20us, [&] { transport.removeFilter(1); });
+    transport.scheduleTimeout(30us, [&] { ASSERT_FALSE(completed); });
+    transport.run();
+    ASSERT_TRUE(completed);
+    ASSERT_EQ(app.op_list.size(), 1);
 }
