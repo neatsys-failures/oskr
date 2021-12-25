@@ -5,6 +5,7 @@
 
 #include <bitsery/brief_syntax/variant.h>
 
+#include "core/Bitsery.hpp"
 #include "core/Client.hpp"
 #include "core/Log.hpp"
 #include "core/Transport.hpp"

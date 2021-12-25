@@ -61,33 +61,3 @@ void bitseryDeserialize(const Span span, Message &message)
     }
 }
 } // namespace oscar
-
-namespace bitsery::traits
-{
-// should work... i think?
-template <>
-struct ContainerTraits<oscar::Data>
-    : public StdContainer<oscar::Data, true, true> {
-};
-} // namespace bitsery::traits
-
-namespace bitsery
-{
-template <typename S> void serialize(S &s, oscar::Data &data)
-{
-    s.container1b(data, 240);
-}
-
-template <typename S> void serialize(S &s, oscar::Log<>::Entry &entry)
-{
-    s(entry.client_id, entry.request_number, entry.op);
-}
-
-template <typename S> void serialize(S &s, oscar::Log<>::List::Block &block)
-{
-    s(block.n_entry);
-    for (int i = 0; i < block.n_entry; i += 1) {
-        s(block.entry_buffer[i]);
-    }
-}
-} // namespace bitsery

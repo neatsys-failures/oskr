@@ -5,12 +5,10 @@ project(oscar VERSION 0.1.0 LANGUAGES CXX)
 # happy easy way to set up DPDK
 execute_process(
     COMMAND meson build
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependency/dpdk
-)
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependency/dpdk)
 execute_process(
     COMMAND ninja -C build
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependency/dpdk
-) 
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependency/dpdk) 
 find_package(PkgConfig REQUIRED)
 set(ENV{PKG_CONFIG_PATH} ${CMAKE_SOURCE_DIR}/dependency/dpdk/build/meson-uninstalled)
 pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
@@ -29,7 +27,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 include_directories(./)
 add_compile_options(-Wall -Wextra -pedantic)
-add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
+add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for r-logging
 enable_testing()
 set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

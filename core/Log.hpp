@@ -2,6 +2,7 @@
 #include <functional>
 
 #include "core/Type.hpp"
+#include "core/Utility.hpp"
 
 namespace oscar
 {
@@ -9,10 +10,7 @@ class App
 {
 public:
     virtual Data commit(Data op) = 0;
-    virtual void rollback(Data)
-    {
-        // panic unsupported
-    }
+    virtual void rollback(Data) { panic("Unsupported rollback operation"); }
 };
 
 template <typename Preset = void> class Log
