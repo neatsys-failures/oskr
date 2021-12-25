@@ -27,6 +27,7 @@ template <typename Transport> struct TransportMeta {
 };
 
 template <typename Transport> class TransportReceiver;
+template <typename Transport> class TransportMulticastReceiver;
 
 /*! General supporting runtime for `TransportReceiver`, the sending half of the
 actor model (and more).

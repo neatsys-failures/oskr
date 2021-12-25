@@ -1,76 +1,63 @@
-\hypertarget{classoscar_1_1BasicClient}{}\doxysection{oscar\+::Basic\+Client$<$ Transport, Replica\+Message $>$ Class Template Reference}
-\label{classoscar_1_1BasicClient}\index{oscar::BasicClient$<$ Transport, ReplicaMessage $>$@{oscar::BasicClient$<$ Transport, ReplicaMessage $>$}}
+\hypertarget{classoscar_1_1BasicClient}{}\doxysection{Basic\+Client$<$ Transport, Replica\+Message $>$}
+\label{classoscar_1_1BasicClient}\index{BasicClient$<$ Transport, ReplicaMessage $>$@{BasicClient$<$ Transport, ReplicaMessage $>$}}
 
 
-Inheritance diagram for oscar\+::Basic\+Client$<$ Transport, Replica\+Message $>$\+:\nopagebreak
+Inheritance diagram for Basic\+Client$<$ Transport, Replica\+Message $>$\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=271pt]{classoscar_1_1BasicClient__inherit__graph}
+\includegraphics[width=269pt]{classoscar_1_1BasicClient__inherit__graph}
 \end{center}
 \end{figure}
 
 
-Collaboration diagram for oscar\+::Basic\+Client$<$ Transport, Replica\+Message $>$\+:\nopagebreak
+Collaboration diagram for Basic\+Client$<$ Transport, Replica\+Message $>$\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=271pt]{classoscar_1_1BasicClient__coll__graph}
+\includegraphics[width=269pt]{classoscar_1_1BasicClient__coll__graph}
 \end{center}
 \end{figure}
-\doxysubsection*{Classes}
-\begin{DoxyCompactItemize}
-\item 
-struct \mbox{\hyperlink{structoscar_1_1BasicClient_1_1Config}{Config}}
-\end{DoxyCompactItemize}
 \doxysubsection*{Public Types}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1BasicClient_ad8cda4b821da4d53703aef37f6a65076}\label{classoscar_1_1BasicClient_ad8cda4b821da4d53703aef37f6a65076}} 
-using {\bfseries Buffer} = \mbox{\hyperlink{Type_8hpp_ad579d39e03ab201f4c20e80e3ee8f80b}{oscar\+::\+Buffer}}$<$ \mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{Transport\+::\+BUFFER\+\_\+\+SIZE}} $>$
+\mbox{\Hypertarget{classoscar_1_1BasicClient_a5f29ed6e4d16038a1ee5b6be088d0f1f}\label{classoscar_1_1BasicClient_a5f29ed6e4d16038a1ee5b6be088d0f1f}} 
+using {\bfseries Config} = \mbox{\hyperlink{classoscar_1_1BasicClient}{Basic\+Client}}$<$$>$\+::Config
+\item 
+\mbox{\Hypertarget{classoscar_1_1BasicClient_abdbff53e429c9e7bb130ced43b0ab6db}\label{classoscar_1_1BasicClient_abdbff53e429c9e7bb130ced43b0ab6db}} 
+using {\bfseries Buffer} = \mbox{\hyperlink{Type_8hpp_a8acb43b3e680d8f2df1b66ab53eb20af}{oscar\+::\+Buffer}}$<$ \mbox{\hyperlink{classoscar_1_1Transport_a01c5fb279d6b80ebed829be7a804dde2}{Transport\+::\+BUFFER\+\_\+\+SIZE}} $>$
 \end{DoxyCompactItemize}
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1BasicClient_a2a87b0bd617105484efc68db54d72287}\label{classoscar_1_1BasicClient_a2a87b0bd617105484efc68db54d72287}} 
-{\bfseries Basic\+Client} (\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} \&transport, \mbox{\hyperlink{structoscar_1_1BasicClient_1_1Config}{Config}} config)
+\mbox{\Hypertarget{classoscar_1_1BasicClient_a902e997fd8ae7d85e608fd99dbf9e9e8}\label{classoscar_1_1BasicClient_a902e997fd8ae7d85e608fd99dbf9e9e8}} 
+{\bfseries Basic\+Client} (\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} \&transport, Config config)
 \item 
-\mbox{\Hypertarget{classoscar_1_1BasicClient_accdfb9f0fb7ef93939bca15496b99d43}\label{classoscar_1_1BasicClient_accdfb9f0fb7ef93939bca15496b99d43}} 
-void {\bfseries invoke} (\mbox{\hyperlink{Type_8hpp_a2adc86b74828e412128ce70bd950d253}{Data}} op, typename Basic\+Client\+::\+Invoke\+Callback callback) override
+\mbox{\Hypertarget{classoscar_1_1BasicClient_a366d4b46f98f6710b4187906714615c1}\label{classoscar_1_1BasicClient_a366d4b46f98f6710b4187906714615c1}} 
+void {\bfseries invoke} (\mbox{\hyperlink{Type_8hpp_a1b2e3eef31ba51928855fd41517a98b4}{Data}} op, typename Basic\+Client\+::\+Invoke\+Callback callback) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1BasicClient_ae334dce1c0e1cf43b446fa51bfda8ddd}{receive\+Message}} (const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&, \mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}} span) override
+\mbox{\Hypertarget{classoscar_1_1BasicClient_afd109887826db32924df42c3b27201be}\label{classoscar_1_1BasicClient_afd109887826db32924df42c3b27201be}} 
+void {\bfseries receive\+Message} (const typename \mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d}{Transport\+::\+Address}} \&, \mbox{\hyperlink{Type_8hpp_a460f2acf1b81050fb952245756a7aaa3}{Span}} span) override
 \item 
-\mbox{\Hypertarget{classoscar_1_1BasicClient_a610abb30ecbb71ce3ce5a4f43dc33c0f}\label{classoscar_1_1BasicClient_a610abb30ecbb71ce3ce5a4f43dc33c0f}} 
+\mbox{\Hypertarget{classoscar_1_1BasicClient_a6213617a095f181cb8173cc1b967e922}\label{classoscar_1_1BasicClient_a6213617a095f181cb8173cc1b967e922}} 
 virtual std\+::size\+\_\+t {\bfseries serialize\+Request\+Message} (Buffer \&buffer, const Replica\+Message \&request)
 \item 
-\mbox{\Hypertarget{classoscar_1_1BasicClient_a72ca1d071ca4e0f67358c1cacf33197e}\label{classoscar_1_1BasicClient_a72ca1d071ca4e0f67358c1cacf33197e}} 
-virtual void {\bfseries deserialize\+Reply\+Message} (const \mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}} \&span, \mbox{\hyperlink{structoscar_1_1ReplyMessage}{Reply\+Message}} \&reply)
+\mbox{\Hypertarget{classoscar_1_1BasicClient_ab444d6d1d6dd4cff429c8abf7d6d4074}\label{classoscar_1_1BasicClient_ab444d6d1d6dd4cff429c8abf7d6d4074}} 
+virtual void {\bfseries deserialize\+Reply\+Message} (const \mbox{\hyperlink{Type_8hpp_a460f2acf1b81050fb952245756a7aaa3}{Span}} \&span, \mbox{\hyperlink{structoscar_1_1ReplyMessage}{Reply\+Message}} \&reply)
 \end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
 
 
-\doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classoscar_1_1BasicClient_ae334dce1c0e1cf43b446fa51bfda8ddd}\label{classoscar_1_1BasicClient_ae334dce1c0e1cf43b446fa51bfda8ddd}} 
-\index{oscar::BasicClient$<$ Transport, ReplicaMessage $>$@{oscar::BasicClient$<$ Transport, ReplicaMessage $>$}!receiveMessage@{receiveMessage}}
-\index{receiveMessage@{receiveMessage}!oscar::BasicClient$<$ Transport, ReplicaMessage $>$@{oscar::BasicClient$<$ Transport, ReplicaMessage $>$}}
-\doxysubsubsection{\texorpdfstring{receiveMessage()}{receiveMessage()}}
-{\footnotesize\ttfamily template$<$typename Transport , typename Replica\+Message $>$ \\
-void \mbox{\hyperlink{classoscar_1_1BasicClient}{oscar\+::\+Basic\+Client}}$<$ \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}, Replica\+Message $>$\+::receive\+Message (\begin{DoxyParamCaption}\item[{const typename \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Transport\+::\+Address}} \&}]{remote,  }\item[{\mbox{\hyperlink{Type_8hpp_a4ea93eb396b87d231e0115f823936d2a}{Span}}}]{span }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Handle received raw message. The underlying memory that backs {\ttfamily span} will go out of lifetime after this method returns, so receiver need to own everything necessary for later processing. 
-
-Implements \mbox{\hyperlink{classoscar_1_1TransportReceiver_a4b0c5c2930b59b63106b2351b288a660}{oscar\+::\+Transport\+Receiver$<$ Transport $>$}}.
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Transport = void, typename Replica\+Message = void$>$\newline
+class oscar\+::\+Basic\+Client$<$ Transport, Replica\+Message $>$}
 
 
-\begin{DoxyCode}{0}
-\DoxyCodeLine{75     \{}
-\DoxyCodeLine{76         ReplyMessage reply;}
-\DoxyCodeLine{77         deserializeReplyMessage(span, reply);}
-\DoxyCodeLine{78         transport.\mbox{\hyperlink{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}{scheduleSequential}}(}
-\DoxyCodeLine{79             std::bind(\&BasicClient::handleReply, \textcolor{keyword}{this}, reply));}
-\DoxyCodeLine{80     \}}
 
-\end{DoxyCode}
+Definition at line 49 of file Basic\+Client.\+hpp.
+
 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}

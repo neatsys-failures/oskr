@@ -1,14 +1,18 @@
 var classoscar_1_1SimulatedTransport =
 [
-    [ "SimulatedTransport", "classoscar_1_1SimulatedTransport.html#aa9387971a4141a8c51095de42b7a6778", null ],
-    [ "allocateAddress", "classoscar_1_1SimulatedTransport.html#a8a91137243944fcb38ab609bae623cbe", null ],
-    [ "registerReceiver", "classoscar_1_1SimulatedTransport.html#aeddcd1f72cf9f6de6db0f88ef54b2c46", null ],
-    [ "registerMulticastReceiver", "classoscar_1_1SimulatedTransport.html#a1616f614fb7ed58fbf7e26441b4ef4cf", null ],
-    [ "sendMessage", "classoscar_1_1SimulatedTransport.html#a0fe3c3e0b49912abccafa0ec74115125", null ],
-    [ "scheduleTimeout", "classoscar_1_1SimulatedTransport.html#a77f0f7a8c93c467b36d07adda6d7cec7", null ],
-    [ "scheduleSequential", "classoscar_1_1SimulatedTransport.html#a8e0b4f1b213d603d93d379b6e978c27e", null ],
-    [ "scheduleConcurrent", "classoscar_1_1SimulatedTransport.html#ad2b031b4b5db0f9f6c9e077b8aa9f045", null ],
-    [ "getConcurrentId", "classoscar_1_1SimulatedTransport.html#a36c65db760fb9579088720254a150628", null ],
-    [ "clearTimeout", "classoscar_1_1SimulatedTransport.html#a96bc8b2475130f279148c84e59701b0d", null ],
-    [ "run", "classoscar_1_1SimulatedTransport.html#aa7cf687e95eb0dff67cd77f99d72a18c", null ]
+    [ "microseconds", "classoscar_1_1SimulatedTransport.html#af0c79670a62b21da4d70eed0826569ee", null ],
+    [ "Filter", "classoscar_1_1SimulatedTransport.html#ab125409ed5a63c16baa4117e847a04b5", null ],
+    [ "SimulatedTransport", "classoscar_1_1SimulatedTransport.html#a7546fce1ac6d2f1527bd66f08c3acbd6", null ],
+    [ "allocateAddress", "classoscar_1_1SimulatedTransport.html#afbeb2a570a6cc87d806629e50667e0ab", null ],
+    [ "registerReceiver", "classoscar_1_1SimulatedTransport.html#a4036fbb7e3858997ffc96f8cd3e937fd", null ],
+    [ "registerMulticastReceiver", "classoscar_1_1SimulatedTransport.html#a1f1f3e199a54cbf5093fb51bde1103b9", null ],
+    [ "sendMessage", "classoscar_1_1SimulatedTransport.html#a59579e7737b42dbeae327c06b09762e3", null ],
+    [ "scheduleTimeout", "classoscar_1_1SimulatedTransport.html#a8fd5d3d0df1cd4f3ace74d893403a8ae", null ],
+    [ "scheduleSequential", "classoscar_1_1SimulatedTransport.html#a1588a48901a475c61cfe9525e6a934c9", null ],
+    [ "scheduleConcurrent", "classoscar_1_1SimulatedTransport.html#a3fea8fb2480727e66d80a12d5f73d74c", null ],
+    [ "getConcurrentId", "classoscar_1_1SimulatedTransport.html#a0b16ba9bd9b1c51f1bd76a029c5cdec1", null ],
+    [ "clearTimeout", "classoscar_1_1SimulatedTransport.html#afa752ea50d3eca992fdde5482e68e2e3", null ],
+    [ "run", "classoscar_1_1SimulatedTransport.html#aa66770af1750fec0f0033d836c312eeb", null ],
+    [ "addFilter", "classoscar_1_1SimulatedTransport.html#a71aeeb770853ccdbca69de847f16df39", null ],
+    [ "removeFilter", "classoscar_1_1SimulatedTransport.html#a79325bcaafbe94c92c1a71cb67e2d251", null ]
 ];

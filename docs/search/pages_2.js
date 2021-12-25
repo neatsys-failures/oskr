@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['write_20distributed_20protocol_20on_20oscar_105',['Write distributed protocol on Oscar',['../write-protocol.html',1,'article']]]
+  ['optimize_20protocol_20performance_20under_20dropping_20network_111',['Optimize protocol performance under dropping network',['../optimize-for-dropping.html',1,'article']]]
 ];

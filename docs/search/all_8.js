@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quorum_26',['Quorum',['../classoscar_1_1Quorum.html',1,'oscar']]]
+  ['optimize_20protocol_20performance_20under_20dropping_20network_29',['Optimize protocol performance under dropping network',['../optimize-for-dropping.html',1,'article']]]
 ];

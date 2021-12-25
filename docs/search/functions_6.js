@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['update_93',['update',['../classoscar_1_1ClientTable.html#ad4eaa81f1e03ab737c6f285e7a7be487',1,'oscar::ClientTable']]]
+  ['update_99',['update',['../classoscar_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a',1,'oscar::ClientTable::update(ClientId client_id, RequestNumber request_number)'],['../classoscar_1_1ClientTable.html#afe1870397cb26938df93b0244f627954',1,'oscar::ClientTable::update(ClientId client_id, RequestNumber request_number, ReplyMessage reply)']]]
 ];

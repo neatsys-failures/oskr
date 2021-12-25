@@ -1,212 +1,84 @@
-\hypertarget{classoscar_1_1SimulatedTransport}{}\doxysection{oscar\+::Simulated\+Transport Class Reference}
-\label{classoscar_1_1SimulatedTransport}\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}}
+\hypertarget{classoscar_1_1SimulatedTransport}{}\doxysection{Simulated\+Transport}
+\label{classoscar_1_1SimulatedTransport}\index{SimulatedTransport@{SimulatedTransport}}
 
 
-Inheritance diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
+Inheritance diagram for Simulated\+Transport\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=259pt]{classoscar_1_1SimulatedTransport__inherit__graph}
+\includegraphics[width=329pt]{classoscar_1_1SimulatedTransport__inherit__graph}
 \end{center}
 \end{figure}
 
 
-Collaboration diagram for oscar\+::Simulated\+Transport\+:\nopagebreak
+Collaboration diagram for Simulated\+Transport\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=259pt]{classoscar_1_1SimulatedTransport__coll__graph}
+\includegraphics[width=329pt]{classoscar_1_1SimulatedTransport__coll__graph}
 \end{center}
 \end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_af0c79670a62b21da4d70eed0826569ee}\label{classoscar_1_1SimulatedTransport_af0c79670a62b21da4d70eed0826569ee}} 
+using {\bfseries microseconds} = std\+::chrono\+::microseconds
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_ab125409ed5a63c16baa4117e847a04b5}\label{classoscar_1_1SimulatedTransport_ab125409ed5a63c16baa4117e847a04b5}} 
+using {\bfseries Filter} = std\+::function$<$ bool(const \mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d}{Address}} \&source, const \mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d}{Address}} \&dest, microseconds \&delay)$>$
+\end{DoxyCompactItemize}
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aa9387971a4141a8c51095de42b7a6778}\label{classoscar_1_1SimulatedTransport_aa9387971a4141a8c51095de42b7a6778}} 
-{\bfseries Simulated\+Transport} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&\mbox{\hyperlink{classoscar_1_1Transport_a8b9ecf7c01c870e14abadf0c252b4a7e}{config}})
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a7546fce1ac6d2f1527bd66f08c3acbd6}\label{classoscar_1_1SimulatedTransport_a7546fce1ac6d2f1527bd66f08c3acbd6}} 
+{\bfseries Simulated\+Transport} (const \mbox{\hyperlink{structoscar_1_1Config}{Config}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&\mbox{\hyperlink{classoscar_1_1Transport_a7d3a3a71db9e796d43f4001b419e83c4}{config}})
 \item 
-\mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}{allocate\+Address}} () override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_afbeb2a570a6cc87d806629e50667e0ab}\label{classoscar_1_1SimulatedTransport_afbeb2a570a6cc87d806629e50667e0ab}} 
+\mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d}{Address}} {\bfseries allocate\+Address} () override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}{register\+Receiver}} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a4036fbb7e3858997ffc96f8cd3e937fd}\label{classoscar_1_1SimulatedTransport_a4036fbb7e3858997ffc96f8cd3e937fd}} 
+void {\bfseries register\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}{register\+Multicast\+Receiver}} (\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a1f1f3e199a54cbf5093fb51bde1103b9}\label{classoscar_1_1SimulatedTransport_a1f1f3e199a54cbf5093fb51bde1103b9}} 
+void {\bfseries register\+Multicast\+Receiver} (\mbox{\hyperlink{classoscar_1_1TransportMulticastReceiver}{Transport\+Multicast\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&receiver) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}{send\+Message}} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&sender, const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&dest, \mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}} write) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a59579e7737b42dbeae327c06b09762e3}\label{classoscar_1_1SimulatedTransport_a59579e7737b42dbeae327c06b09762e3}} 
+void {\bfseries send\+Message} (const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&sender, const \mbox{\hyperlink{classoscar_1_1Transport_a1c8682bdba52d3903c24664c9574923d}{Address}} \&dest, \mbox{\hyperlink{classoscar_1_1Transport_a1b95d6e95646af8502c81eb51ea1f232}{Write}} write) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}{schedule\+Timeout}} (std\+::chrono\+::microseconds delay, \mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a8fd5d3d0df1cd4f3ace74d893403a8ae}\label{classoscar_1_1SimulatedTransport_a8fd5d3d0df1cd4f3ace74d893403a8ae}} 
+void {\bfseries schedule\+Timeout} (microseconds delay, \mbox{\hyperlink{classoscar_1_1Transport_a9f4d3f1692b57758c10763bea8a50a04}{Callback}} callback) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}{schedule\+Sequential}} (\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a1588a48901a475c61cfe9525e6a934c9}\label{classoscar_1_1SimulatedTransport_a1588a48901a475c61cfe9525e6a934c9}} 
+void {\bfseries schedule\+Sequential} (\mbox{\hyperlink{classoscar_1_1Transport_a9f4d3f1692b57758c10763bea8a50a04}{Callback}} callback) override
 \item 
-void \mbox{\hyperlink{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}{schedule\+Concurrent}} (\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}} callback) override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a3fea8fb2480727e66d80a12d5f73d74c}\label{classoscar_1_1SimulatedTransport_a3fea8fb2480727e66d80a12d5f73d74c}} 
+void {\bfseries schedule\+Concurrent} (\mbox{\hyperlink{classoscar_1_1Transport_a9f4d3f1692b57758c10763bea8a50a04}{Callback}} callback) override
 \item 
-int \mbox{\hyperlink{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}{get\+Concurrent\+Id}} () const override
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a0b16ba9bd9b1c51f1bd76a029c5cdec1}\label{classoscar_1_1SimulatedTransport_a0b16ba9bd9b1c51f1bd76a029c5cdec1}} 
+int {\bfseries get\+Concurrent\+Id} () const override
 \item 
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a96bc8b2475130f279148c84e59701b0d}\label{classoscar_1_1SimulatedTransport_a96bc8b2475130f279148c84e59701b0d}} 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_afa752ea50d3eca992fdde5482e68e2e3}\label{classoscar_1_1SimulatedTransport_afa752ea50d3eca992fdde5482e68e2e3}} 
 void {\bfseries clear\+Timeout} ()
 \item 
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aa7cf687e95eb0dff67cd77f99d72a18c}\label{classoscar_1_1SimulatedTransport_aa7cf687e95eb0dff67cd77f99d72a18c}} 
-void {\bfseries run} ()
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aa66770af1750fec0f0033d836c312eeb}\label{classoscar_1_1SimulatedTransport_aa66770af1750fec0f0033d836c312eeb}} 
+void {\bfseries run} (microseconds time\+\_\+limit=10 $\ast$1000ms)
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a71aeeb770853ccdbca69de847f16df39}\label{classoscar_1_1SimulatedTransport_a71aeeb770853ccdbca69de847f16df39}} 
+void {\bfseries add\+Filter} (int filter\+\_\+id, Filter filter)
+\item 
+\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a79325bcaafbe94c92c1a71cb67e2d251}\label{classoscar_1_1SimulatedTransport_a79325bcaafbe94c92c1a71cb67e2d251}} 
+void {\bfseries remove\+Filter} (int removed\+\_\+id)
 \end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
 
 
-\doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}\label{classoscar_1_1SimulatedTransport_a8a91137243944fcb38ab609bae623cbe}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!allocateAddress@{allocateAddress}}
-\index{allocateAddress@{allocateAddress}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{allocateAddress()}{allocateAddress()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} oscar\+::\+Simulated\+Transport\+::allocate\+Address (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Dynamically allocate free address, mainly for construct {\ttfamily \mbox{\hyperlink{classoscar_1_1Client}{Client}}}. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_ab3d5558ee3d5b5b986b3fd7acfbb0f00}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
+\doxysubsection{Detailed Description}
 
 
-\begin{DoxyCode}{0}
-\DoxyCodeLine{43     \{}
-\DoxyCodeLine{44         \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} addr(\textcolor{stringliteral}{"{}client-\/"{}});}
-\DoxyCodeLine{45         addr.push\_back(\textcolor{charliteral}{'A'} + (\textcolor{keywordtype}{char})receiver\_table.size());}
-\DoxyCodeLine{46         \textcolor{keywordflow}{return} addr;}
-\DoxyCodeLine{47     \}}
+Definition at line 18 of file Simulated.\+hpp.
 
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}\label{classoscar_1_1SimulatedTransport_aeddcd1f72cf9f6de6db0f88ef54b2c46}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!registerReceiver@{registerReceiver}}
-\index{registerReceiver@{registerReceiver}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{registerReceiver()}{registerReceiver()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::register\+Receiver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&}]{receiver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Register a receiver. The caller ensures that receiver\textquotesingle{}s reference will be valid as long as message get received on receiver\textquotesingle{}s address, which probably happens through the rest of {\ttfamily \mbox{\hyperlink{classoscar_1_1Transport}{Transport}}}\textquotesingle{}s lifetime. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_a6cef04d770422df78860c682c0278c6e}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{51     \{}
-\DoxyCodeLine{52         receiver\_table.insert(\{\{receiver.address, receiver\}\});}
-\DoxyCodeLine{53     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}\label{classoscar_1_1SimulatedTransport_a1616f614fb7ed58fbf7e26441b4ef4cf}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!registerMulticastReceiver@{registerMulticastReceiver}}
-\index{registerMulticastReceiver@{registerMulticastReceiver}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{registerMulticastReceiver()}{registerMulticastReceiver()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::register\+Multicast\+Receiver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&}]{receiver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Register a receiver that listens to multicast messages. \mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation may require receiver to call {\ttfamily register\+Receiver} first. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_af731a2d5e477c570490d011b693cb5de}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{57     \{}
-\DoxyCodeLine{58         \textcolor{comment}{// TODO}}
-\DoxyCodeLine{59         (void)receiver;}
-\DoxyCodeLine{60     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}\label{classoscar_1_1SimulatedTransport_a0fe3c3e0b49912abccafa0ec74115125}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!sendMessage@{sendMessage}}
-\index{sendMessage@{sendMessage}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{sendMessage()}{sendMessage()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::send\+Message (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classoscar_1_1TransportReceiver}{Transport\+Receiver}}$<$ \mbox{\hyperlink{classoscar_1_1SimulatedTransport}{Simulated\+Transport}} $>$ \&}]{sender,  }\item[{const \mbox{\hyperlink{classoscar_1_1Transport_aff91396b76146595e391b69f5e22b93e}{Address}} \&}]{dest,  }\item[{\mbox{\hyperlink{classoscar_1_1Transport_a6a11e02eceec229ca9da406625e319a7}{Write}}}]{write }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Send a message. The first argument is probably {\ttfamily $\ast$this}.
-
-\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation promise not to access {\ttfamily write} after this method return, so the closure can capture references with no worry. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_acd5e8804ec663f74387ad2eb167d8d60}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{65     \{}
-\DoxyCodeLine{66         \textcolor{keywordflow}{if} (!receiver\_table.count(dest)) \{}
-\DoxyCodeLine{67             panic(\textcolor{stringliteral}{"{}Send to unknown destination: sender = \{\}"{}}, sender.address);}
-\DoxyCodeLine{68         \}}
-\DoxyCodeLine{69 }
-\DoxyCodeLine{70         \textcolor{comment}{// TODO filter}}
-\DoxyCodeLine{71         \mbox{\hyperlink{Type_8hpp_a2adc86b74828e412128ce70bd950d253}{Data}} message(\mbox{\hyperlink{classoscar_1_1Transport_a3ec403efa69791443bcedbd76aed74fc}{BUFFER\_SIZE}});}
-\DoxyCodeLine{72         message.resize(write(*(Buffer<BUFFER\_SIZE> *)message.data()));}
-\DoxyCodeLine{73         message\_queue.insert(}
-\DoxyCodeLine{74             \{\{now\_us, MessageBox\{sender.address, dest, message\}\}\});}
-\DoxyCodeLine{75     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}\label{classoscar_1_1SimulatedTransport_a77f0f7a8c93c467b36d07adda6d7cec7}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!scheduleTimeout@{scheduleTimeout}}
-\index{scheduleTimeout@{scheduleTimeout}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{scheduleTimeout()}{scheduleTimeout()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::schedule\+Timeout (\begin{DoxyParamCaption}\item[{std\+::chrono\+::microseconds}]{delay,  }\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Schedule a one-\/time timeout. {\ttfamily callback} will be called after {\ttfamily delay}, cannot be canceled.
-
-Unlike receiving message, timeout is non-\/direction, i.\+e., does not have a {\ttfamily receiver}. The behavior depends on {\ttfamily callback}\textquotesingle{}s capturing.
-
-Timeout\textquotesingle{}s {\ttfamily callback} is always executed sequentially. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_ad3190e3914566e3d9726b36fb79d359a}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{79     \{}
-\DoxyCodeLine{80         timeout\_queue.insert(\{\{now\_us + delay.count(), callback\}\});}
-\DoxyCodeLine{81     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}\label{classoscar_1_1SimulatedTransport_a8e0b4f1b213d603d93d379b6e978c27e}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!scheduleSequential@{scheduleSequential}}
-\index{scheduleSequential@{scheduleSequential}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{scheduleSequential()}{scheduleSequential()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::schedule\+Sequential (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Schedule a sequential task. Sequential task is promised to be executed one by one without concurrency, so different sequential tasks can share states without locking. However, it is not guaranteed that all sequential tasks will be executed by the same thread.
-
-A default implementation is provided mainly for implying that timeout is sequential task by default, so there is no need for calling {\ttfamily schedule\+Sequential} inside timeout callback. 
-
-Reimplemented from \mbox{\hyperlink{classoscar_1_1Transport_ada764acb3c30c90bb50dba06a8318f1e}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{84     \{}
-\DoxyCodeLine{85         sequential\_queue.push(callback);}
-\DoxyCodeLine{86     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}\label{classoscar_1_1SimulatedTransport_ad2b031b4b5db0f9f6c9e077b8aa9f045}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!scheduleConcurrent@{scheduleConcurrent}}
-\index{scheduleConcurrent@{scheduleConcurrent}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{scheduleConcurrent()}{scheduleConcurrent()}}
-{\footnotesize\ttfamily void oscar\+::\+Simulated\+Transport\+::schedule\+Concurrent (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classoscar_1_1Transport_aa3d533e280f8ecbf3fcd4556ca4d1c96}{Callback}}}]{callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Schedule a concurrent task. Multiple concurrent tasks may be executed with temporal overlapping, so they would better to be stateless. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_a1bfd2706eac30831cd312869b1490bee}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{89     \{}
-\DoxyCodeLine{90         concurrent\_queue.push(callback);}
-\DoxyCodeLine{91     \}}
-
-\end{DoxyCode}
-\mbox{\Hypertarget{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}\label{classoscar_1_1SimulatedTransport_a36c65db760fb9579088720254a150628}} 
-\index{oscar::SimulatedTransport@{oscar::SimulatedTransport}!getConcurrentId@{getConcurrentId}}
-\index{getConcurrentId@{getConcurrentId}!oscar::SimulatedTransport@{oscar::SimulatedTransport}}
-\doxysubsubsection{\texorpdfstring{getConcurrentId()}{getConcurrentId()}}
-{\footnotesize\ttfamily int oscar\+::\+Simulated\+Transport\+::get\+Concurrent\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
-
-Every concurrent task get assigned to a concurrent id, which can be queried by calling {\ttfamily get\+Concurrent\+Id} during execution. Concurrent id is unsigned and bounded.
-
-\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} implementation promise that all concurrent tasks that get assigned to the same concurrent id will be sequentially executed. So it is safe to reuse pre-\/allocated memory \char`\"{}slot\char`\"{} among those tasks.
-
-\mbox{\hyperlink{classoscar_1_1Transport}{Transport}} may set concurrent id to {\ttfamily -\/1} for sequential tasks, but it is encouraged to determine sequential tasks by themselves. 
-
-Implements \mbox{\hyperlink{classoscar_1_1Transport_a8bd8e5bd990724c95ea591450c09f14e}{oscar\+::\+Transport$<$ Simulated\+Transport $>$}}.
-
-
-\begin{DoxyCode}{0}
-\DoxyCodeLine{93 \{ \textcolor{keywordflow}{return} concurrent\_id; \}}
-
-\end{DoxyCode}
 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}

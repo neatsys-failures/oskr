@@ -1,5 +1,5 @@
-<map id="oscar::BasicClient&lt; Transport, ReplicaMessage &gt;" name="oscar::BasicClient&lt; Transport, ReplicaMessage &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,169,260,211"/>
-<area shape="rect" id="node2" href="$classoscar_1_1Client.html" title=" " alt="" coords="17,95,248,121"/>
-<area shape="rect" id="node3" href="$classoscar_1_1TransportReceiver.html" title=" " alt="" coords="25,5,240,47"/>
+<map id="BasicClient&lt; Transport, ReplicaMessage &gt;" name="BasicClient&lt; Transport, ReplicaMessage &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="5,177,257,224"/>
+<area shape="rect" id="node2" href="$classoscar_1_1Client.html" title=" " alt="" coords="50,100,213,129"/>
+<area shape="rect" id="node3" href="$classoscar_1_1TransportReceiver.html" title=" " alt="" coords="30,5,233,52"/>
 </map>

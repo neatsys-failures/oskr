@@ -1,12 +1,12 @@
 var classoscar_1_1Quorum =
 [
-    [ "Quorum", "classoscar_1_1Quorum.html#a1a1361eca298fb13099683dcd593d966", null ],
-    [ "clear", "classoscar_1_1Quorum.html#ae5f5734dc0813f1b732b109fa5203afb", null ],
-    [ "clear", "classoscar_1_1Quorum.html#a2b69f9cebb625ac2d0ff17a27ba5ec8d", null ],
-    [ "nRequired", "classoscar_1_1Quorum.html#a4f87e7f16a30672537fc4e83fdac54f2", null ],
-    [ "getMessages", "classoscar_1_1Quorum.html#aae42cf8883efe470395b2d1d4bb00a2c", null ],
-    [ "checkForQuorum", "classoscar_1_1Quorum.html#af214fc8f36ba8df6b7dd9ee8b4877655", null ],
-    [ "addAndCheckForQuorum", "classoscar_1_1Quorum.html#af816bf67da24562ccb41106a461cc9ac", null ],
-    [ "add", "classoscar_1_1Quorum.html#a9fdc666143aaf24edc08e8026c9cb9c1", null ],
-    [ "numRequired", "classoscar_1_1Quorum.html#a2257fea5d6bd076e9a1c00fe68109f75", null ]
+    [ "Quorum", "classoscar_1_1Quorum.html#a225aeb7beb4d158ef763ec36c0c9543a", null ],
+    [ "clear", "classoscar_1_1Quorum.html#ac8bb3912a3ce86b15842e79d0b421204", null ],
+    [ "clear", "classoscar_1_1Quorum.html#a47ab9c368b597dd7aa81829048975fc4", null ],
+    [ "nRequired", "classoscar_1_1Quorum.html#af020dce1ea352a6d0bf48e429999445d", null ],
+    [ "getMessages", "classoscar_1_1Quorum.html#a71cc81a9e3ac61fe04129399fda1b475", null ],
+    [ "checkForQuorum", "classoscar_1_1Quorum.html#a8cf5ababefed4727839167a347c97fc3", null ],
+    [ "addAndCheckForQuorum", "classoscar_1_1Quorum.html#ab9561e35f66810f167152da3cd611a12", null ],
+    [ "add", "classoscar_1_1Quorum.html#a421664fc9de6e71da8615b3a455b4200", null ],
+    [ "numRequired", "classoscar_1_1Quorum.html#a466610c237807c85ad5bb089fc51147b", null ]
 ];

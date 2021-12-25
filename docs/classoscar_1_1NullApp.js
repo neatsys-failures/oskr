@@ -1,5 +1,5 @@
 var classoscar_1_1NullApp =
 [
-    [ "commit", "classoscar_1_1NullApp.html#a99cf4d64e4590354e522036e7835f846", null ],
-    [ "rollback", "classoscar_1_1NullApp.html#a2c2d18ea14f986c46460b543eb1dc080", null ]
+    [ "commit", "classoscar_1_1NullApp.html#aba2c7453a82a7e52dc942f8d5c32a60d", null ],
+    [ "rollback", "classoscar_1_1NullApp.html#a2a4b68303ab0ec998be09be4d24684f6", null ]
 ];

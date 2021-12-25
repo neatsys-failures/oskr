@@ -1,5 +1,7 @@
-<map id="oscar::TransportReceiver&lt; Transport &gt;" name="oscar::TransportReceiver&lt; Transport &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="25,5,240,47"/>
-<area shape="rect" id="node2" href="$classoscar_1_1Client.html" title=" " alt="" coords="17,95,248,121"/>
-<area shape="rect" id="node3" href="$classoscar_1_1BasicClient.html" title=" " alt="" coords="5,169,260,211"/>
+<map id="TransportReceiver&lt; Transport &gt;" name="TransportReceiver&lt; Transport &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="242,5,445,52"/>
+<area shape="rect" id="node2" href="$classoscar_1_1Client.html" title=" " alt="" coords="50,109,213,138"/>
+<area shape="rect" id="node4" href="$classoscar_1_1Client.html" title=" " alt="" coords="237,109,449,138"/>
+<area shape="rect" id="node5" href="$classoscar_1_1TransportMulticastReceiver.html" title=" " alt="" coords="473,100,755,147"/>
+<area shape="rect" id="node3" href="$classoscar_1_1BasicClient.html" title=" " alt="" coords="5,195,257,241"/>
 </map>

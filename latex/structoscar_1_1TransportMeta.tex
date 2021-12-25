@@ -1,8 +1,8 @@
-\hypertarget{structoscar_1_1TransportMeta}{}\doxysection{oscar\+::Transport\+Meta$<$ Transport $>$ Struct Template Reference}
-\label{structoscar_1_1TransportMeta}\index{oscar::TransportMeta$<$ Transport $>$@{oscar::TransportMeta$<$ Transport $>$}}
+\hypertarget{structoscar_1_1TransportMeta}{}\doxysection{Transport\+Meta$<$ Transport $>$}
+\label{structoscar_1_1TransportMeta}\index{TransportMeta$<$ Transport $>$@{TransportMeta$<$ Transport $>$}}
 
 
-{\ttfamily \#include $<$Transport.\+hpp$>$}
+{\ttfamily \#include \char`\"{}core/\+Transport.\+hpp\char`\"{}}
 
 
 
@@ -17,6 +17,10 @@ Each specialization must include\+:
 \item Associated type {\ttfamily Address}. It is assumed to be suitable for value semantic.
 \item Compile-\/time constant {\ttfamily std\+::size\+\_\+t} expression {\ttfamily BUFFER\+\_\+\+SIZE}, the maximum length of serialized tx message. Sender\textquotesingle{}s message length is bounded by this so transport do not need to provide dynamic allocated buffer. 
 \end{DoxyItemize}
+
+Definition at line 20 of file Transport.\+hpp.
+
+
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

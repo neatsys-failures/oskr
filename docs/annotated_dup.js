@@ -13,10 +13,14 @@ var annotated_dup =
       [ "Log< void >", "structoscar_1_1Log_3_01void_01_4.html", "structoscar_1_1Log_3_01void_01_4" ],
       [ "TransportMeta", "structoscar_1_1TransportMeta.html", null ],
       [ "TransportReceiver", "classoscar_1_1TransportReceiver.html", "classoscar_1_1TransportReceiver" ],
+      [ "TransportMulticastReceiver", "classoscar_1_1TransportMulticastReceiver.html", null ],
       [ "Transport", "classoscar_1_1Transport.html", "classoscar_1_1Transport" ],
       [ "RequestMessage", "structoscar_1_1RequestMessage.html", "structoscar_1_1RequestMessage" ],
       [ "ReplyMessage", "structoscar_1_1ReplyMessage.html", "structoscar_1_1ReplyMessage" ],
       [ "BasicClient", "classoscar_1_1BasicClient.html", "classoscar_1_1BasicClient" ],
+      [ "BasicClient< void, void >", "classoscar_1_1BasicClient_3_01void_00_01void_01_4.html", [
+        [ "Config", "structoscar_1_1BasicClient_3_01void_00_01void_01_4_1_1Config.html", "structoscar_1_1BasicClient_3_01void_00_01void_01_4_1_1Config" ]
+      ] ],
       [ "ChainLog", "classoscar_1_1ChainLog.html", null ],
       [ "ClientTable", "classoscar_1_1ClientTable.html", "classoscar_1_1ClientTable" ],
       [ "ListLog", "classoscar_1_1ListLog.html", "classoscar_1_1ListLog" ],

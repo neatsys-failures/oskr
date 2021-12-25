@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['span_101',['Span',['../Type_8hpp.html#a4ea93eb396b87d231e0115f823936d2a',1,'oscar']]]
+  ['span_107',['Span',['../Type_8hpp.html#a460f2acf1b81050fb952245756a7aaa3',1,'oscar']]]
 ];

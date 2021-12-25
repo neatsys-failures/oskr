@@ -1,8 +1,8 @@
 var structoscar_1_1ReplyMessage =
 [
-    [ "serialize", "structoscar_1_1ReplyMessage.html#ad6b9d6c5bbd0f9ec0cbe94147a3471f6", null ],
-    [ "request_number", "structoscar_1_1ReplyMessage.html#adf8c859546de72c7d1550d677ba82170", null ],
-    [ "result", "structoscar_1_1ReplyMessage.html#a78d749a884ccdb56139cb8800573868a", null ],
-    [ "view_number", "structoscar_1_1ReplyMessage.html#a42b94bb116a5cce7bd49181470f57088", null ],
-    [ "replica_id", "structoscar_1_1ReplyMessage.html#ad67f7f2b87e8acffe2ac36f49565bd96", null ]
+    [ "serialize", "structoscar_1_1ReplyMessage.html#ad94d8db533c6957898c0b86f07c3c655", null ],
+    [ "request_number", "structoscar_1_1ReplyMessage.html#a718eacad36485a445c438cd801120d4f", null ],
+    [ "result", "structoscar_1_1ReplyMessage.html#a878cd6cb0d1ae01834c52300930ecf63", null ],
+    [ "view_number", "structoscar_1_1ReplyMessage.html#a86c71fe717a638ad374d2b5db5ce3940", null ],
+    [ "replica_id", "structoscar_1_1ReplyMessage.html#acd881ff6635edfd174851cd47efb3265", null ]
 ];

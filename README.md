@@ -1,3 +1,4 @@
+<!-- prevent doxygen adapt title from below -->
 ## High Performance Distributed Protocols Collection
 ![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oscar)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oscar)

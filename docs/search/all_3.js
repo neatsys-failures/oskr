@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['data_18',['Data',['../Type_8hpp.html#a2adc86b74828e412128ce70bd950d253',1,'oscar']]]
+  ['data_20',['Data',['../Type_8hpp.html#a1b2e3eef31ba51928855fd41517a98b4',1,'oscar']]]
 ];

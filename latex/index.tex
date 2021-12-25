@@ -2,7 +2,9 @@
 \Hypertarget{index_md_README}%
 
 
-\doxysubsubsection*{High Performance Distributed Protocols Collection}
+\doxysubsection*{High Performance Distributed Protocols Collection}
+
+    
 
 {\bfseries{Motivation.}} This is an attempt to improve based on \href{https://github.com/UWSysLab/specpaxos}{\texttt{ specpaxos}}. The detail of consideration is listed in \href{https://sgdxbc.github.io/ideas/2021-12-15/p0}{\texttt{ a piece of blog}}.
 
@@ -14,19 +16,29 @@
 \item Heavily-\/used template programming + self-\/contained header result in long compilation time. Because most class in header are templated, precompiled header not help much.
 \item Serialization leverage Bitsery, which is a little bit lack of document.
 \item Some part of interface has cumbersome syntax, because of required {\ttfamily typename} and such.
+\item CMake makes me feel good, meson makes me feel better, but at the end of the day I have to use CMake because of the supportness of most dependencies. This causes the setup of DPDK a little bit hacky and maybe fragile.
 \end{DoxyItemize}
 
 \DoxyHorRuler{0}
 
 
-Develop on Ubuntu 21.\+10, with clang version 13. Dependent apt packages\+:
+Develop on Ubuntu 21.\+10, with clang version 13. Required apt packages\+:
 \begin{DoxyItemize}
+\item {\ttfamily cmake}
+\item {\ttfamily clang}
+\item {\ttfamily clang-\/tidy}
+\item {\ttfamily meson}
+\item {\ttfamily ninja-\/build}
+\item {\ttfamily python3-\/pyelftools}
 \item {\ttfamily libboost-\/dev}
 \end{DoxyItemize}
 
 Step 1, clone the repo with {\ttfamily -\/-\/recursive}.
 
-Step 2, build CMake project.
+Step 2, build CMake project as usual. Initial configuration will build a DPDK, which takes some time. Notable targets\+:
+\begin{DoxyItemize}
+\item {\ttfamily Client} benchmark client, executable at {\ttfamily $<$build$>$/benchmark/\+Client}.
+\end{DoxyItemize}
 
 {\itshape Work in progress.}
 

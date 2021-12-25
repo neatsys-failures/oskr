@@ -91,7 +91,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_README"></a></p>
-<h3>High Performance Distributed Protocols Collection</h3>
+<h2>High Performance Distributed Protocols Collection</h2>
+<p><img src="https://img.shields.io/github/repo-size/sgdxbc/oscar" alt="GitHub repo size" class="inline"/> <img src="https://img.shields.io/github/languages/code-size/sgdxbc/oscar" alt="GitHub code size in bytes" class="inline"/> <img src="https://img.shields.io/tokei/lines/github/sgdxbc/oscar" alt="Lines of code" class="inline"/> <img src="https://img.shields.io/github/contributors/sgdxbc/oscar" alt="GitHub contributors" class="inline"/> <img src="https://img.shields.io/github/commit-activity/m/sgdxbc/oscar" alt="GitHub commit activity" class="inline"/></p>
 <p><b>Motivation.</b> This is an attempt to improve based on <a href="https://github.com/UWSysLab/specpaxos">specpaxos</a>. The detail of consideration is listed in <a href="https://sgdxbc.github.io/ideas/2021-12-15/p0">a piece of blog</a>.</p>
 <p><b>Why named Oscar?</b> Because the core of this project is based on a specialized actor model.</p>
 <p><b>Present issues:</b></p><ul>
@@ -99,13 +100,22 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>Heavily-used template programming + self-contained header result in long compilation time. Because most class in header are templated, precompiled header not help much.</li>
 <li>Serialization leverage Bitsery, which is a little bit lack of document.</li>
 <li>Some part of interface has cumbersome syntax, because of required <code>typename</code> and such.</li>
+<li>CMake makes me feel good, meson makes me feel better, but at the end of the day I have to use CMake because of the supportness of most dependencies. This causes the setup of DPDK a little bit hacky and maybe fragile.</li>
 </ul>
 <hr  />
-<p>Develop on Ubuntu 21.10, with clang version 13. Dependent apt packages:</p><ul>
+<p>Develop on Ubuntu 21.10, with clang version 13. Required apt packages:</p><ul>
+<li><code>cmake</code></li>
+<li><code>clang</code></li>
+<li><code>clang-tidy</code></li>
+<li><code>meson</code></li>
+<li><code>ninja-build</code></li>
+<li><code>python3-pyelftools</code></li>
 <li><code>libboost-dev</code></li>
 </ul>
 <p>Step 1, clone the repo with <code>--recursive</code>.</p>
-<p>Step 2, build CMake project.</p>
+<p>Step 2, build CMake project as usual. Initial configuration will build a DPDK, which takes some time. Notable targets:</p><ul>
+<li><code>Client</code> benchmark client, executable at <code>&lt;build&gt;/benchmark/Client</code>.</li>
+</ul>
 <p><em>Work in progress.</em></p>
 <hr  />
 <p>Project structure:</p><ul>
@@ -128,7 +138,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Dec 23 2021 21:36:43 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Sat Dec 25 2021 12:47:35 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>
