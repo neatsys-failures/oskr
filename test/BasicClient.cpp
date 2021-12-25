@@ -8,8 +8,8 @@ using ReplicaMessage = std::variant<RequestMessage>;
 
 TEST(BasicClient, Noop)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
-    BasicClient<SimulatedTransport, ReplicaMessage> client(
+    Config<Simulated> config{0, {}, {}};
+    Simulated transport(config);
+    BasicClient<Simulated, ReplicaMessage> client(
         transport, {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1});
 }

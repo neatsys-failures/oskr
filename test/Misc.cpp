@@ -5,28 +5,24 @@
 
 using namespace oscar; // NOLINT
 
-class SimpleClient : public Client<SimulatedTransport>
+class SimpleClient : public Client<Simulated>
 {
 public:
-    explicit SimpleClient(SimulatedTransport &transport) :
-        Client<SimulatedTransport>(transport)
+    explicit SimpleClient(Simulated &transport) : Client<Simulated>(transport)
     {
     }
 
     std::uint32_t GetId() const { return client_id; }
 
-    void
-    receiveMessage(const typename SimulatedTransport::Address &, Span) override
-    {
-    }
+    void receiveMessage(const typename Simulated::Address &, Span) override {}
 
     void invoke(Data, InvokeCallback) override {}
 };
 
 TEST(Misc, ClientId)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {}, {}};
+    Simulated transport(config);
     SimpleClient client1(transport), client2(transport);
     ASSERT_NE(client1.GetId(), client2.GetId());
 }

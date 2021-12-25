@@ -15,11 +15,11 @@ using namespace oscar::unreplicated; // NOLINT
 class Unreplicated : public testing::Test
 {
 protected:
-    Config<SimulatedTransport> config;
-    SimulatedTransport transport;
+    Config<Simulated> config;
+    Simulated transport;
     MockApp app;
     ListLog log;
-    Replica<SimulatedTransport> replica;
+    Replica<Simulated> replica;
 
     Unreplicated() :
         config{0, {"replica-0"}}, transport(config), log(app),
@@ -28,13 +28,13 @@ protected:
         transport.registerReceiver(replica);
     }
 
-    std::vector<BasicClient<SimulatedTransport, ReplicaMessage>> client;
+    std::vector<BasicClient<Simulated, ReplicaMessage>> client;
 
     void spawnClient(int n_client)
     {
         client.reserve(n_client);
         for (int i = 0; i < n_client; i += 1) {
-            client.push_back(BasicClient<SimulatedTransport, ReplicaMessage>(
+            client.push_back(BasicClient<Simulated, ReplicaMessage>(
                 transport,
                 {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1}));
             transport.registerReceiver(client.back());
@@ -98,7 +98,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
 
     bool time_up = false;
     int n_completed = 0;
-    SimulatedTransport::Callback close_loop[10];
+    Simulated::Callback close_loop[10];
     for (int i = 0; i < 10; i += 1) {
         close_loop[i] = [&, i] {
             if (time_up) {

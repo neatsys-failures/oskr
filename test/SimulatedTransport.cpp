@@ -7,10 +7,10 @@
 
 using namespace oscar; // NOLINT
 
-TEST(SimulatedTransport, ExternalTimeout)
+TEST(Simulated, ExternalTimeout)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {}, {}};
+    Simulated transport(config);
     bool triggered = false;
     transport.scheduleTimeout(0us, [&]() { triggered = true; });
     transport.run();
@@ -40,12 +40,11 @@ public:
     }
 };
 
-TEST(SimulatedTransport, OneMessage)
+TEST(Simulated, OneMessage)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
-    SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
-        receiver2("receiver-2");
+    Config<Simulated> config{0, {}, {}};
+    Simulated transport(config);
+    SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
     transport.registerReceiver(receiver1);
     Data message{0, 1, 2, 3};
     transport.scheduleTimeout(0us, [&]() {
@@ -108,17 +107,17 @@ public:
     }
 };
 
-TEST(SimulatedTransport, PingPong)
+TEST(Simulated, PingPong)
 {
-    Config<SimulatedTransport> config{0, {"ping", "pong"}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {"ping", "pong"}, {}};
+    Simulated transport(config);
     bool all_done = false;
-    auto on_exit = [&](const PingPongReceiver<SimulatedTransport> &receiver) {
+    auto on_exit = [&](const PingPongReceiver<Simulated> &receiver) {
         all_done = true;
         ASSERT_EQ(receiver.address, "pong");
     };
-    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 0us);
-    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 0us);
+    PingPongReceiver<Simulated> ping("ping", transport, on_exit, 0us);
+    PingPongReceiver<Simulated> pong("pong", transport, on_exit, 0us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
     transport.scheduleTimeout(0us, [&] { ping.Start(); });
@@ -127,17 +126,17 @@ TEST(SimulatedTransport, PingPong)
     ASSERT_TRUE(all_done);
 }
 
-TEST(SimulatedTransport, PingPongWithTimeout)
+TEST(Simulated, PingPongWithTimeout)
 {
-    Config<SimulatedTransport> config{0, {"ping", "pong"}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {"ping", "pong"}, {}};
+    Simulated transport(config);
     bool all_done = false;
-    auto on_exit = [&](const PingPongReceiver<SimulatedTransport> &receiver) {
+    auto on_exit = [&](const PingPongReceiver<Simulated> &receiver) {
         all_done = true;
         ASSERT_EQ(receiver.address, "pong");
     };
-    PingPongReceiver<SimulatedTransport> ping("ping", transport, on_exit, 1us);
-    PingPongReceiver<SimulatedTransport> pong("pong", transport, on_exit, 2us);
+    PingPongReceiver<Simulated> ping("ping", transport, on_exit, 1us);
+    PingPongReceiver<Simulated> pong("pong", transport, on_exit, 2us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
     transport.scheduleTimeout(0us, [&] { ping.Start(); });
@@ -150,12 +149,11 @@ TEST(SimulatedTransport, PingPongWithTimeout)
     ASSERT_TRUE(checked);
 }
 
-TEST(SimulatedTransport, DropMessage)
+TEST(Simulated, DropMessage)
 {
-    Config<SimulatedTransport> config{0, {}};
-    SimulatedTransport transport(config);
-    SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
-        receiver2("receiver-2");
+    Config<Simulated> config{0, {}};
+    Simulated transport(config);
+    SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
     transport.registerReceiver(receiver1);
     transport.registerReceiver(receiver2);
 
@@ -189,12 +187,11 @@ TEST(SimulatedTransport, DropMessage)
     ASSERT_TRUE(checked);
 }
 
-TEST(SimulatedTransport, DelayMessage)
+TEST(Simulated, DelayMessage)
 {
-    Config<SimulatedTransport> config{0, {}};
-    SimulatedTransport transport(config);
-    SimpleReceiver<SimulatedTransport> receiver1("receiver-1"),
-        receiver2("receiver-2");
+    Config<Simulated> config{0, {}};
+    Simulated transport(config);
+    SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
     transport.registerReceiver(receiver1);
     transport.registerReceiver(receiver2);
 

@@ -9,18 +9,17 @@
 namespace oscar
 {
 
-class SimulatedTransport;
-template <> struct TransportMeta<SimulatedTransport> {
+class Simulated;
+template <> struct TransportMeta<Simulated> {
     using Address = std::string;
     static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
 };
 
-class SimulatedTransport : public Transport<SimulatedTransport>
+class Simulated : public Transport<Simulated>
 {
-    std::unordered_map<Address, TransportReceiver<SimulatedTransport> &>
-        receiver_table;
+    std::unordered_map<Address, TransportReceiver<Simulated> &> receiver_table;
     template <typename T> using ref_wrapper = std::reference_wrapper<T>;
-    std::vector<ref_wrapper<TransportMulticastReceiver<SimulatedTransport>>>
+    std::vector<ref_wrapper<TransportMulticastReceiver<Simulated>>>
         multicast_receiver_list;
 
     struct MessageBox {
@@ -46,8 +45,7 @@ private:
     std::map<int, Filter> filter_table;
 
 public:
-    SimulatedTransport(const Config<SimulatedTransport> &config) :
-        Transport(config)
+    Simulated(const Config<Simulated> &config) : Transport(config)
     {
         now_us = 0;
     }
@@ -59,21 +57,20 @@ public:
         return addr;
     }
 
-    void
-    registerReceiver(TransportReceiver<SimulatedTransport> &receiver) override
+    void registerReceiver(TransportReceiver<Simulated> &receiver) override
     {
         receiver_table.insert({{receiver.address, receiver}});
     }
 
     void registerMulticastReceiver(
-        TransportMulticastReceiver<SimulatedTransport> &receiver) override
+        TransportMulticastReceiver<Simulated> &receiver) override
     {
         multicast_receiver_list.push_back(receiver);
     }
 
     void sendMessage(
-        const TransportReceiver<SimulatedTransport> &sender,
-        const Address &dest, Write write) override;
+        const TransportReceiver<Simulated> &sender, const Address &dest,
+        Write write) override;
 
     void scheduleTimeout(microseconds delay, Callback callback) override
     {
@@ -108,8 +105,8 @@ public:
     void removeFilter(int removed_id) { filter_table.erase(removed_id); }
 };
 
-void SimulatedTransport::sendMessage(
-    const TransportReceiver<SimulatedTransport> &sender, const Address &dest,
+void Simulated::sendMessage(
+    const TransportReceiver<Simulated> &sender, const Address &dest,
     Write write)
 {
     if (!receiver_table.count(dest)) {
@@ -133,7 +130,7 @@ void SimulatedTransport::sendMessage(
         {{now_us + delay.count(), MessageBox{sender.address, dest, message}}});
 }
 
-void SimulatedTransport::processScheduled()
+void Simulated::processScheduled()
 {
     while (true) {
         if (!concurrent_queue.empty()) {
@@ -150,7 +147,7 @@ void SimulatedTransport::processScheduled()
     }
 }
 
-void SimulatedTransport::run(microseconds time_limit)
+void Simulated::run(microseconds time_limit)
 {
     while (true) {
         if (microseconds(now_us) >= time_limit) {
