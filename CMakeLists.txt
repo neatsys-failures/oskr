@@ -28,6 +28,7 @@ set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 include_directories(./)
 add_compile_options(-Wall -Wextra -pedantic)
 add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for r-logging
+add_compile_options(-march=native)
 enable_testing()
 set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

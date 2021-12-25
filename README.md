@@ -43,6 +43,8 @@ Step 1, clone the repo with `--recursive`.
 Step 2, build CMake project as usual. Initial configuration will build a DPDK, 
 which takes some time. Notable targets:
 * `Client` benchmark client, executable at `<build>/benchmark/Client`.
+* `Test*` unit tests (to get full list run `make help | grep Test`), executable
+  at `<build>/test/Test*`
 
 *Work in progress.*
 
@@ -59,6 +61,7 @@ Project structure:
 * `transactional` transactional protocols.
 * `dependency` git submodule stubs.
 * `test` flat directory for tests.
+* `benchmark` universal entry executable for running all protocols.
 
 [^1]: Document of these source is hosted on [project site][site].
 
