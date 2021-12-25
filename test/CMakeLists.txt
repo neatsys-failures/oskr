@@ -1,7 +1,7 @@
 include(GoogleTest)
 
 set(OSCAR_TEST_UNITS
-    SimulatedTransport
+    Simulated
     Misc
     Unreplicated
     BasicClient

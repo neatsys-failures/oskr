@@ -4,7 +4,7 @@ project(oscar VERSION 0.1.0 LANGUAGES CXX)
 
 # happy easy way to set up DPDK
 execute_process(
-    COMMAND meson build
+    COMMAND bash -c "test -f build/build.ninja || meson setup build"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependency/dpdk)
 execute_process(
     COMMAND ninja -C build
