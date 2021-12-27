@@ -1,7 +1,10 @@
+// final decision: will not use co_await
+
 #include <deque>
 #include <experimental/coroutine>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 using namespace std;
 using namespace std::experimental;
@@ -14,6 +17,7 @@ struct Runtime {
     struct TaskPromise {
         int code;
         TaskPromise(Guest &guest, int arg);
+        TaskPromise() {}
 
         suspend_always initial_suspend() { return {}; }
         suspend_never final_suspend() noexcept { return {}; }
@@ -44,6 +48,19 @@ struct Runtime {
     SwitchAwaitable switchResume() { return {*this}; }
 };
 
+struct NestedAwaitable {
+    bool await_ready() { return false; }
+    void await_resume() {}
+    void await_suspend(coroutine_handle<> handle)
+    {
+        coroutine_handle<Runtime::TaskPromise>::from_promise(task.promise)
+            .resume();
+    }
+
+    Runtime::Task task;
+    NestedAwaitable(Runtime::Task nested_task) : task(nested_task) {}
+};
+
 struct Guest {
     Runtime &runtime;
     Guest(Runtime &runtime) : runtime(runtime) {}
@@ -59,6 +76,13 @@ struct Guest {
         tid = co_await runtime.switchResume();
         cout << "switch again: tid = " << tid
              << ", thread id = " << this_thread::get_id() << "\n";
+    }
+
+    Runtime::Task nestedCall()
+    {
+        cout << "nested co_await\n";
+        co_await runtime.switchResume();
+        cout << "nested co_await done\n";
     }
 };
 
@@ -79,12 +103,13 @@ void Runtime::run(Guest guest, int arg)
     while (!switch_list.empty()) {
         auto &awaitable = *switch_list.front();
         switch_list.pop_front();
-        if (awaitable.handle.done()) {
-            continue;
-        }
         resume_id += 1;
         awaitable.resume_id = resume_id;
-        awaitable.handle.resume();
+        auto used = thread([&]() mutable {
+            cout << "spawn worker thread " << this_thread::get_id() << "\n";
+            awaitable.handle.resume();
+        });
+        used.join();
     }
 }
 
