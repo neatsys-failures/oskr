@@ -82,7 +82,7 @@ public:
     //!
     //! Timeout's `callback` is always executed sequentially.
     virtual void
-    scheduleTimeout(std::chrono::microseconds delay, Callback callback) = 0;
+    spawn(std::chrono::microseconds delay, Callback callback) = 0;
 
     //! Schedule a sequential task. Sequential task is promised to be executed
     //! one by one without concurrency, so different sequential tasks can share
@@ -91,15 +91,15 @@ public:
     //!
     //! A default implementation is provided mainly for implying that timeout is
     //! sequential task by default, so there is no need for calling
-    //! `scheduleSequential` inside timeout callback.
-    virtual void scheduleSequential(Callback callback)
+    //! `spawn` inside timeout callback.
+    virtual void spawn(Callback callback)
     {
-        scheduleTimeout(std::chrono::microseconds(0), callback);
+        spawn(std::chrono::microseconds(0), callback);
     }
 
     //! Schedule a concurrent task. Multiple concurrent tasks may be executed
     //! with temporal overlapping, so they would better to be stateless.
-    virtual void scheduleConcurrent(Callback callback) = 0;
+    virtual void spawnConcurrent(Callback callback) = 0;
 
     //! Every concurrent task get assigned to a concurrent id, which can be
     //! queried by calling `getConcurrentId` during execution. Concurrent id is

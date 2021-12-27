@@ -82,7 +82,7 @@ public:
     {
         ReplyMessage reply;
         deserializeReplyMessage(span, reply);
-        transport.scheduleSequential(
+        transport.spawn(
             std::bind(&BasicClient::handleReply, this, reply));
     }
 
@@ -149,7 +149,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
         panic("Unreachable");
     }
 
-    transport.scheduleTimeout(
+    transport.spawn(
         config.resend_interval, [this, current_number = request_number] {
             if (!pending || request_number != current_number) {
                 return;

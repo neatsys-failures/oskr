@@ -12,7 +12,7 @@ TEST(Simulated, ExternalTimeout)
     Config<Simulated> config{0, {}, {}};
     Simulated transport(config);
     bool triggered = false;
-    transport.scheduleTimeout(0us, [&]() { triggered = true; });
+    transport.spawn(0us, [&]() { triggered = true; });
     transport.run();
     ASSERT_TRUE(triggered);
 }
@@ -47,7 +47,7 @@ TEST(Simulated, OneMessage)
     SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
     transport.registerReceiver(receiver1);
     Data message{0, 1, 2, 3};
-    transport.scheduleTimeout(0us, [&]() {
+    transport.spawn(0us, [&]() {
         transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
             std::copy(message.begin(), message.end(), buffer);
             return message.size();
@@ -95,7 +95,7 @@ public:
         if (delay_us == 0us) {
             transport.sendMessage(*this, remote, write);
         } else {
-            transport.scheduleTimeout(delay_us, [this, remote, write] {
+            transport.spawn(delay_us, [this, remote, write] {
                 transport.sendMessage(*this, remote, write);
             });
         }
@@ -120,7 +120,7 @@ TEST(Simulated, PingPong)
     PingPongReceiver<Simulated> pong("pong", transport, on_exit, 0us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
-    transport.scheduleTimeout(0us, [&] { ping.Start(); });
+    transport.spawn(0us, [&] { ping.Start(); });
     spdlog::debug("Transport run");
     transport.run();
     ASSERT_TRUE(all_done);
@@ -139,9 +139,9 @@ TEST(Simulated, PingPongWithTimeout)
     PingPongReceiver<Simulated> pong("pong", transport, on_exit, 2us);
     transport.registerReceiver(ping);
     transport.registerReceiver(pong);
-    transport.scheduleTimeout(0us, [&] { ping.Start(); });
+    transport.spawn(0us, [&] { ping.Start(); });
     bool checked = false;
-    transport.scheduleTimeout(200us, [&] {
+    transport.spawn(200us, [&] {
         ASSERT_TRUE(all_done);
         checked = true;
     });
@@ -158,14 +158,14 @@ TEST(Simulated, DropMessage)
     transport.registerReceiver(receiver2);
 
     for (auto i = 0us; i < 10us; i += 1us) {
-        transport.scheduleTimeout(i, [&]() {
+        transport.spawn(i, [&]() {
             transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
                 std::string message("Bad network");
                 std::copy(message.begin(), message.end(), buffer);
                 return message.size();
             });
         });
-        transport.scheduleTimeout(i, [&]() {
+        transport.spawn(i, [&]() {
             transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
                 std::string message("Good network");
                 std::copy(message.begin(), message.end(), buffer);
@@ -177,7 +177,7 @@ TEST(Simulated, DropMessage)
         return dest != "receiver-1";
     });
     bool checked = false;
-    transport.scheduleTimeout(20us, [&] {
+    transport.spawn(20us, [&] {
         ASSERT_EQ(receiver1.n_message, 0);
         ASSERT_EQ(receiver2.n_message, 10);
         checked = true;
@@ -196,14 +196,14 @@ TEST(Simulated, DelayMessage)
     transport.registerReceiver(receiver2);
 
     for (auto i = 0us; i < 10us; i += 1us) {
-        transport.scheduleTimeout(i, [&]() {
+        transport.spawn(i, [&]() {
             transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
                 std::string message("Slow network");
                 std::copy(message.begin(), message.end(), buffer);
                 return message.size();
             });
         });
-        transport.scheduleTimeout(i, [&]() {
+        transport.spawn(i, [&]() {
             transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
                 std::string message("Good network");
                 std::copy(message.begin(), message.end(), buffer);
@@ -218,10 +218,10 @@ TEST(Simulated, DelayMessage)
         return true;
     });
     bool checked = false;
-    transport.scheduleTimeout(20us, [&] {
+    transport.spawn(20us, [&] {
         ASSERT_EQ(receiver1.n_message, 0);
         ASSERT_EQ(receiver2.n_message, 10);
-        transport.scheduleTimeout(80us, [&] {
+        transport.spawn(80us, [&] {
             ASSERT_EQ(receiver1.n_message, 10);
             ASSERT_EQ(receiver2.n_message, 10);
             checked = true;

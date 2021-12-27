@@ -36,15 +36,15 @@ public:
     }
 
     void
-    scheduleTimeout(std::chrono::microseconds delay, Callback callback) override
+    spawn(std::chrono::microseconds delay, Callback callback) override
     {
     }
 
-    void scheduleSequential(Callback callback) override
+    void spawn(Callback callback) override
     {
-        scheduleTimeout(std::chrono::microseconds(0), callback);
+        spawn(std::chrono::microseconds(0), callback);
     }
-    void scheduleConcurrent(Callback callback) {}
+    void spawnConcurrent(Callback callback) {}
 
     int getConcurrentId() const override {}
     void sendMessage(

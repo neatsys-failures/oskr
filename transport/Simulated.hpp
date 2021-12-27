@@ -72,17 +72,17 @@ public:
         const TransportReceiver<Simulated> &sender, const Address &dest,
         Write write) override;
 
-    void scheduleTimeout(microseconds delay, Callback callback) override
+    void spawn(microseconds delay, Callback callback) override
     {
         timeout_queue.insert({{now_us + delay.count(), callback}});
     }
 
-    void scheduleSequential(Callback callback) override
+    void spawn(Callback callback) override
     {
         sequential_queue.push(callback);
     }
 
-    void scheduleConcurrent(Callback callback) override
+    void spawnConcurrent(Callback callback) override
     {
         concurrent_queue.push(callback);
     }

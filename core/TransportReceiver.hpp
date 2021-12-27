@@ -1,5 +1,6 @@
 #pragma once
 #include "core/Type.hpp"
+#include "core/Utility.hpp"
 
 namespace oscar
 {
@@ -35,7 +36,18 @@ public:
     //! will go out of lifetime after this method returns, so receiver need to
     //! own everything necessary for later processing.
     virtual void
-    receiveMessage(const typename Transport::Address &remote, Span span) = 0;
+    receiveMessage(const typename Transport::Address &remote, Span span)
+    {
+        panic("Unimplemented");
+    }
+
+    virtual void
+    glanceMessage(const typename Transport::Address &remote, Span span)
+    {
+        // transport.spawn(
+        //     bind(&TransportReceiver::receiverMessage, this, 
+        //         remote, move(span)))
+    }
 };
 
 /*! Although theoretically a multicast receiver is not required to be

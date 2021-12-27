@@ -30,13 +30,10 @@ actor model.
 ----
 
 Develop on Ubuntu 21.10, with clang version 13. Required apt packages:
-* `cmake`
-* `clang`
-* `clang-tidy`
-* `meson`
-* `ninja-build`
-* `python3-pyelftools`
-* `libboost-dev`
+
+```
+clang cmake pkg-config meson ninja-build python3-pyelftools libboost-dev clang-tidy
+```
 
 Step 1, clone the repo with `--recursive`.
 

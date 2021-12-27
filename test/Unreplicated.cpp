@@ -52,7 +52,7 @@ TEST_F(Unreplicated, OneRequest)
     Data op(op_string.begin(), op_string.end());
     bool completed = false;
 
-    transport.scheduleTimeout(0ms, [&] {
+    transport.spawn(0ms, [&] {
         client[0].invoke(op, [&](Data result) {
             ASSERT_EQ(
                 std::string(result.begin(), result.end()),
@@ -76,7 +76,7 @@ TEST_F(Unreplicated, TenClientOneRequest)
     int n_completed = 0;
 
     for (int i = 0; i < 10; i += 1) {
-        transport.scheduleTimeout(0ms, [&, i] {
+        transport.spawn(0ms, [&, i] {
             client[i].invoke(op, [&](Data result) {
                 ASSERT_EQ(
                     std::string(result.begin(), result.end()),
@@ -104,7 +104,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
             if (time_up) {
                 return;
             }
-            transport.scheduleTimeout(
+            transport.spawn(
                 std::chrono::milliseconds(dist(random_engine())), [&, i] {
                     debug(
                         "i = {}, client[i] = {}", i,
@@ -115,9 +115,9 @@ TEST_F(Unreplicated, TenClientOneSecond)
                     });
                 });
         };
-        transport.scheduleTimeout(0ms, close_loop[i]);
+        transport.spawn(0ms, close_loop[i]);
     }
-    transport.scheduleTimeout(1000ms, [&] { time_up = true; });
+    transport.spawn(1000ms, [&] { time_up = true; });
 
     transport.run();
     ASSERT_EQ(app.op_list.size(), n_completed);
@@ -128,13 +128,13 @@ TEST_F(Unreplicated, ResendUndone)
 {
     spawnClient(1);
     bool completed = false;
-    transport.scheduleTimeout(0us, [&] {
+    transport.spawn(0us, [&] {
         transport.addFilter(1, [](auto, auto, auto) { return false; });
     });
-    transport.scheduleTimeout(10us, [&] {
+    transport.spawn(10us, [&] {
         client[0].invoke(Data(), [&](auto) { completed = true; });
     });
-    transport.scheduleTimeout(20us, [&] { transport.removeFilter(1); });
+    transport.spawn(20us, [&] { transport.removeFilter(1); });
     transport.run();
     ASSERT_TRUE(completed);
 }
@@ -143,16 +143,16 @@ TEST_F(Unreplicated, ResendDuplicated)
 {
     spawnClient(1);
     bool completed = false;
-    transport.scheduleTimeout(0us, [&] {
+    transport.spawn(0us, [&] {
         transport.addFilter(1, [&](const auto &source, auto, auto) {
             return source != config.replica_address_list[0];
         });
     });
-    transport.scheduleTimeout(10us, [&] {
+    transport.spawn(10us, [&] {
         client[0].invoke(Data(), [&](auto) { completed = true; });
     });
-    transport.scheduleTimeout(20us, [&] { transport.removeFilter(1); });
-    transport.scheduleTimeout(30us, [&] { ASSERT_FALSE(completed); });
+    transport.spawn(20us, [&] { transport.removeFilter(1); });
+    transport.spawn(30us, [&] { ASSERT_FALSE(completed); });
     transport.run();
     ASSERT_TRUE(completed);
     ASSERT_EQ(app.op_list.size(), 1);
