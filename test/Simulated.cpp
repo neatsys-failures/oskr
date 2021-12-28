@@ -5,7 +5,7 @@
 
 #include "transport/Simulated.hpp"
 
-using namespace oscar; // NOLINT
+using namespace oskr; // NOLINT
 
 TEST(Simulated, ExternalTimeout)
 {

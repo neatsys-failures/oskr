@@ -7,7 +7,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 class DPDKClient;
 struct MBufDescriptor {
@@ -65,4 +65,4 @@ MBufDescriptor::~MBufDescriptor()
     transport.releaseDescriptor(*this);
 }
 
-} // namespace oscar
+} // namespace oskr

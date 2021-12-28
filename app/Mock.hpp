@@ -3,7 +3,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 class MockApp : public App
 {
@@ -30,4 +30,4 @@ public:
         return make_reply(op);
     }
 };
-} // namespace oscar
+} // namespace oskr

@@ -6,7 +6,7 @@
 #include "core/Config.hpp"
 #include "core/Type.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Self> struct TransportMeta {
 };
@@ -52,4 +52,4 @@ public:
     }
 };
 
-} // namespace oscar
+} // namespace oskr

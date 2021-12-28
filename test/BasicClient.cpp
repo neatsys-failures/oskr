@@ -3,7 +3,7 @@
 #include "common/BasicClient.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar; // NOLINT
+using namespace oskr; // NOLINT
 using ReplicaMessage = std::variant<RequestMessage>;
 
 TEST(BasicClient, Noop)

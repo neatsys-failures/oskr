@@ -1,6 +1,6 @@
 include(GoogleTest)
 
-set(OSCAR_TEST_UNITS
+set(OSKR_TEST_UNITS
     Simulated
     Misc
     Unreplicated
@@ -8,15 +8,15 @@ set(OSCAR_TEST_UNITS
     VR
 )
 
-foreach(UNIT ${OSCAR_TEST_UNITS})
+foreach(UNIT ${OSKR_TEST_UNITS})
     add_executable(Test${UNIT} ${UNIT}.cpp)
     target_link_libraries(Test${UNIT} PRIVATE 
-        oscar_core 
-        oscar_common 
+        oskr_core 
+        oskr_common 
         gtest_main
     )
     gtest_discover_tests(Test${UNIT})
 endforeach()
 
-target_link_libraries(TestUnreplicated PRIVATE oscar_replication_unreplicated)
-target_link_libraries(TestVR PRIVATE oscar_replication_vr)
+target_link_libraries(TestUnreplicated PRIVATE oskr_replication_unreplicated)
+target_link_libraries(TestVR PRIVATE oskr_replication_vr)

@@ -4,7 +4,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Transport, typename ReplyMessage> class ClientTable
 {
@@ -149,4 +149,4 @@ auto ClientTable<Transport, ReplyMessage>::update(
         on_reply(remote, reply);
     };
 }
-} // namespace oscar
+} // namespace oskr

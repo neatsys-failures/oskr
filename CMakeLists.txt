@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18.4)
-project(oscar VERSION 0.1.0 LANGUAGES CXX)
+project(oskr VERSION 0.1.0 LANGUAGES CXX)
 
 if (NOT ${CMAKE_BUILD_TYPE})
     set(CMAKE_BUILD_TYPE Debug)
@@ -35,8 +35,8 @@ enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # https://stackoverflow.com/a/34234515
-set(OSCAR_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_dummy.cpp")
-file(WRITE "${OSCAR_DUMMY_SOURCE}" "")
+set(OSKR_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_dummy.cpp")
+file(WRITE "${OSKR_DUMMY_SOURCE}" "")
 
 
 add_subdirectory(core)

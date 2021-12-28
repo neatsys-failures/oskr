@@ -9,8 +9,8 @@
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;               // NOLINT
-using namespace oscar::unreplicated; // NOLINT
+using namespace oskr;               // NOLINT
+using namespace oskr::unreplicated; // NOLINT
 
 class Unreplicated : public testing::Test
 {

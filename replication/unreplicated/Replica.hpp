@@ -3,7 +3,7 @@
 #include "core/Foundation.hpp"
 #include "replication/unreplicated/Message.hpp"
 
-namespace oscar::unreplicated
+namespace oskr::unreplicated
 {
 // work with:
 // BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
@@ -80,4 +80,4 @@ void Replica<Transport>::handle(
         });
 }
 
-} // namespace oscar::unreplicated
+} // namespace oskr::unreplicated

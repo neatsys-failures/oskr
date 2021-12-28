@@ -5,7 +5,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Transport> class StatefulTimeout
 {
@@ -50,4 +50,4 @@ public:
     void disable() { current_id = std::nullopt; }
 };
 
-} // namespace oscar
+} // namespace oskr

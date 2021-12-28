@@ -5,7 +5,7 @@
 #include "core/TransportReceiver.hpp"
 #include "core/Utility.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Transport> class Client : public TransportReceiver<Transport>
 {
@@ -23,4 +23,4 @@ public:
     virtual void invoke(Data op, InvokeCallback callback) = 0;
 };
 
-} // namespace oscar
+} // namespace oskr

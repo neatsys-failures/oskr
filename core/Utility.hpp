@@ -10,7 +10,7 @@
 #include "core/Log.hpp"
 #include "core/Type.hpp"
 
-namespace oscar
+namespace oskr
 {
 using //
     std::literals::chrono_literals::operator""ms,
@@ -26,7 +26,7 @@ template <typename... Args>
 }
 
 // TODO explore a at-least-equally convinent but better way
-#ifndef OSCAR_NO_RLOGGING
+#ifndef OSKR_NO_RLOGGING
 #define rdebug(fmt, ...) debug("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
 #define rinfo(fmt, ...) info("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
 #define rwarn(fmt, ...) warn("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
@@ -61,4 +61,4 @@ void bitseryDeserialize(const RxSpan span, Message &message)
             state.second);
     }
 }
-} // namespace oscar
+} // namespace oskr

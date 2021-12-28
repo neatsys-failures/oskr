@@ -4,7 +4,7 @@
 #include "core/Type.hpp"
 #include "core/Utility.hpp"
 
-namespace oscar
+namespace oskr
 {
 class App
 {
@@ -76,4 +76,4 @@ template <> struct Log<void> {
     using Chain = Log<ChainPreset>;
 };
 
-} // namespace oscar
+} // namespace oskr

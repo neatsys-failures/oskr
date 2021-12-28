@@ -2,7 +2,7 @@
 #include "core/Type.hpp"
 #include "core/Utility.hpp"
 
-namespace oscar
+namespace oskr
 {
 /*! @brief The base class for packet-listeners, i.e., all participants of
 protocols. The receiving half of the actor model.
@@ -18,7 +18,7 @@ received message, but a subclass will probably want to call `Transport` methods
 to send message and schedule timeout. So it is conventional to ask for a
 reference of `Transport` instance when constructing subclass. Because the
 `Transport` base class follows CRTP, `Transport &` is basically equals to
-`oscar::Transport<Transport> &` in every situation.
+`oskr::Transport<Transport> &` in every situation.
 */
 template <typename Transport> class TransportReceiver
 {
@@ -47,4 +47,4 @@ public:
     receiveMessage(const typename Transport::Address &remote, RxSpan span) = 0;
 };
 
-} // namespace oscar
+} // namespace oskr

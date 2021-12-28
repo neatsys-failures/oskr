@@ -3,7 +3,7 @@
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/DPDKClient.hpp"
 
-using namespace oscar;
+using namespace oskr;
 
 int main(int, char *argv[])
 {

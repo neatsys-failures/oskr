@@ -3,7 +3,7 @@
 
 #include "core/Type.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Transport> struct Config {
     std::size_t n_fault;
@@ -16,4 +16,4 @@ template <typename Transport> struct Config {
     }
 };
 
-} // namespace oscar
+} // namespace oskr

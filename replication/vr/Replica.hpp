@@ -6,7 +6,7 @@
 #include "core/Foundation.hpp"
 #include "replication/vr/Message.hpp"
 
-namespace oscar::vr
+namespace oskr::vr
 {
 // work with:
 // BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
@@ -63,7 +63,7 @@ private:
     static constexpr auto _2 = std::placeholders::_2;
     template <typename Message = ReplicaMessage>
     static constexpr auto bitserySerialize =
-        oscar::bitserySerialize<Message, Transport::BUFFER_SIZE>;
+        oskr::bitserySerialize<Message, Transport::BUFFER_SIZE>;
 
     bool isPrimary() const
     {
@@ -250,4 +250,4 @@ void Replica<Transport>::send(
         *this, remote, std::bind(bitserySerialize<ReplyMessage>, _1, reply));
 }
 
-} // namespace oscar::vr
+} // namespace oskr::vr

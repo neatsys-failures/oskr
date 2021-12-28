@@ -3,7 +3,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 class ChainLog : public Log<>::Chain
 {
@@ -14,4 +14,4 @@ class ChainLog : public Log<>::Chain
     std::unordered_map<Hash, BlockBox> block_table;
     //
 };
-} // namespace oscar
+} // namespace oskr

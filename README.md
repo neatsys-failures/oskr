@@ -1,16 +1,16 @@
 <!-- prevent doxygen adapt title from below -->
 ## High Performance Distributed Protocols Collection
-![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oscar)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oscar)
-![Lines of code](https://img.shields.io/tokei/lines/github/sgdxbc/oscar)
-![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oscar)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oscar)
+![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oskr)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oskr)
+![Lines of code](https://img.shields.io/tokei/lines/github/sgdxbc/oskr)
+![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oskr)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oskr)
 
 **Motivation.** This is an attempt to improve based on [specpaxos]. The detail 
 of consideration is listed in [a piece of blog][sgd-blog].
 
-**Why named Oscar?** Because the core of this project is based on a specialized 
-actor model.
+**Why named Oskr?** The name is derived from the Oscars (Academy Awards), 
+because the core of this project is based on a specialized actor model.
 
 **Present issues:**
 * Heavily-used template programming + self-contained header result in terrible 
@@ -74,4 +74,4 @@ Project structure:
 
 [^1]: Document of these source is hosted on [project site][site].
 
-[site]: https://sgdxbc.github.io/oscar
+[site]: https://sgdxbc.github.io/oskr

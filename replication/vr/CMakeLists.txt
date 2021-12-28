@@ -1,1 +1,1 @@
-add_library(oscar_replication_vr INTERFACE)
+add_library(oskr_replication_vr INTERFACE)

@@ -6,7 +6,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 class Simulated;
 template <> struct TransportMeta<Simulated> {
@@ -177,4 +177,4 @@ void Simulated::run(microseconds time_limit)
     }
 }
 
-} // namespace oscar
+} // namespace oskr

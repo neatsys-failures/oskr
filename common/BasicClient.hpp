@@ -5,7 +5,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 struct RequestMessage {
     ClientId client_id;
@@ -86,7 +86,7 @@ public:
         handleReply(reply);
     }
 
-    using Buffer = oscar::TxSpan<Transport::BUFFER_SIZE>;
+    using Buffer = oskr::TxSpan<Transport::BUFFER_SIZE>;
     virtual std::size_t
     serializeRequestMessage(Buffer &buffer, const ReplicaMessage &request)
     {
@@ -186,4 +186,4 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
     callback(reply.result);
 }
 
-} // namespace oscar
+} // namespace oskr

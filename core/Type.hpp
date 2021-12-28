@@ -6,7 +6,7 @@
 
 #include <boost/container/small_vector.hpp>
 
-namespace oscar
+namespace oskr
 {
 using OpNumber = std::uint64_t;
 using RequestNumber = std::uint32_t;
@@ -24,4 +24,4 @@ using TxSpan = std::span<std::uint8_t, BUFFER_SIZE>;
 using Data = boost::container::small_vector<std::uint8_t, 16>;
 
 using Hash = std::uint8_t[32]; // SHA256
-} // namespace oscar
+} // namespace oskr
