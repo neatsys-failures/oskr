@@ -55,6 +55,8 @@ private:
     using TransportReceiver<Transport>::transport;
     Config config;
 
+    using Client<Transport>::client_id;
+
     RequestNumber request_number;
     ViewNumber view_number;
 
@@ -86,9 +88,8 @@ public:
         handleReply(reply);
     }
 
-    using Buffer = oskr::TxSpan<Transport::BUFFER_SIZE>;
-    virtual std::size_t
-    serializeRequestMessage(Buffer &buffer, const ReplicaMessage &request)
+    virtual std::size_t serializeRequestMessage(
+        TxSpan<Transport::BUFFER_SIZE> buffer, const ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
     }
@@ -120,19 +121,17 @@ template <typename Transport, typename ReplicaMessage>
 void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
 {
     RequestMessage request;
-    request.client_id = this->client_id;
+    request.client_id = client_id;
     request.request_number = pending->request_number;
     request.op = pending->op;
-    auto write = [this, request](auto buffer) {
+    auto write = [&](auto buffer) {
         return serializeRequestMessage(buffer, ReplicaMessage(request));
     };
-    auto send_to_primary = [this, write] {
+    auto send_to_primary = [&] {
         transport.sendMessageToReplica(
             *this, transport.config.primaryId(view_number), write);
     };
-    auto send_to_all = [this, write] {
-        transport.sendMessageToAll(*this, write);
-    };
+    auto send_to_all = [&] { transport.sendMessageToAll(*this, write); };
 
     switch (config.strategy) {
     case Config::Strategy::ALL:
@@ -150,7 +149,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     }
 
     transport.spawn(
-        config.resend_interval, [this, current_number = request_number] {
+        config.resend_interval, [&, current_number = request_number] {
             if (!pending || request_number != current_number) {
                 return;
             }

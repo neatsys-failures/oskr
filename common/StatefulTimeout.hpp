@@ -32,7 +32,7 @@ public:
     {
         timeout_id += 1;
         current_id = timeout_id;
-        transport.spawn(delay, [this, current_id = this->current_id] {
+        transport.spawn(delay, [&, current_id = current_id] {
             if (this->current_id != current_id) {
                 return;
             }

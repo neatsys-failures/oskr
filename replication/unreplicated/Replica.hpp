@@ -48,7 +48,7 @@ void Replica<Transport>::handle(
 {
     using std::placeholders::_1;
 
-    auto send_reply = [this](auto &remote, const ReplyMessage &reply) {
+    auto send_reply = [&](auto &remote, const ReplyMessage &reply) {
         transport.sendMessage(
             *this, remote,
             std::bind(

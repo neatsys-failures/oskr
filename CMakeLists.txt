@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(oskr VERSION 0.1.0 LANGUAGES CXX)
 
-if (NOT ${CMAKE_BUILD_TYPE})
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
@@ -31,7 +31,9 @@ include_directories(./)
 add_compile_options(-Wall -Wextra -Wpedantic)
 add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for r-logging
 enable_testing()
-# set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
+if (${OSKR_TIDY})
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
+endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # https://stackoverflow.com/a/34234515
@@ -45,3 +47,7 @@ add_subdirectory(replication/unreplicated)
 add_subdirectory(replication/vr)
 add_subdirectory(test)
 add_subdirectory(benchmark)
+
+# prevent side effects
+unset(CMAKE_BUILD_TYPE CACHE)
+unset(OSKR_TIDY CACHE)

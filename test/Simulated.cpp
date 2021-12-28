@@ -100,7 +100,7 @@ public:
         if (delay_us == 0us) {
             transport.sendMessage(*this, remote, write);
         } else {
-            transport.spawn(delay_us, [this, remote, write] {
+            transport.spawn(delay_us, [&, remote, write] {
                 transport.sendMessage(*this, remote, write);
             });
         }

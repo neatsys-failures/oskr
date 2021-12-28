@@ -3,7 +3,7 @@
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/DPDKClient.hpp"
 
-using namespace oskr;
+using namespace oskr; // NOLINT
 
 int main(int, char *argv[])
 {
