@@ -27,18 +27,9 @@ public:
 private:
     std::unordered_map<Address, Receiver> receiver_table;
     std::vector<Receiver> multicast_receiver_list;
-
-    struct MessageBox {
-        Address source, dest;
-        Data message;
-    };
     std::uint64_t now_us;
-    std::multimap<std::uint64_t, MessageBox> message_queue;
-    std::multimap<std::uint64_t, Callback> timeout_queue;
-
-    // should clear up per message/timeout
-    std::queue<Callback> sequential_queue, concurrent_queue;
-    int concurrent_id;
+    std::multimap<std::uint64_t, Callback> destiny_queue;
+    int channel_id;
     std::map<int, Filter> filter_table;
 
 public:
@@ -68,20 +59,25 @@ public:
 
     void spawn(microseconds delay, Callback callback)
     {
-        timeout_queue.insert({{now_us + delay.count(), callback}});
+        destiny_queue.insert({now_us + delay.count(), [&, callback] {
+                                  channel_id = -1;
+                                  callback();
+                              }});
     }
 
-    void spawn(Callback callback) { sequential_queue.push(callback); }
+    void spawn(Callback callback) { spawn(0us, callback); }
 
-    void spawnConcurrent(Callback callback) { concurrent_queue.push(callback); }
+    void spawnConcurrent(Callback callback)
+    {
+        destiny_queue.insert({now_us, [&, callback] {
+                                  channel_id = 0;
+                                  callback();
+                              }});
+    }
 
-    int channel() const { return concurrent_id; }
+    int channel() const { return channel_id; }
 
-private:
-    void processScheduled();
-
-public:
-    void clearTimeout() { timeout_queue.clear(); }
+    void terminate() { destiny_queue.clear(); }
 
     void run(microseconds time_limit = 10 * 1000ms);
 
@@ -114,25 +110,11 @@ void Simulated::sendMessage(
 
     Data message(BUFFER_SIZE);
     message.resize(write(TxSpan<BUFFER_SIZE>(message.data(), BUFFER_SIZE)));
-    message_queue.insert(
-        {{now_us + delay.count(), MessageBox{sender.address, dest, message}}});
-}
-
-void Simulated::processScheduled()
-{
-    while (true) {
-        if (!concurrent_queue.empty()) {
-            concurrent_id = 0;
-            concurrent_queue.front()();
-            concurrent_queue.pop();
-        } else if (!sequential_queue.empty()) {
-            concurrent_id = -1;
-            sequential_queue.front()();
-            sequential_queue.pop();
-        } else {
-            return;
-        }
-    }
+    destiny_queue.insert({{now_us + delay.count(), [&, dest, message] {
+                               channel_id = -2;
+                               // TODO multicast
+                               receiver_table.at(dest)(sender.address, message);
+                           }}});
 }
 
 void Simulated::run(microseconds time_limit)
@@ -144,36 +126,13 @@ void Simulated::run(microseconds time_limit)
                 double(time_limit.count()) / 1000);
         }
 
-        auto message_iter = message_queue.begin();
-        while (message_iter != message_queue.end() &&
-               message_iter->first == now_us) {
-            auto box = message_iter->second;
-            message_queue.erase(message_iter);
-
-            if (box.dest == config.multicast_address) {
-                panic("TODO");
-            }
-
-            concurrent_id = -1;
-            receiver_table.at(box.dest)(box.source, box.message);
-            processScheduled();
-            message_iter = message_queue.begin();
-        }
-
-        auto timeout_iter = timeout_queue.begin();
-        if (timeout_iter != timeout_queue.end() &&
-            (message_iter == message_queue.end() ||
-             timeout_iter->first < message_iter->first)) {
-            now_us = timeout_iter->first;
-            concurrent_id = -1;
-            timeout_iter->second();
-            processScheduled();
-            timeout_queue.erase(timeout_iter);
-        } else if (message_iter != message_queue.end()) {
-            now_us = message_iter->first;
-        } else {
+        auto timeout_iter = destiny_queue.begin();
+        if (timeout_iter == destiny_queue.end()) {
             return;
         }
+        now_us = timeout_iter->first;
+        timeout_iter->second();
+        destiny_queue.erase(timeout_iter);
     }
 }
 
