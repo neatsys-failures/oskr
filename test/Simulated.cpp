@@ -17,22 +17,22 @@ TEST(Simulated, ExternalTimeout)
     ASSERT_TRUE(triggered);
 }
 
-template <typename Transport>
-class SimpleReceiver : public TransportReceiver<Transport>
+template <typename Transport> class SimpleReceiver
 {
 public:
+    const typename Transport::Address address;
+
     typename Transport::Address latest_remote;
     Data latest_message;
     int n_message;
 
     explicit SimpleReceiver(typename Transport::Address address) :
-        TransportReceiver<Transport>(address)
+        address(address)
     {
         n_message = 0;
     }
 
-    void receiveMessage(
-        const typename Transport::Address &remote, Span buffer) override
+    void receiveMessage(const typename Transport::Address &remote, Span buffer)
     {
         n_message += 1;
         latest_remote = remote;
@@ -45,7 +45,9 @@ TEST(Simulated, OneMessage)
     Config<Simulated> config{0, {}, {}};
     Simulated transport(config);
     SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
-    transport.registerReceiver(receiver1);
+    transport.registerReceiver("receiver-1", [&](auto &remote, auto buffer) {
+        receiver1.receiveMessage(remote, buffer);
+    });
     Data message{0, 1, 2, 3};
     transport.spawn(0us, [&]() {
         transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
@@ -61,7 +63,8 @@ TEST(Simulated, OneMessage)
 template <typename Transport>
 class PingPongReceiver : public TransportReceiver<Transport>
 {
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
+
     std::function<void(PingPongReceiver<Transport> &)> on_exit;
     std::chrono::microseconds delay_us;
 
@@ -70,8 +73,7 @@ public:
         typename Transport::Address address, Transport &transport,
         std::function<void(PingPongReceiver<Transport> &)> on_exit,
         std::chrono::microseconds delay_us) :
-        TransportReceiver<Transport>(address),
-        transport(transport)
+        TransportReceiver<Transport>(transport, address)
     {
         this->on_exit = on_exit;
         this->delay_us = delay_us;
@@ -118,8 +120,6 @@ TEST(Simulated, PingPong)
     };
     PingPongReceiver<Simulated> ping("ping", transport, on_exit, 0us);
     PingPongReceiver<Simulated> pong("pong", transport, on_exit, 0us);
-    transport.registerReceiver(ping);
-    transport.registerReceiver(pong);
     transport.spawn(0us, [&] { ping.Start(); });
     spdlog::debug("Transport run");
     transport.run();
@@ -137,8 +137,6 @@ TEST(Simulated, PingPongWithTimeout)
     };
     PingPongReceiver<Simulated> ping("ping", transport, on_exit, 1us);
     PingPongReceiver<Simulated> pong("pong", transport, on_exit, 2us);
-    transport.registerReceiver(ping);
-    transport.registerReceiver(pong);
     transport.spawn(0us, [&] { ping.Start(); });
     bool checked = false;
     transport.spawn(200us, [&] {
@@ -154,8 +152,12 @@ TEST(Simulated, DropMessage)
     Config<Simulated> config{0, {}};
     Simulated transport(config);
     SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
-    transport.registerReceiver(receiver1);
-    transport.registerReceiver(receiver2);
+    transport.registerReceiver("receiver-1", [&](auto &remote, auto buffer) {
+        receiver1.receiveMessage(remote, buffer);
+    });
+    transport.registerReceiver("receiver-2", [&](auto &remote, auto buffer) {
+        receiver2.receiveMessage(remote, buffer);
+    });
 
     for (auto i = 0us; i < 10us; i += 1us) {
         transport.spawn(i, [&]() {
@@ -192,8 +194,12 @@ TEST(Simulated, DelayMessage)
     Config<Simulated> config{0, {}};
     Simulated transport(config);
     SimpleReceiver<Simulated> receiver1("receiver-1"), receiver2("receiver-2");
-    transport.registerReceiver(receiver1);
-    transport.registerReceiver(receiver2);
+    transport.registerReceiver("receiver-1", [&](auto &remote, auto buffer) {
+        receiver1.receiveMessage(remote, buffer);
+    });
+    transport.registerReceiver("receiver-2", [&](auto &remote, auto buffer) {
+        receiver2.receiveMessage(remote, buffer);
+    });
 
     for (auto i = 0us; i < 10us; i += 1us) {
         transport.spawn(i, [&]() {

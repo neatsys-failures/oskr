@@ -25,7 +25,6 @@ protected:
         config{0, {"replica-0"}}, transport(config), log(app),
         replica(transport, log)
     {
-        transport.registerReceiver(replica);
     }
 
     std::vector<BasicClient<Simulated, ReplicaMessage>> client;
@@ -37,7 +36,6 @@ protected:
             client.push_back(BasicClient<Simulated, ReplicaMessage>(
                 transport,
                 {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1}));
-            transport.registerReceiver(client.back());
         }
     }
 };

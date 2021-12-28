@@ -14,7 +14,7 @@ protected:
 
 public:
     Client(Transport &transport) :
-        TransportReceiver<Transport>(transport.allocateAddress())
+        TransportReceiver<Transport>(transport, transport.allocateAddress())
     {
         client_id = std::uniform_int_distribution<ClientId>()(random_engine());
     }

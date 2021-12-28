@@ -8,19 +8,24 @@
 
 namespace oscar
 {
-
 class Simulated;
 template <> struct TransportMeta<Simulated> {
     using Address = std::string;
     static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
 };
 
-class Simulated : public Transport<Simulated>
+class Simulated : public TransportBase<Simulated>
 {
-    std::unordered_map<Address, TransportReceiver<Simulated> &> receiver_table;
-    template <typename T> using ref_wrapper = std::reference_wrapper<T>;
-    std::vector<ref_wrapper<TransportMulticastReceiver<Simulated>>>
-        multicast_receiver_list;
+public:
+    using microseconds = std::chrono::microseconds;
+    // we do not provide message content here, because serialized message is
+    // normally hard to inspect
+    using Filter = std::function<bool(
+        const Address &source, const Address &dest, microseconds &delay)>;
+
+private:
+    std::unordered_map<Address, Receiver> receiver_table;
+    std::vector<Receiver> multicast_receiver_list;
 
     struct MessageBox {
         Address source, dest;
@@ -33,61 +38,43 @@ class Simulated : public Transport<Simulated>
     // should clear up per message/timeout
     std::queue<Callback> sequential_queue, concurrent_queue;
     int concurrent_id;
-
-public:
-    using microseconds = std::chrono::microseconds;
-    // we do not provide message content here, because serialized message is
-    // normally hard to inspect
-    using Filter = std::function<bool(
-        const Address &source, const Address &dest, microseconds &delay)>;
-
-private:
     std::map<int, Filter> filter_table;
 
 public:
-    Simulated(const Config<Simulated> &config) : Transport(config)
-    {
-        now_us = 0;
-    }
+    const Config<Simulated> &config;
 
-    Address allocateAddress() override
+    Simulated(const Config<Simulated> &config) : config(config) { now_us = 0; }
+
+    Address allocateAddress()
     {
         Address addr("client-");
         addr.push_back('A' + (char)receiver_table.size());
         return addr;
     }
 
-    void registerReceiver(TransportReceiver<Simulated> &receiver) override
+    void registerReceiver(Address address, Receiver receiver)
     {
-        receiver_table.insert({{receiver.address, receiver}});
+        receiver_table.insert({{address, receiver}});
     }
 
-    void registerMulticastReceiver(
-        TransportMulticastReceiver<Simulated> &receiver) override
+    void registerMulticastReceiver(Receiver receiver)
     {
         multicast_receiver_list.push_back(receiver);
     }
 
-    void sendMessage(
-        const TransportReceiver<Simulated> &sender, const Address &dest,
-        Write write) override;
+    template <typename Sender>
+    void sendMessage(const Sender &sender, const Address &dest, Write write);
 
-    void spawn(microseconds delay, Callback callback) override
+    void spawn(microseconds delay, Callback callback)
     {
         timeout_queue.insert({{now_us + delay.count(), callback}});
     }
 
-    void spawn(Callback callback) override
-    {
-        sequential_queue.push(callback);
-    }
+    void spawn(Callback callback) { sequential_queue.push(callback); }
 
-    void spawnConcurrent(Callback callback) override
-    {
-        concurrent_queue.push(callback);
-    }
+    void spawnConcurrent(Callback callback) { concurrent_queue.push(callback); }
 
-    int getConcurrentId() const override { return concurrent_id; }
+    int channel() const { return concurrent_id; }
 
 private:
     void processScheduled();
@@ -105,9 +92,9 @@ public:
     void removeFilter(int removed_id) { filter_table.erase(removed_id); }
 };
 
+template <typename Sender>
 void Simulated::sendMessage(
-    const TransportReceiver<Simulated> &sender, const Address &dest,
-    Write write)
+    const Sender &sender, const Address &dest, Write write)
 {
     if (!receiver_table.count(dest)) {
         panic("Send to unknown destination: sender = {}", sender.address);
@@ -167,7 +154,7 @@ void Simulated::run(microseconds time_limit)
             }
 
             concurrent_id = -1;
-            receiver_table.at(box.dest).receiveMessage(
+            receiver_table.at(box.dest)(
                 box.source, Span(box.message.data(), box.message.size()));
             processScheduled();
             message_iter = message_queue.begin();

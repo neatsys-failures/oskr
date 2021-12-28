@@ -52,7 +52,7 @@ public:
     using Config = BasicClient<>::Config;
 
 private:
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
     Config config;
 
     RequestNumber request_number;
@@ -68,7 +68,7 @@ private:
 
 public:
     BasicClient(Transport &transport, Config config) :
-        Client<Transport>(transport), transport(transport)
+        Client<Transport>(transport)
     {
         this->config = config;
         request_number = 0;
@@ -82,8 +82,7 @@ public:
     {
         ReplyMessage reply;
         deserializeReplyMessage(span, reply);
-        transport.spawn(
-            std::bind(&BasicClient::handleReply, this, reply));
+        transport.spawn(std::bind(&BasicClient::handleReply, this, reply));
     }
 
     using Buffer = oscar::Buffer<Transport::BUFFER_SIZE>;

@@ -13,11 +13,11 @@ template <> struct TransportMeta<DPDKClient> {
     static constexpr std::size_t BUFFER_SIZE = 1500;
 };
 
-class DPDKClient : public Transport<DPDKClient>
+class DPDKClient : public TransportBase<DPDKClient>
 {
 public:
     DPDKClient(Config<DPDKClient> &config, char *prog_name) :
-        Transport<DPDKClient>(config)
+        TransportBase<DPDKClient>(config)
     {
         std::vector<char *> args{prog_name};
         // TODO conditional

@@ -14,7 +14,7 @@ namespace oscar::vr
 template <typename Transport>
 class Replica : public TransportReceiver<Transport>
 {
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
     ReplicaId replica_id;
     int batch_size;
 
@@ -35,8 +35,8 @@ public:
         Transport &transport, Log<>::List &log, ReplicaId replica_id,
         int batch_size) :
         TransportReceiver<Transport>(
-            transport.config.replica_address_list[replica_id]),
-        transport(transport), log(log), prepare_set(transport.config.n_fault)
+            transport, transport.config.replica_address_list[replica_id]),
+        log(log), prepare_set(transport.config.n_fault)
     {
         if (batch_size > Log<>::BLOCK_SIZE) {
             panic("Batch size too large");

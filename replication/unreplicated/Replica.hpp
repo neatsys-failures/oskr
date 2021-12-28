@@ -11,7 +11,7 @@ namespace oscar::unreplicated
 template <typename Transport>
 class Replica : public TransportReceiver<Transport>
 {
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
 
     OpNumber op_number;
     ClientTable<Transport, ReplyMessage> client_table;
@@ -19,8 +19,9 @@ class Replica : public TransportReceiver<Transport>
 
 public:
     Replica(Transport &transport, Log<>::List &log) :
-        TransportReceiver<Transport>(transport.config.replica_address_list[0]),
-        transport(transport), log(log)
+        TransportReceiver<Transport>(
+            transport, transport.config.replica_address_list[0]),
+        log(log)
     {
         op_number = 0;
     }

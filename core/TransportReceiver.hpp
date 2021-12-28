@@ -22,44 +22,28 @@ reference of `Transport` instance when constructing subclass. Because the
 */
 template <typename Transport> class TransportReceiver
 {
+protected:
+    Transport &transport;
+
 public:
-    //! Static receiving address of the receiver. Must be unique across the
-    //! whole system.
     const typename Transport::Address address;
 
-    //! Construct receiver base class with address.
-    //!
-    TransportReceiver(typename Transport::Address address) : address(address) {}
+    TransportReceiver(
+        Transport &transport, typename Transport::Address address) :
+        transport(transport),
+        address(address)
+    {
+        transport.registerReceiver(address, [&](auto &remote, auto span) {
+            transport.spawn([&, span] { this->receiveMessage(remote, span); });
+        });
+    }
     virtual ~TransportReceiver() {}
 
     //! Handle received raw message. The underlying memory that backs `span`
     //! will go out of lifetime after this method returns, so receiver need to
     //! own everything necessary for later processing.
     virtual void
-    receiveMessage(const typename Transport::Address &remote, Span span)
-    {
-        panic("Unimplemented");
-    }
-
-    virtual void
-    glanceMessage(const typename Transport::Address &remote, Span span)
-    {
-        // transport.spawn(
-        //     bind(&TransportReceiver::receiverMessage, this, 
-        //         remote, move(span)))
-    }
-};
-
-/*! Although theoretically a multicast receiver is not required to be
-addressable if it does not listen to any unicast, the situation not present for
-known protocols (or can be easily workaround-ed by assigning a dummy address),
-and we try to avoid multi-inheritance here.
-*/
-// the codebase assume at most one multicast address present
-template <typename Transport>
-class TransportMulticastReceiver : public TransportReceiver<Transport>
-{
-    // TODO define methods
+    receiveMessage(const typename Transport::Address &remote, Span span) = 0;
 };
 
 } // namespace oscar
