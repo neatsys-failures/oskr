@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: common/ClientTable.hpp Source File</title>
+<title>Oskr: common/ClientTable.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -96,9 +96,9 @@ $(document).ready(function(){initNavTree('ClientTable_8hpp_source.html',''); ini
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Foundation.hpp&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace</span> oscar</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace</span> oskr</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;{</div>
-<div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="classoscar_1_1ClientTable.html">    9</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport, <span class="keyword">typename</span> ReplyMessage&gt; <span class="keyword">class</span> <a class="code" href="classoscar_1_1ClientTable.html">ClientTable</a></div>
+<div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="classoskr_1_1ClientTable.html">    9</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport, <span class="keyword">typename</span> ReplyMessage&gt; <span class="keyword">class</span> <a class="code" href="classoskr_1_1ClientTable.html">ClientTable</a></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;{</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <span class="keyword">struct</span> Record {</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;        std::optional&lt;<span class="keyword">typename</span> Transport::Address&gt; remote;</div>
@@ -126,23 +126,23 @@ $(document).ready(function(){initNavTree('ClientTable_8hpp_source.html',''); ini
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">//! }</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">//! // normally process new request here</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="comment">//! ```</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    Apply <a class="code" href="classoscar_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">check</a>(</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    Apply <a class="code" href="classoskr_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">check</a>(</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address &amp;remote, ClientId client_id,</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        RequestNumber request_number);</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="comment">//! On handling relayed request message. Caller assumes `request_number`</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="comment">//! corresponding to an currently outstanding request.</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">update</a>(ClientId client_id, RequestNumber request_number);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classoskr_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">update</a>(ClientId client_id, RequestNumber request_number);</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="comment">//! On committing.</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="comment">//!</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="comment">//! Always return callable (instead of `nullptr`) even when nothing to do.</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    Apply <a class="code" href="classoscar_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">update</a>(</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    Apply <a class="code" href="classoskr_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">update</a>(</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        ClientId client_id, RequestNumber request_number, ReplyMessage reply);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport, <span class="keyword">typename</span> ReplyMessage&gt;</div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="classoscar_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">   53</a></span>&#160;<span class="keyword">auto</span> <a class="code" href="classoscar_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoscar_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">check</a>(</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="classoskr_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">   53</a></span>&#160;<span class="keyword">auto</span> <a class="code" href="classoskr_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoskr_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb">check</a>(</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address &amp;remote, ClientId client_id,</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    RequestNumber request_number) -&gt; Apply</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;{</div>
@@ -182,7 +182,7 @@ $(document).ready(function(){initNavTree('ClientTable_8hpp_source.html',''); ini
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;}</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport, <span class="keyword">typename</span> ReplyMessage&gt;</div>
-<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="classoscar_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">   93</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classoscar_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoscar_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">update</a>(</div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="classoskr_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">   93</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classoskr_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoskr_1_1ClientTable.html#a11e9f734d654734e63b88a967ff2476a">update</a>(</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    ClientId client_id, RequestNumber request_number)</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;{</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keyword">auto</span> iter = record_table.find(client_id);</div>
@@ -205,7 +205,7 @@ $(document).ready(function(){initNavTree('ClientTable_8hpp_source.html',''); ini
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;}</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport, <span class="keyword">typename</span> ReplyMessage&gt;</div>
-<div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="classoscar_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">  116</a></span>&#160;<span class="keyword">auto</span> <a class="code" href="classoscar_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoscar_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">update</a>(</div>
+<div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="classoskr_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">  116</a></span>&#160;<span class="keyword">auto</span> <a class="code" href="classoskr_1_1ClientTable.html">ClientTable</a>&lt;Transport, ReplyMessage&gt;::<a class="code" href="classoskr_1_1ClientTable.html#afe1870397cb26938df93b0244f627954">update</a>(</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    ClientId client_id, RequestNumber request_number, ReplyMessage reply)</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    -&gt; Apply</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;{</div>
@@ -241,14 +241,14 @@ $(document).ready(function(){initNavTree('ClientTable_8hpp_source.html',''); ini
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        on_reply(remote, reply);</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    };</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;}</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;} <span class="comment">// namespace oscar</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;} <span class="comment">// namespace oskr</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_bdd9a5d540de89e9fe90efdfc6973a4f.html">common</a></li><li class="navelem"><b>ClientTable.hpp</b></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:56:58 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:25 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

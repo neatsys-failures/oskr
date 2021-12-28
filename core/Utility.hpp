@@ -7,7 +7,6 @@
 #include <bitsery/brief_syntax/vector.h>
 #include <spdlog/spdlog.h>
 
-#include "core/Log.hpp"
 #include "core/Type.hpp"
 
 namespace oskr

@@ -2,33 +2,33 @@ var annotated_dup =
 [
     [ "bitsery", null, [
       [ "traits", null, [
-        [ "ContainerTraits< oscar::Data >", "structbitsery_1_1traits_1_1ContainerTraits_3_01oscar_1_1Data_01_4.html", null ]
+        [ "ContainerTraits< oskr::Data >", "structbitsery_1_1traits_1_1ContainerTraits_3_01oskr_1_1Data_01_4.html", null ]
       ] ]
     ] ],
-    [ "oscar", null, [
-      [ "Client", "classoscar_1_1Client.html", "classoscar_1_1Client" ],
-      [ "Config", "structoscar_1_1Config.html", "structoscar_1_1Config" ],
-      [ "App", "classoscar_1_1App.html", "classoscar_1_1App" ],
-      [ "Log", "classoscar_1_1Log.html", "classoscar_1_1Log" ],
-      [ "Log< void >", "structoscar_1_1Log_3_01void_01_4.html", "structoscar_1_1Log_3_01void_01_4" ],
-      [ "TransportMeta", "structoscar_1_1TransportMeta.html", null ],
-      [ "TransportReceiver", "classoscar_1_1TransportReceiver.html", "classoscar_1_1TransportReceiver" ],
-      [ "TransportMulticastReceiver", "classoscar_1_1TransportMulticastReceiver.html", null ],
-      [ "Transport", "classoscar_1_1Transport.html", "classoscar_1_1Transport" ],
-      [ "RequestMessage", "structoscar_1_1RequestMessage.html", "structoscar_1_1RequestMessage" ],
-      [ "ReplyMessage", "structoscar_1_1ReplyMessage.html", "structoscar_1_1ReplyMessage" ],
-      [ "BasicClient", "classoscar_1_1BasicClient.html", "classoscar_1_1BasicClient" ],
-      [ "BasicClient< void, void >", "classoscar_1_1BasicClient_3_01void_00_01void_01_4.html", [
-        [ "Config", "structoscar_1_1BasicClient_3_01void_00_01void_01_4_1_1Config.html", "structoscar_1_1BasicClient_3_01void_00_01void_01_4_1_1Config" ]
-      ] ],
-      [ "ChainLog", "classoscar_1_1ChainLog.html", null ],
-      [ "ClientTable", "classoscar_1_1ClientTable.html", "classoscar_1_1ClientTable" ],
-      [ "ListLog", "classoscar_1_1ListLog.html", "classoscar_1_1ListLog" ],
-      [ "Quorum", "classoscar_1_1Quorum.html", "classoscar_1_1Quorum" ],
-      [ "StatefulTimeout", "classoscar_1_1StatefulTimeout.html", "classoscar_1_1StatefulTimeout" ],
-      [ "MockApp", "classoscar_1_1MockApp.html", "classoscar_1_1MockApp" ],
-      [ "NullApp", "classoscar_1_1NullApp.html", "classoscar_1_1NullApp" ],
-      [ "TransportMeta< SimulatedTransport >", "structoscar_1_1TransportMeta_3_01SimulatedTransport_01_4.html", "structoscar_1_1TransportMeta_3_01SimulatedTransport_01_4" ],
-      [ "SimulatedTransport", "classoscar_1_1SimulatedTransport.html", "classoscar_1_1SimulatedTransport" ]
+    [ "oskr", null, [
+      [ "Client", "classoskr_1_1Client.html", "classoskr_1_1Client" ],
+      [ "Config", "structoskr_1_1Config.html", "structoskr_1_1Config" ],
+      [ "App", "classoskr_1_1App.html", "classoskr_1_1App" ],
+      [ "Log", "classoskr_1_1Log.html", "classoskr_1_1Log" ],
+      [ "Log< void >", "structoskr_1_1Log_3_01void_01_4.html", "structoskr_1_1Log_3_01void_01_4" ],
+      [ "TransportMeta", "structoskr_1_1TransportMeta.html", null ],
+      [ "TransportBase", "classoskr_1_1TransportBase.html", "classoskr_1_1TransportBase" ],
+      [ "SenderArchetype", "structoskr_1_1SenderArchetype.html", "structoskr_1_1SenderArchetype" ],
+      [ "TransportReceiver", "classoskr_1_1TransportReceiver.html", "classoskr_1_1TransportReceiver" ],
+      [ "RequestMessage", "structoskr_1_1RequestMessage.html", "structoskr_1_1RequestMessage" ],
+      [ "ReplyMessage", "structoskr_1_1ReplyMessage.html", "structoskr_1_1ReplyMessage" ],
+      [ "BasicClient", "classoskr_1_1BasicClient.html", "classoskr_1_1BasicClient" ],
+      [ "ChainLog", "classoskr_1_1ChainLog.html", null ],
+      [ "ClientTable", "classoskr_1_1ClientTable.html", "classoskr_1_1ClientTable" ],
+      [ "ListLog", "classoskr_1_1ListLog.html", "classoskr_1_1ListLog" ],
+      [ "Quorum", "classoskr_1_1Quorum.html", "classoskr_1_1Quorum" ],
+      [ "StatefulTimeout", "classoskr_1_1StatefulTimeout.html", "classoskr_1_1StatefulTimeout" ],
+      [ "MockApp", "classoskr_1_1MockApp.html", "classoskr_1_1MockApp" ],
+      [ "NullApp", "classoskr_1_1NullApp.html", "classoskr_1_1NullApp" ],
+      [ "MBufDesc", "structoskr_1_1MBufDesc.html", "structoskr_1_1MBufDesc" ],
+      [ "TransportMeta< DPDKClient >", "structoskr_1_1TransportMeta_3_01DPDKClient_01_4.html", "structoskr_1_1TransportMeta_3_01DPDKClient_01_4" ],
+      [ "DPDKClient", "classoskr_1_1DPDKClient.html", "classoskr_1_1DPDKClient" ],
+      [ "TransportMeta< Simulated >", "structoskr_1_1TransportMeta_3_01Simulated_01_4.html", "structoskr_1_1TransportMeta_3_01Simulated_01_4" ],
+      [ "Simulated", "classoskr_1_1Simulated.html", "classoskr_1_1Simulated" ]
     ] ]
 ];

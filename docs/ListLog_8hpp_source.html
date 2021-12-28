@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: common/ListLog.hpp Source File</title>
+<title>Oskr: common/ListLog.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -95,9 +95,9 @@ $(document).ready(function(){initNavTree('ListLog_8hpp_source.html',''); initRes
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Foundation.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace</span> oscar</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace</span> oskr</div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;{</div>
-<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="classoscar_1_1ListLog.html">    8</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classoscar_1_1ListLog.html">ListLog</a> : <span class="keyword">public</span> <a class="code" href="classoscar_1_1Log.html">Log</a>&lt;&gt;::List</div>
+<div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="classoskr_1_1ListLog.html">    8</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classoskr_1_1ListLog.html">ListLog</a> : <span class="keyword">public</span> <a class="code" href="classoskr_1_1Log.html">Log</a>&lt;&gt;::List</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;{</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <span class="keyword">struct</span> FlattenBlock {</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;        std::size_t offset;</div>
@@ -105,16 +105,16 @@ $(document).ready(function(){initNavTree('ListLog_8hpp_source.html',''); initRes
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;        <span class="keywordtype">bool</span> committed;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    };</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    std::vector&lt;FlattenBlock&gt; block_list;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    std::vector&lt;<a class="code" href="classoscar_1_1Log.html">Log</a>&lt;&gt;::Entry&gt; entry_list;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    std::vector&lt;<a class="code" href="classoskr_1_1Log.html">Log</a>&lt;&gt;::Entry&gt; entry_list;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    OpNumber start_number, commit_number;</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keyword">explicit</span> ListLog(<a class="code" href="classoscar_1_1App.html">App</a> &amp;app) : <a class="code" href="classoscar_1_1Log.html">Log</a>&lt;<a class="code" href="classoscar_1_1Log.html">Log</a>&lt;&gt;::<a class="code" href="structoscar_1_1Log_3_01void_01_4_1_1ListPreset.html">ListPreset</a>&gt;(app)</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keyword">explicit</span> ListLog(<a class="code" href="classoskr_1_1App.html">App</a> &amp;app) : <a class="code" href="classoskr_1_1Log.html">Log</a>&lt;<a class="code" href="classoskr_1_1Log.html">Log</a>&lt;&gt;::<a class="code" href="structoskr_1_1Log_3_01void_01_4_1_1ListPreset.html">ListPreset</a>&gt;(app)</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        start_number = 0;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        commit_number = 0;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">ifdef</span> <span class="preprocessor">OSCAR_BENCHMARK</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">ifdef</span> <span class="preprocessor">OSKR_BENCHMARK</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        <span class="comment">// guess what batch size will be used?</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        <span class="comment">// benchmark env should feel well even preallocate for no batch :)</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        block_list.reserve(Log&lt;&gt;::N_RESERVED_ENTRY);</div>
@@ -197,14 +197,14 @@ $(document).ready(function(){initNavTree('ListLog_8hpp_source.html',''); initRes
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    }</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;};</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;} <span class="comment">// namespace oscar</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;} <span class="comment">// namespace oskr</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_bdd9a5d540de89e9fe90efdfc6973a4f.html">common</a></li><li class="navelem"><b>ListLog.hpp</b></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:56:59 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:26 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

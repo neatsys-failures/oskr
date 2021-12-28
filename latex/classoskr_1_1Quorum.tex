@@ -1,0 +1,50 @@
+\hypertarget{classoskr_1_1Quorum}{}\doxysection{Quorum$<$ IDTYPE, MSGTYPE $>$}
+\label{classoskr_1_1Quorum}\index{Quorum$<$ IDTYPE, MSGTYPE $>$@{Quorum$<$ IDTYPE, MSGTYPE $>$}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a225aeb7beb4d158ef763ec36c0c9543a}\label{classoskr_1_1Quorum_a225aeb7beb4d158ef763ec36c0c9543a}} 
+{\bfseries Quorum} (int n\+\_\+required)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_ac8bb3912a3ce86b15842e79d0b421204}\label{classoskr_1_1Quorum_ac8bb3912a3ce86b15842e79d0b421204}} 
+void {\bfseries clear} ()
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a47ab9c368b597dd7aa81829048975fc4}\label{classoskr_1_1Quorum_a47ab9c368b597dd7aa81829048975fc4}} 
+void {\bfseries clear} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_af020dce1ea352a6d0bf48e429999445d}\label{classoskr_1_1Quorum_af020dce1ea352a6d0bf48e429999445d}} 
+Replica\+Id {\bfseries n\+Required} () const
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a71cc81a9e3ac61fe04129399fda1b475}\label{classoskr_1_1Quorum_a71cc81a9e3ac61fe04129399fda1b475}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ \& {\bfseries get\+Messages} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a8cf5ababefed4727839167a347c97fc3}\label{classoskr_1_1Quorum_a8cf5ababefed4727839167a347c97fc3}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ $\ast$ {\bfseries check\+For\+Quorum} (IDTYPE vs)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_ab9561e35f66810f167152da3cd611a12}\label{classoskr_1_1Quorum_ab9561e35f66810f167152da3cd611a12}} 
+const std\+::map$<$ Replica\+Id, MSGTYPE $>$ $\ast$ {\bfseries add\+And\+Check\+For\+Quorum} (IDTYPE vs, Replica\+Id replica\+\_\+id, const MSGTYPE \&msg)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a421664fc9de6e71da8615b3a455b4200}\label{classoskr_1_1Quorum_a421664fc9de6e71da8615b3a455b4200}} 
+void {\bfseries add} (IDTYPE vs, Replica\+Id replica\+\_\+id, const MSGTYPE \&msg)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1Quorum_a466610c237807c85ad5bb089fc51147b}\label{classoskr_1_1Quorum_a466610c237807c85ad5bb089fc51147b}} 
+int {\bfseries num\+Required}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$class IDTYPE, class MSGTYPE$>$\newline
+class oskr\+::\+Quorum$<$ IDTYPE, MSGTYPE $>$}
+
+
+
+Definition at line 46 of file Quorum.\+hpp.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+common/Quorum.\+hpp\end{DoxyCompactItemize}

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: Main Page</title>
+<title>Oskr: Main Page</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -87,58 +87,65 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">Oscar Documentation</div>  </div>
+<div class="title">Oskr Documentation</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_README"></a></p>
 <h2>High Performance Distributed Protocols Collection</h2>
-<p><img src="https://img.shields.io/github/repo-size/sgdxbc/oscar" alt="GitHub repo size" class="inline"/> <img src="https://img.shields.io/github/languages/code-size/sgdxbc/oscar" alt="GitHub code size in bytes" class="inline"/> <img src="https://img.shields.io/tokei/lines/github/sgdxbc/oscar" alt="Lines of code" class="inline"/> <img src="https://img.shields.io/github/contributors/sgdxbc/oscar" alt="GitHub contributors" class="inline"/> <img src="https://img.shields.io/github/commit-activity/m/sgdxbc/oscar" alt="GitHub commit activity" class="inline"/></p>
+<p><img src="https://img.shields.io/github/repo-size/sgdxbc/oskr" alt="GitHub repo size" class="inline"/> <img src="https://img.shields.io/github/languages/code-size/sgdxbc/oskr" alt="GitHub code size in bytes" class="inline"/> <img src="https://img.shields.io/tokei/lines/github/sgdxbc/oskr" alt="Lines of code" class="inline"/> <img src="https://img.shields.io/github/contributors/sgdxbc/oskr" alt="GitHub contributors" class="inline"/> <img src="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr" alt="GitHub commit activity" class="inline"/></p>
 <p><b>Motivation.</b> This is an attempt to improve based on <a href="https://github.com/UWSysLab/specpaxos">specpaxos</a>. The detail of consideration is listed in <a href="https://sgdxbc.github.io/ideas/2021-12-15/p0">a piece of blog</a>.</p>
-<p><b>Why named Oscar?</b> Because the core of this project is based on a specialized actor model.</p>
+<p><b>Why named Oskr?</b> The name is derived from the Oscars (Academy Awards), because the core of this project is based on a specialized actor model.</p>
 <p><b>Present issues:</b></p><ul>
-<li>Heavily-used template programming causing terrible error reporting.</li>
-<li>Heavily-used template programming + self-contained header result in long compilation time. Because most class in header are templated, precompiled header not help much.</li>
+<li>Heavily-used template programming + self-contained header result in terrible error reporting long compilation time. Because most class in header are templated, precompiled header not help much.<ul>
+<li>Template programming also make interface more cumbersome with <code>typename</code> and such.</li>
+</ul>
+</li>
 <li>Serialization leverage Bitsery, which is a little bit lack of document.</li>
-<li>Some part of interface has cumbersome syntax, because of required <code>typename</code> and such.</li>
 <li>CMake makes me feel good, meson makes me feel better, but at the end of the day I have to use CMake because of the supportness of most dependencies. This causes the setup of DPDK a little bit hacky and maybe fragile.</li>
+<li>The <em>executors</em> draft is not standardized yet. Once it is done, certain part of the project (i.e. <code>Transport</code>) may be invalidated by it:<ul>
+<li>For non-DPDK <code>Transport</code>, standard may provide a better alternative but the migration could be hard.</li>
+<li>Althrough standard or anyone else probably will not provide DPDK <code>Transport</code>s, its non-standard shape may impede other projects to adapt it.</li>
+</ul>
+</li>
+</ul>
+<p><b>Roadmap:</b></p><ul>
+<li>[ ] Architecture design + Viewstamped Replication</li>
+<li>[ ] PBFT</li>
+<li>[ ] HotStuff</li>
+<li>[ ] Two-phase commit</li>
 </ul>
 <hr  />
-<p>Develop on Ubuntu 21.10, with clang version 13. Required apt packages:</p><ul>
-<li><code>cmake</code></li>
-<li><code>clang</code></li>
-<li><code>clang-tidy</code></li>
-<li><code>meson</code></li>
-<li><code>ninja-build</code></li>
-<li><code>python3-pyelftools</code></li>
-<li><code>libboost-dev</code></li>
-</ul>
-<p>Step 1, clone the repo with <code>--recursive</code>.</p>
+<p>Develop on Ubuntu 21.10, with Clang version 13. Required apt packages:</p>
+<div class="fragment"><div class="line">clang cmake pkg-config meson ninja-build python3-pyelftools libboost-dev clang-tidy</div>
+</div><!-- fragment --><p>Step 1, clone the repo with <code>--recursive</code>.</p>
 <p>Step 2, build CMake project as usual. Initial configuration will build a DPDK, which takes some time. Notable targets:</p><ul>
 <li><code>Client</code> benchmark client, executable at <code>&lt;build&gt;/benchmark/Client</code>.</li>
+<li><code>Test*</code> unit tests (to get full list run <code>make help | grep Test</code>), executable at <code>&lt;build&gt;/test/Test*</code></li>
 </ul>
 <p><em>Work in progress.</em></p>
 <hr  />
 <p>Project structure:</p><ul>
-<li><code>core</code>[^1] classes designed to be inherited, and something essential to those classes.<ul>
+<li><code>core</code>[^1] behavioral definition of abstraction components. Pure interfaces without concrete logic.<ul>
 <li><code><a class="el" href="Foundation_8hpp_source.html">Foundation.hpp</a></code> an all-in-one header for protocol implementation.</li>
 </ul>
 </li>
-<li><code>common</code>[^1] classes designed to be composed.</li>
+<li><code>common</code>[^1] common behavior logic prepared for reusing.</li>
 <li><code>app</code>[^1] builtin applications to be supported by protocols.</li>
 <li><code>transport</code>[^1] runtime implementations that support protocols.</li>
 <li><code>replication</code> replication protocols.</li>
 <li><code>transactional</code> transactional protocols.</li>
 <li><code>dependency</code> git submodule stubs.</li>
 <li><code>test</code> flat directory for tests.</li>
+<li><code>benchmark</code> universal entry executable for running all protocols.</li>
 </ul>
-<p>[^1]: Document of these source is hosted on <a href="https://sgdxbc.github.io/oscar">project site</a>. </p>
+<p>[^1]: Document of these source is hosted on <a href="https://sgdxbc.github.io/oskr">project site</a>. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Dec 25 2021 12:57:06 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:37 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

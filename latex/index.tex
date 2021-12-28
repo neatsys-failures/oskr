@@ -8,36 +8,49 @@
 
 {\bfseries{Motivation.}} This is an attempt to improve based on \href{https://github.com/UWSysLab/specpaxos}{\texttt{ specpaxos}}. The detail of consideration is listed in \href{https://sgdxbc.github.io/ideas/2021-12-15/p0}{\texttt{ a piece of blog}}.
 
-{\bfseries{Why named Oscar?}} Because the core of this project is based on a specialized actor model.
+{\bfseries{Why named Oskr?}} The name is derived from the Oscars (Academy Awards), because the core of this project is based on a specialized actor model.
 
 {\bfseries{Present issues\+:}}
 \begin{DoxyItemize}
-\item Heavily-\/used template programming causing terrible error reporting.
-\item Heavily-\/used template programming + self-\/contained header result in long compilation time. Because most class in header are templated, precompiled header not help much.
+\item Heavily-\/used template programming + self-\/contained header result in terrible error reporting long compilation time. Because most class in header are templated, precompiled header not help much.
+\begin{DoxyItemize}
+\item Template programming also make interface more cumbersome with {\ttfamily typename} and such.
+\end{DoxyItemize}
 \item Serialization leverage Bitsery, which is a little bit lack of document.
-\item Some part of interface has cumbersome syntax, because of required {\ttfamily typename} and such.
 \item CMake makes me feel good, meson makes me feel better, but at the end of the day I have to use CMake because of the supportness of most dependencies. This causes the setup of DPDK a little bit hacky and maybe fragile.
+\item The {\itshape executors} draft is not standardized yet. Once it is done, certain part of the project (i.\+e. {\ttfamily Transport}) may be invalidated by it\+:
+\begin{DoxyItemize}
+\item For non-\/\+DPDK {\ttfamily Transport}, standard may provide a better alternative but the migration could be hard.
+\item Althrough standard or anyone else probably will not provide DPDK {\ttfamily Transport}s, its non-\/standard shape may impede other projects to adapt it.
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+{\bfseries{Roadmap\+:}}
+\begin{DoxyItemize}
+\item \mbox{[} \mbox{]} Architecture design + Viewstamped Replication
+\item \mbox{[} \mbox{]} PBFT
+\item \mbox{[} \mbox{]} Hot\+Stuff
+\item \mbox{[} \mbox{]} Two-\/phase commit
 \end{DoxyItemize}
 
 \DoxyHorRuler{0}
 
 
-Develop on Ubuntu 21.\+10, with clang version 13. Required apt packages\+:
-\begin{DoxyItemize}
-\item {\ttfamily cmake}
-\item {\ttfamily clang}
-\item {\ttfamily clang-\/tidy}
-\item {\ttfamily meson}
-\item {\ttfamily ninja-\/build}
-\item {\ttfamily python3-\/pyelftools}
-\item {\ttfamily libboost-\/dev}
-\end{DoxyItemize}
+Develop on Ubuntu 21.\+10, with Clang version 13. Required apt packages\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{clang cmake pkg-\/config meson ninja-\/build python3-\/pyelftools libboost-\/dev clang-\/tidy}
+
+\end{DoxyCode}
+
 
 Step 1, clone the repo with {\ttfamily -\/-\/recursive}.
 
 Step 2, build CMake project as usual. Initial configuration will build a DPDK, which takes some time. Notable targets\+:
 \begin{DoxyItemize}
 \item {\ttfamily Client} benchmark client, executable at {\ttfamily $<$build$>$/benchmark/\+Client}.
+\item {\ttfamily Test$\ast$} unit tests (to get full list run {\ttfamily make help $\vert$ grep Test}), executable at {\ttfamily $<$build$>$/test/\+Test$\ast$}
 \end{DoxyItemize}
 
 {\itshape Work in progress.}
@@ -47,17 +60,18 @@ Step 2, build CMake project as usual. Initial configuration will build a DPDK, w
 
 Project structure\+:
 \begin{DoxyItemize}
-\item {\ttfamily core}\mbox{[}$^\wedge$1\mbox{]} classes designed to be inherited, and something essential to those classes.
+\item {\ttfamily core}\mbox{[}$^\wedge$1\mbox{]} behavioral definition of abstraction components. Pure interfaces without concrete logic.
 \begin{DoxyItemize}
 \item {\ttfamily \mbox{\hyperlink{Foundation_8hpp_source}{Foundation.\+hpp}}} an all-\/in-\/one header for protocol implementation.
 \end{DoxyItemize}
-\item {\ttfamily common}\mbox{[}$^\wedge$1\mbox{]} classes designed to be composed.
+\item {\ttfamily common}\mbox{[}$^\wedge$1\mbox{]} common behavior logic prepared for reusing.
 \item {\ttfamily app}\mbox{[}$^\wedge$1\mbox{]} builtin applications to be supported by protocols.
 \item {\ttfamily transport}\mbox{[}$^\wedge$1\mbox{]} runtime implementations that support protocols.
 \item {\ttfamily replication} replication protocols.
 \item {\ttfamily transactional} transactional protocols.
 \item {\ttfamily dependency} git submodule stubs.
 \item {\ttfamily test} flat directory for tests.
+\item {\ttfamily benchmark} universal entry executable for running all protocols.
 \end{DoxyItemize}
 
-\mbox{[}$^\wedge$1\mbox{]}\+: Document of these source is hosted on \href{https://sgdxbc.github.io/oscar}{\texttt{ project site}}. 
+\mbox{[}$^\wedge$1\mbox{]}\+: Document of these source is hosted on \href{https://sgdxbc.github.io/oskr}{\texttt{ project site}}. 

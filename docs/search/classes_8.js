@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['simulatedtransport_76',['SimulatedTransport',['../classoscar_1_1SimulatedTransport.html',1,'oscar']]],
-  ['statefultimeout_77',['StatefulTimeout',['../classoscar_1_1StatefulTimeout.html',1,'oscar']]]
+  ['replymessage_59',['ReplyMessage',['../structoskr_1_1ReplyMessage.html',1,'oskr']]],
+  ['requestmessage_60',['RequestMessage',['../structoskr_1_1RequestMessage.html',1,'oskr']]]
 ];

@@ -1,0 +1,5 @@
+<map id="Client&lt; Transport &gt;" name="Client&lt; Transport &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="25,100,237,129"/>
+<area shape="rect" id="node3" href="$classoskr_1_1BasicClient.html" title=" " alt="" coords="5,177,257,224"/>
+<area shape="rect" id="node2" href="$classoskr_1_1TransportReceiver.html" title="The base class for packet&#45;listeners, i.e., all participants of protocols. The receiving half of the a..." alt="" coords="30,5,233,52"/>
+</map>

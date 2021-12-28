@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: common/StatefulTimeout.hpp Source File</title>
+<title>Oskr: common/StatefulTimeout.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -97,9 +97,9 @@ $(document).ready(function(){initNavTree('StatefulTimeout_8hpp_source.html','');
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Foundation.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace</span> oscar</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace</span> oskr</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;{</div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classoscar_1_1StatefulTimeout.html">   10</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">class</span> <a class="code" href="classoscar_1_1StatefulTimeout.html">StatefulTimeout</a></div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classoskr_1_1StatefulTimeout.html">   10</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">class</span> <a class="code" href="classoskr_1_1StatefulTimeout.html">StatefulTimeout</a></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;{</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    std::optional&lt;<span class="keywordtype">int</span>&gt; current_id;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <span class="keywordtype">int</span> timeout_id;</div>
@@ -124,7 +124,7 @@ $(document).ready(function(){initNavTree('StatefulTimeout_8hpp_source.html','');
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    {</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;        timeout_id += 1;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        current_id = timeout_id;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        transport.scheduleTimeout(delay, [<span class="keyword">this</span>, current_id = <span class="keyword">this</span>-&gt;current_id] {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        transport.spawn(delay, [&amp;, current_id = current_id] {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">this</span>-&gt;current_id != current_id) {</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            }</div>
@@ -142,14 +142,14 @@ $(document).ready(function(){initNavTree('StatefulTimeout_8hpp_source.html','');
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordtype">void</span> disable() { current_id = std::nullopt; }</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;};</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;} <span class="comment">// namespace oscar</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;} <span class="comment">// namespace oskr</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_bdd9a5d540de89e9fe90efdfc6973a4f.html">common</a></li><li class="navelem"><b>StatefulTimeout.hpp</b></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:57:01 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:29 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

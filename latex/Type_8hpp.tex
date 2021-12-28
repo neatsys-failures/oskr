@@ -3,14 +3,16 @@
 {\ttfamily \#include $<$cstdint$>$}\newline
 {\ttfamily \#include $<$span$>$}\newline
 {\ttfamily \#include $<$boost/container/small\+\_\+vector.\+hpp$>$}\newline
-Include dependency graph for Type.\+hpp\+:\nopagebreak
+Include dependency graph for Type.\+hpp\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{Type_8hpp__incl}
 \end{center}
 \end{figure}
-This graph shows which files directly or indirectly include this file\+:\nopagebreak
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -35,9 +37,11 @@ using {\bfseries Replica\+Id} = std\+::int8\+\_\+t
 \mbox{\Hypertarget{Type_8hpp_a21da8e687fc364ce2b80dee2b6765bb7}\label{Type_8hpp_a21da8e687fc364ce2b80dee2b6765bb7}} 
 using {\bfseries Client\+Id} = std\+::uint32\+\_\+t
 \item 
-using \mbox{\hyperlink{Type_8hpp_a460f2acf1b81050fb952245756a7aaa3}{Span}} = const std\+::span$<$ std\+::uint8\+\_\+t $>$
+\mbox{\Hypertarget{Type_8hpp_a5d4da2a22bf60dd156b7736bf8cb946f}\label{Type_8hpp_a5d4da2a22bf60dd156b7736bf8cb946f}} 
+using {\bfseries Rx\+Span} = std\+::span$<$ std\+::uint8\+\_\+t $>$
 \item 
-{\footnotesize template$<$std\+::size\+\_\+t BUFFER\+\_\+\+SIZE$>$ }\\using \mbox{\hyperlink{Type_8hpp_a8acb43b3e680d8f2df1b66ab53eb20af}{Buffer}} = std\+::uint8\+\_\+t\mbox{[}BUFFER\+\_\+\+SIZE\mbox{]}
+\mbox{\Hypertarget{Type_8hpp_a9f6c07c4652721cfbad4e89864489dae}\label{Type_8hpp_a9f6c07c4652721cfbad4e89864489dae}} 
+{\footnotesize template$<$std\+::size\+\_\+t BUFFER\+\_\+\+SIZE$>$ }\\using {\bfseries Tx\+Span} = std\+::span$<$ std\+::uint8\+\_\+t, BUFFER\+\_\+\+SIZE $>$
 \item 
 using \mbox{\hyperlink{Type_8hpp_a1b2e3eef31ba51928855fd41517a98b4}{Data}} = boost\+::container\+::small\+\_\+vector$<$ std\+::uint8\+\_\+t, 16 $>$
 \item 
@@ -47,26 +51,6 @@ using {\bfseries Hash} = std\+::uint8\+\_\+t\mbox{[}32\mbox{]}
 
 
 \doxysubsection{Typedef Documentation}
-\mbox{\Hypertarget{Type_8hpp_a460f2acf1b81050fb952245756a7aaa3}\label{Type_8hpp_a460f2acf1b81050fb952245756a7aaa3}} 
-\index{Type.hpp@{Type.hpp}!Span@{Span}}
-\index{Span@{Span}!Type.hpp@{Type.hpp}}
-\doxysubsubsection{\texorpdfstring{Span}{Span}}
-{\footnotesize\ttfamily using Span =  const std\+::span$<$std\+::uint8\+\_\+t$>$}
-
-Unlike {\ttfamily Buffer}, {\ttfamily Span} does not own represented slice, so using {\ttfamily Span} with value semantic actually behaves as pass reference. 
-
-Definition at line 21 of file Type.\+hpp.
-
-\mbox{\Hypertarget{Type_8hpp_a8acb43b3e680d8f2df1b66ab53eb20af}\label{Type_8hpp_a8acb43b3e680d8f2df1b66ab53eb20af}} 
-\index{Type.hpp@{Type.hpp}!Buffer@{Buffer}}
-\index{Buffer@{Buffer}!Type.hpp@{Type.hpp}}
-\doxysubsubsection{\texorpdfstring{Buffer}{Buffer}}
-{\footnotesize\ttfamily using Buffer =  std\+::uint8\+\_\+t\mbox{[}BUFFER\+\_\+\+SIZE\mbox{]}}
-
-The thing similar to {\ttfamily Span} is {\ttfamily Buffer \&}, and use {\ttfamily auto \&} in lambdas. 
-
-Definition at line 25 of file Type.\+hpp.
-
 \mbox{\Hypertarget{Type_8hpp_a1b2e3eef31ba51928855fd41517a98b4}\label{Type_8hpp_a1b2e3eef31ba51928855fd41517a98b4}} 
 \index{Type.hpp@{Type.hpp}!Data@{Data}}
 \index{Data@{Data}!Type.hpp@{Type.hpp}}
@@ -75,5 +59,5 @@ Definition at line 25 of file Type.\+hpp.
 
 For general storage of opaque things 
 
-Definition at line 29 of file Type.\+hpp.
+Definition at line 24 of file Type.\+hpp.
 

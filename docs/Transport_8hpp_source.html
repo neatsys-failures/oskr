@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: core/Transport.hpp Source File</title>
+<title>Oskr: core/Transport.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -98,164 +98,88 @@ $(document).ready(function(){initNavTree('Transport_8hpp_source.html',''); initR
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Config.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Type.hpp&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace</span> oscar</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace</span> oskr</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;{</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">/*! @brief A struct required by C++, so `Transport`&#39;s subclass can define</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">essentials ahead of instantiating base class.</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">Each specialization must include:</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">+ Associated type `Address`. It is assumed to be suitable for value semantic.</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">+ Compile-time constant `std::size_t` expression `BUFFER_SIZE`, the maximum</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">  length of serialized tx message. Sender&#39;s message length is bounded by this so</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">  transport do not need to provide dynamic allocated buffer.</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="structoscar_1_1TransportMeta.html">   20</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">struct</span> <a class="code" href="structoscar_1_1TransportMeta.html">TransportMeta</a> {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="comment">// would be better to use concept?</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="comment">// using Address = ...;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="comment">// static constexpr std::size_t BUFFER_SIZE = ...;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="structoskr_1_1TransportMeta.html">   11</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Self&gt; <span class="keyword">struct</span> <a class="code" href="structoskr_1_1TransportMeta.html">TransportMeta</a> {</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;};</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classoskr_1_1TransportBase.html">   14</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Self&gt; <span class="keyword">class</span> <a class="code" href="classoskr_1_1TransportBase.html">TransportBase</a></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;{</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keyword">using</span> Address = <span class="keyword">typename</span> <a class="code" href="structoskr_1_1TransportMeta.html">TransportMeta</a>&lt;Self&gt;::Address;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keyword">using</span> Desc = <span class="keyword">typename</span> <a class="code" href="structoskr_1_1TransportMeta.html">TransportMeta</a>&lt;Self&gt;::Desc;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keyword">static</span> <span class="keyword">constexpr</span> std::size_t BUFFER_SIZE = <a class="code" href="structoskr_1_1TransportMeta.html">TransportMeta</a>&lt;Self&gt;::BUFFER_SIZE;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">using</span> Receiver =</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> Address &amp;remote, Desc descriptor)&gt;;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">using</span> Callback = std::function&lt;<span class="keywordtype">void</span>()&gt;;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keyword">using</span> Write = std::function&lt;std::size_t(TxSpan&lt;BUFFER_SIZE&gt; buffer)&gt;;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="comment">// TODO N_CONCURRENT_MAX</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;};</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">class</span> TransportReceiver;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">class</span> TransportMulticastReceiver;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">/*! @brief General supporting runtime for `TransportReceiver`, the sending half</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">of the actor model (and more).</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment">The base class takes curiously recurring template pattern. The subclass</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">`Transport` is passed as template argument to `Transport`, as well as `Config`,</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">`TransportReceiver`, etc.</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">Besides of all interfaces defined here, a `Transport` implementation probably</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">wants to provide a `run` method to start main loop.</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html">   42</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Self&gt; <span class="keyword">class</span> <a class="code" href="classoscar_1_1Transport.html">Transport</a></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;{</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="comment">//! Construct base class with global configuration.</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#ac9a29eaa89638d455a7b6eeb2e0001c9">   47</a></span>&#160;    <a class="code" href="classoscar_1_1Transport.html#ac9a29eaa89638d455a7b6eeb2e0001c9">Transport</a>(<span class="keyword">const</span> <a class="code" href="structoscar_1_1Config.html">Config</a>&lt;Self&gt; &amp;config) : <a class="code" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">config</a>(config) {}</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">virtual</span> ~Transport() {}</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="comment">//! Value-semantic address type. Possible choices include plain string,</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="comment">//! `socketaddr_in`, or more customized ones.</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a1c8682bdba52d3903c24664c9574923d">   54</a></span>&#160;    <span class="keyword">using</span> Address = <span class="keyword">typename</span> <a class="code" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt;Self&gt;::Address;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="comment">//! Dynamically allocate free address, mainly for construct `Client`.</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a89734c342cac0f428c4653c656821636">   58</a></span>&#160;    <span class="keyword">virtual</span> Address <a class="code" href="classoscar_1_1Transport.html#a89734c342cac0f428c4653c656821636">allocateAddress</a>() = 0;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="comment">//! Configuration for `Transport` instance, along with all registered</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="comment">//! receivers.</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">   62</a></span>&#160;    <span class="keyword">const</span> <a class="code" href="structoscar_1_1Config.html">Config</a>&lt;Self&gt; &amp;<a class="code" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">config</a>;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="comment">//! Register a receiver. The caller ensures that receiver&#39;s reference will</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="comment">//! be valid as long as message get received on receiver&#39;s address, which</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="comment">//! probably happens through the rest of `Transport`&#39;s lifetime.</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a76f67960f0c55270475b5995e9ecb9e8">   67</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1Transport.html#a76f67960f0c55270475b5995e9ecb9e8">registerReceiver</a>(TransportReceiver&lt;Self&gt; &amp;receiver) = 0;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="comment">//! Register a receiver that listens to multicast messages. Transport</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">//! implementation may require receiver to call `registerReceiver` first.</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a25108bca10e81b195a42266f2c1a5bd2">   71</a></span>&#160;    <a class="code" href="classoscar_1_1Transport.html#a25108bca10e81b195a42266f2c1a5bd2">registerMulticastReceiver</a>(TransportMulticastReceiver&lt;Self&gt; &amp;receiver) = 0;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">//! General task closure. Receiver can keep things inside it alive between</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="comment">//! working steps.</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a9f4d3f1692b57758c10763bea8a50a04">   75</a></span>&#160;    <span class="keyword">using</span> Callback = std::function&lt;<span class="keywordtype">void</span>()&gt;;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="comment">//! Schedule a one-time timeout. `callback` will be called after `delay`,</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="comment">//! cannot be canceled.</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="comment">//! Unlike receiving message, timeout is non-direction, i.e., does not have</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="comment">//! a `receiver`. The behavior depends on `callback`&#39;s capturing.</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">//! Timeout&#39;s `callback` is always executed sequentially.</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">   85</a></span>&#160;    <a class="code" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">scheduleTimeout</a>(std::chrono::microseconds delay, Callback callback) = 0;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="comment">//! Schedule a sequential task. Sequential task is promised to be executed</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">//! one by one without concurrency, so different sequential tasks can share</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="comment">//! states without locking. However, it is not guaranteed that all</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">//! sequential tasks will be executed by the same thread.</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="comment">//! A default implementation is provided mainly for implying that timeout is</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="comment">//! sequential task by default, so there is no need for calling</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="comment">//! `scheduleSequential` inside timeout callback.</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#abdfe4e9d8c5c75d92a6e0d4537c7a8bc">   95</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1Transport.html#abdfe4e9d8c5c75d92a6e0d4537c7a8bc">scheduleSequential</a>(Callback callback)</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        <a class="code" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">scheduleTimeout</a><a class="code" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">(</a>std::chrono::microseconds(0)<a class="code" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">,</a> callback<a class="code" href="classoscar_1_1Transport.html#a4bb5fc411813a63a08bcd0725682a0b7">)</a>;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    }</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="comment">//! Schedule a concurrent task. Multiple concurrent tasks may be executed</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="comment">//! with temporal overlapping, so they would better to be stateless.</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a3cb0a793c8df60862c9506aed5f7880d">  102</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1Transport.html#a3cb0a793c8df60862c9506aed5f7880d">scheduleConcurrent</a>(Callback callback) = 0;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="comment">//! Every concurrent task get assigned to a concurrent id, which can be</span></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="comment">//! queried by calling `getConcurrentId` during execution. Concurrent id is</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="comment">//! unsigned and bounded.</span></div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="comment">//! Transport implementation promise that all concurrent tasks that get</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="comment">//! assigned to the same concurrent id will be sequentially executed. So it</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="comment">//! is safe to reuse pre-allocated memory &quot;slot&quot; among those tasks.</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="comment">//! Transport may set concurrent id to `-1` for sequential tasks, but it is</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="comment">//! encouraged to determine sequential tasks by themselves.</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a80a1bffd0639aedd276a53be28b9fde3">  114</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">int</span> <a class="code" href="classoscar_1_1Transport.html#a80a1bffd0639aedd276a53be28b9fde3">getConcurrentId</a>() <span class="keyword">const</span> = 0;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="comment">//! The size of buffer of tx message. May be helpful in assertion.</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00118"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a01c5fb279d6b80ebed829be7a804dde2">  118</a></span>&#160;    <span class="keyword">static</span> <span class="keyword">constexpr</span> std::size_t <a class="code" href="classoscar_1_1Transport.html#a01c5fb279d6b80ebed829be7a804dde2">BUFFER_SIZE</a> = <a class="code" href="structoscar_1_1TransportMeta.html">TransportMeta</a>&lt;Self&gt;::BUFFER_SIZE;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="comment">//! Argument for `sendMessage*` methods. The lambda should in-place</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="comment">//! serialize message into `buffer`, and return message length. The returned</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="comment">//! value must not exceed `BUFFER_SIZE`.</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a1b95d6e95646af8502c81eb51ea1f232">  123</a></span>&#160;    <span class="keyword">using</span> Write = std::function&lt;std::size_t(Buffer&lt;<a class="code" href="classoscar_1_1Transport.html#a01c5fb279d6b80ebed829be7a804dde2">BUFFER_SIZE</a>&gt; &amp;buffer)&gt;;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <span class="comment">//! Send a message. The first argument is probably `*this`.</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="comment">//! Transport implementation promise not to access `write` after this method</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="comment">//! return, so the closure can capture references with no worry.</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">  129</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">sendMessage</a>(</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        <span class="keyword">const</span> TransportReceiver&lt;Self&gt; &amp;sender, <span class="keyword">const</span> Address &amp;dest,</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        Write write) = 0;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160; </div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordtype">void</span> sendMessageToReplica(</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        <span class="keyword">const</span> TransportReceiver&lt;Self&gt; &amp;sender, ReplicaId replica_id,</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;        Write write)</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    {</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        <a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">sendMessage</a><a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">(</a>sender<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> <a class="code" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">config</a>.replica_address_list[replica_id]<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> write<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">)</a>;</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    }</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160; </div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <span class="comment">//! The default implementation is mainly for illustration purpose. Transport</span></div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    <span class="comment">//! should provide a more efficient version that only serialize once.</span></div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00143"></a><span class="lineno"><a class="line" href="classoscar_1_1Transport.html#a266d9f88b4ba748bdb8fd8c3640791c3">  143</a></span>&#160;    <a class="code" href="classoscar_1_1Transport.html#a266d9f88b4ba748bdb8fd8c3640791c3">sendMessageToAll</a>(<span class="keyword">const</span> TransportReceiver&lt;Self&gt; &amp;sender, Write write)</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    {</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> address : <a class="code" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">config</a>.replica_address_list) {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;            <span class="keywordflow">if</span> (address != sender.address) {</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;                <a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">sendMessage</a><a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">(</a>sender<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> address<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> write<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">)</a>;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;            }</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        }</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    }</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    sendMessageToMulticast(<span class="keyword">const</span> TransportReceiver&lt;Self&gt; &amp;sender, Write write)</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    {</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        <a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">sendMessage</a><a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">(</a>sender<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> <a class="code" href="classoscar_1_1Transport.html#a7d3a3a71db9e796d43f4001b419e83c4">config</a>.multicast_address<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">,</a> write<a class="code" href="classoscar_1_1Transport.html#a428461e07c001528d167a143d0aaed79">)</a>;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    }</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;};</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160; </div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;} <span class="comment">// namespace oscar</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sender&gt;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">void</span> sendMessageToReplica(</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        <span class="keyword">const</span> Sender &amp;sender, ReplicaId replica_id, Write write)</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        Self &amp;transport = <span class="keyword">static_cast</span>&lt;Self &amp;&gt;(*<span class="keyword">this</span>);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        transport.sendMessage(</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;            sender, transport.config.replica_address_list[replica_id], write);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    }</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sender&gt;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordtype">void</span> sendMessageToAll(<span class="keyword">const</span> Sender &amp;sender, Write write)</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        Self &amp;transport = <span class="keyword">static_cast</span>&lt;Self &amp;&gt;(*<span class="keyword">this</span>);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> dest : transport.config.replica_address_list) {</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;            <span class="keywordflow">if</span> (dest != sender.address) {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                transport.sendMessage(sender, dest, write);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            }</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        }</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sender&gt;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">void</span> sendMessageToMulticast(<span class="keyword">const</span> Sender &amp;sender, Write write)</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    {</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        Self &amp;transport = <span class="keyword">static_cast</span>&lt;Self &amp;&gt;(*<span class="keyword">this</span>);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        transport.sendMessage(</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            sender, transport.config.multicast_address, write);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    }</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;};</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="structoskr_1_1SenderArchetype.html">   55</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">struct</span> <a class="code" href="structoskr_1_1SenderArchetype.html">SenderArchetype</a> {</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address address;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;};</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">concept</span> TransportTrait = <span class="keyword">requires</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;{</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keyword">typename</span> TransportMeta&lt;T&gt;::Address;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keyword">typename</span> TransportMeta&lt;T&gt;::Desc;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keyword">typename</span> std::integral_constant&lt;std::size_t, TransportMeta&lt;T&gt;::BUFFER_SIZE&gt;;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;}</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;&amp;&amp;std::derived_from&lt;T, TransportBase&lt;T&gt;&gt; &amp;&amp;<span class="keyword">requires</span>(</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    T transport, <span class="keyword">const</span> <span class="keyword">typename</span> T::Address address,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keyword">typename</span> T::Receiver receiver)</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;{</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    transport.registerReceiver(address, receiver);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="comment">// TODO multicast</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;}</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;&amp;&amp;<span class="keyword">requires</span>(T transport, <span class="keyword">typename</span> T::Callback callback)</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;{</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    transport.spawn(callback);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;}</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;&amp;&amp;<span class="keyword">requires</span>(</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    T transport, <span class="keyword">const</span> SenderArchetype&lt;T&gt; &amp;sender,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">const</span> <span class="keyword">typename</span> T::Address &amp;dest, <span class="keyword">typename</span> T::Write write)</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;{</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    transport.sendMessage(sender, dest, write);</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;};</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;} <span class="comment">// namespace oskr</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_4270bfced15e0e73154b13468c7c9ad9.html">core</a></li><li class="navelem"><b>Transport.hpp</b></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:57:05 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:34 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

@@ -1,0 +1,53 @@
+\hypertarget{classoskr_1_1TransportBase}{}\doxysection{Transport\+Base$<$ Self $>$}
+\label{classoskr_1_1TransportBase}\index{TransportBase$<$ Self $>$@{TransportBase$<$ Self $>$}}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a1c8682bdba52d3903c24664c9574923d}\label{classoskr_1_1TransportBase_a1c8682bdba52d3903c24664c9574923d}} 
+using {\bfseries Address} = typename \mbox{\hyperlink{structoskr_1_1TransportMeta}{Transport\+Meta}}$<$ Self $>$\+::Address
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_ac0c48e67f3706c442879abd6b9569de9}\label{classoskr_1_1TransportBase_ac0c48e67f3706c442879abd6b9569de9}} 
+using {\bfseries Desc} = typename \mbox{\hyperlink{structoskr_1_1TransportMeta}{Transport\+Meta}}$<$ Self $>$\+::Desc
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a387aa98e5edd356178f21ff399dbeaaf}\label{classoskr_1_1TransportBase_a387aa98e5edd356178f21ff399dbeaaf}} 
+using {\bfseries Receiver} = std\+::function$<$ void(const Address \&remote, Desc descriptor)$>$
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a9f4d3f1692b57758c10763bea8a50a04}\label{classoskr_1_1TransportBase_a9f4d3f1692b57758c10763bea8a50a04}} 
+using {\bfseries Callback} = std\+::function$<$ void()$>$
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_ac844257c82b28e35f6f095733a1dffbb}\label{classoskr_1_1TransportBase_ac844257c82b28e35f6f095733a1dffbb}} 
+using {\bfseries Write} = std\+::function$<$ std\+::size\+\_\+t(Tx\+Span$<$ BUFFER\+\_\+\+SIZE $>$ buffer)$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a3e338622a51b1800424e32edf032f4e3}\label{classoskr_1_1TransportBase_a3e338622a51b1800424e32edf032f4e3}} 
+{\footnotesize template$<$typename Sender $>$ }\\void {\bfseries send\+Message\+To\+Replica} (const Sender \&sender, Replica\+Id replica\+\_\+id, Write write)
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a74cd3dea0584c6c7a9524093c1233788}\label{classoskr_1_1TransportBase_a74cd3dea0584c6c7a9524093c1233788}} 
+{\footnotesize template$<$typename Sender $>$ }\\void {\bfseries send\+Message\+To\+All} (const Sender \&sender, Write write)
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a31da8750951c0c4fdc5a4019c7ba3c3f}\label{classoskr_1_1TransportBase_a31da8750951c0c4fdc5a4019c7ba3c3f}} 
+{\footnotesize template$<$typename Sender $>$ }\\void {\bfseries send\+Message\+To\+Multicast} (const Sender \&sender, Write write)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1TransportBase_a01c5fb279d6b80ebed829be7a804dde2}\label{classoskr_1_1TransportBase_a01c5fb279d6b80ebed829be7a804dde2}} 
+static constexpr std\+::size\+\_\+t {\bfseries BUFFER\+\_\+\+SIZE} = \mbox{\hyperlink{structoskr_1_1TransportMeta}{Transport\+Meta}}$<$Self$>$\+::BUFFER\+\_\+\+SIZE
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Self$>$\newline
+class oskr\+::\+Transport\+Base$<$ Self $>$}
+
+
+
+Definition at line 14 of file Transport.\+hpp.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+core/Transport.\+hpp\end{DoxyCompactItemize}

@@ -1,0 +1,92 @@
+\hypertarget{classoskr_1_1Simulated}{}\doxysection{Simulated}
+\label{classoskr_1_1Simulated}\index{Simulated@{Simulated}}
+
+
+Inheritance diagram for Simulated\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{classoskr_1_1Simulated__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Simulated\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classoskr_1_1Simulated__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_af0c79670a62b21da4d70eed0826569ee}\label{classoskr_1_1Simulated_af0c79670a62b21da4d70eed0826569ee}} 
+using {\bfseries microseconds} = std\+::chrono\+::microseconds
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_ab125409ed5a63c16baa4117e847a04b5}\label{classoskr_1_1Simulated_ab125409ed5a63c16baa4117e847a04b5}} 
+using {\bfseries Filter} = std\+::function$<$ bool(const Address \&source, const Address \&dest, microseconds \&delay)$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a03252a1dbff3eb56b93e9ff786914c4d}\label{classoskr_1_1Simulated_a03252a1dbff3eb56b93e9ff786914c4d}} 
+{\bfseries Simulated} (const \mbox{\hyperlink{structoskr_1_1Config}{Config}}$<$ \mbox{\hyperlink{classoskr_1_1Simulated}{Simulated}} $>$ \&config)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_af74e2f95fbaec552d47e5d58534c2626}\label{classoskr_1_1Simulated_af74e2f95fbaec552d47e5d58534c2626}} 
+Address {\bfseries allocate\+Address} ()
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a5606640a31f43dcc760a9e9c1a0b555b}\label{classoskr_1_1Simulated_a5606640a31f43dcc760a9e9c1a0b555b}} 
+void {\bfseries register\+Receiver} (Address address, Receiver receiver)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_aafdacab5e137480492098cb02da7fadf}\label{classoskr_1_1Simulated_aafdacab5e137480492098cb02da7fadf}} 
+void {\bfseries register\+Multicast\+Receiver} (Receiver receiver)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a3c4b0b6499ec72a112afe387fd4b1ecc}\label{classoskr_1_1Simulated_a3c4b0b6499ec72a112afe387fd4b1ecc}} 
+{\footnotesize template$<$typename Sender $>$ }\\void {\bfseries send\+Message} (const Sender \&sender, const Address \&dest, Write write)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a7a18ae3ea16dd8616fc566dceb060bc5}\label{classoskr_1_1Simulated_a7a18ae3ea16dd8616fc566dceb060bc5}} 
+void {\bfseries spawn} (microseconds delay, Callback callback)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_acd1ff3ef13d6ee85720346fae9966702}\label{classoskr_1_1Simulated_acd1ff3ef13d6ee85720346fae9966702}} 
+void {\bfseries spawn} (Callback callback)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a692866dd8fe2b330f09fd52e86183c3c}\label{classoskr_1_1Simulated_a692866dd8fe2b330f09fd52e86183c3c}} 
+void {\bfseries spawn\+Concurrent} (Callback callback)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a1ce6da5ff54686fbe6515581868764fd}\label{classoskr_1_1Simulated_a1ce6da5ff54686fbe6515581868764fd}} 
+int {\bfseries channel} () const
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a74a45d2648335936561898c390281a6a}\label{classoskr_1_1Simulated_a74a45d2648335936561898c390281a6a}} 
+void {\bfseries terminate} ()
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_aa66770af1750fec0f0033d836c312eeb}\label{classoskr_1_1Simulated_aa66770af1750fec0f0033d836c312eeb}} 
+void {\bfseries run} (microseconds time\+\_\+limit=10 $\ast$1000ms)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a71aeeb770853ccdbca69de847f16df39}\label{classoskr_1_1Simulated_a71aeeb770853ccdbca69de847f16df39}} 
+void {\bfseries add\+Filter} (int filter\+\_\+id, Filter filter)
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a79325bcaafbe94c92c1a71cb67e2d251}\label{classoskr_1_1Simulated_a79325bcaafbe94c92c1a71cb67e2d251}} 
+void {\bfseries remove\+Filter} (int removed\+\_\+id)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classoskr_1_1Simulated_a9919f4bc5ba7a93423b16106183ff730}\label{classoskr_1_1Simulated_a9919f4bc5ba7a93423b16106183ff730}} 
+const \mbox{\hyperlink{structoskr_1_1Config}{Config}}$<$ \mbox{\hyperlink{classoskr_1_1Simulated}{Simulated}} $>$ \& {\bfseries config}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+
+
+Definition at line 18 of file Simulated.\+hpp.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+transport/Simulated.\+hpp\end{DoxyCompactItemize}

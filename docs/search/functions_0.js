@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['allocateaddress_86',['allocateAddress',['../classoscar_1_1Transport.html#a89734c342cac0f428c4653c656821636',1,'oscar::Transport']]]
+  ['check_72',['check',['../classoskr_1_1ClientTable.html#a1108fd6ec869fef1510d9d79ad3ac9fb',1,'oskr::ClientTable']]]
 ];

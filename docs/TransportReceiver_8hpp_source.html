@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Oscar: core/TransportReceiver.hpp Source File</title>
+<title>Oskr: core/TransportReceiver.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Oscar
+   <div id="projectname">Oskr
    &#160;<span id="projectnumber">0.1.0</span>
    </div>
    <div id="projectbrief">High Performance Distributed</div>
@@ -91,65 +91,63 @@ $(document).ready(function(){initNavTree('TransportReceiver_8hpp_source.html',''
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Type.hpp&quot;</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">namespace</span> oscar</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;{</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">/*! @brief The base class for packet-listeners, i.e., all participants of</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">protocols. The receiving half of the actor model.</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">Each instance of `TransportReceiver` has a static address throughout its</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">lifetime. It also can only work with one specific `Transport` type.</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">After registered to a `Transport` instance, virtual method `receiveMessage` will</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">be called whenever messages arrives receiver&#39;s address.</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">The `TransportReceiver` itself does not make any assumption on how to process</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">received message, but a subclass will probably want to call `Transport` methods</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">to send message and schedule timeout. So it is conventional to ask for a</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">reference of `Transport` instance when constructing subclass. Because the</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">`Transport` base class follows CRTP, `Transport &amp;` is basically equals to</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">`oscar::Transport&lt;Transport&gt; &amp;` in every situation.</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classoscar_1_1TransportReceiver.html">   22</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt; <span class="keyword">class</span> TransportReceiver</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;{</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="comment">//! Static receiving address of the receiver. Must be unique across the</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="comment">//! whole system.</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">   27</a></span>&#160;    <span class="keyword">const</span> <span class="keyword">typename</span> Transport::<a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">Address</a> <a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>;</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Transport.hpp&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Type.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;core/Utility.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace</span> oskr</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;{</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">/*! @brief The base class for packet-listeners, i.e., all participants of</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">protocols. The receiving half of the actor model.</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"></span> </div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">Each instance of `TransportReceiver` has a static address throughout its</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">lifetime. It also can only work with one specific `Transport` type.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"></span> </div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">After registered to a `Transport` instance, virtual method `receiveMessage` will</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">be called whenever messages arrives receiver&#39;s address.</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"></span> </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">The `TransportReceiver` itself does not make any assumption on how to process</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">received message, but a subclass will probably want to call `Transport` methods</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">to send message and schedule timeout. So it is conventional to ask for a</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">reference of `Transport` instance when constructing subclass. Because the</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">`Transport` base class follows CRTP, `Transport &amp;` is basically equals to</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">`oskr::Transport&lt;Transport&gt; &amp;` in every situation.</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">*/</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classoskr_1_1TransportReceiver.html">   24</a></span>&#160;<span class="keyword">template</span> &lt;TransportTrait Transport&gt; <span class="keyword">class</span> <a class="code" href="classoskr_1_1TransportReceiver.html">TransportReceiver</a></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;{</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    Transport &amp;transport;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="comment">//! Construct receiver base class with address.</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="comment">//!</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="classoscar_1_1TransportReceiver.html#a7a709fe1009cb24201825e855d3fbf58">   31</a></span>&#160;    <a class="code" href="classoscar_1_1TransportReceiver.html#a7a709fe1009cb24201825e855d3fbf58">TransportReceiver</a>(<span class="keyword">typename</span> Transport::Address address) : <a class="code" href="classoscar_1_1TransportReceiver.html#aabf5601802c72ede99d2b0eae083d00c">address</a>(address) {}</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keyword">virtual</span> ~TransportReceiver() {}</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">//! Handle received raw message. The underlying memory that backs `span`</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">//! will go out of lifetime after this method returns, so receiver need to</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="comment">//! own everything necessary for later processing.</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classoscar_1_1TransportReceiver.html#a4704bb54e04d07b1d4beefa833f8b4aa">   38</a></span>&#160;    <a class="code" href="classoscar_1_1TransportReceiver.html#a4704bb54e04d07b1d4beefa833f8b4aa">receiveMessage</a>(<span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address &amp;remote, Span span) = 0;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">/*! Although theoretically a multicast receiver is not required to be</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">addressable if it does not listen to any unicast, the situation not present for</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">known protocols (or can be easily workaround-ed by assigning a dummy address),</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">and we try to avoid multi-inheritance here.</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// the codebase assume at most one multicast address present</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Transport&gt;</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="classoscar_1_1TransportMulticastReceiver.html">   48</a></span>&#160;<span class="keyword">class</span> TransportMulticastReceiver : <span class="keyword">public</span> TransportReceiver&lt;Transport&gt;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;{</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="comment">// TODO define methods</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;};</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;} <span class="comment">// namespace oscar</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address address;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    TransportReceiver(</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;        Transport &amp;transport, <span class="keyword">typename</span> Transport::Address address) :</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        transport(transport),</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        address(address)</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    {</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        transport.registerReceiver(address, [&amp;](<span class="keyword">auto</span> &amp;remote, <span class="keyword">auto</span> desc) {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            transport.spawn(</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                [&amp;, desc = std::make_shared&lt;<span class="keyword">typename</span> Transport::Desc&gt;(</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                        std::move(desc))] {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                    receiveMessage(remote, RxSpan(desc-&gt;data(), desc-&gt;size()));</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                });</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        });</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">virtual</span> ~TransportReceiver() {}</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    receiveMessage(<span class="keyword">const</span> <span class="keyword">typename</span> Transport::Address &amp;remote, RxSpan span) = 0;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;};</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;} <span class="comment">// namespace oskr</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_4270bfced15e0e73154b13468c7c9ad9.html">core</a></li><li class="navelem"><b>TransportReceiver.hpp</b></li>
-    <li class="footer">Generated on Sat Dec 25 2021 12:57:05 for Oscar by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated on Tue Dec 28 2021 22:33:35 for Oskr by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

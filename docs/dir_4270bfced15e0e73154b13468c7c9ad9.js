@@ -1,5 +1,6 @@
 var dir_4270bfced15e0e73154b13468c7c9ad9 =
 [
+    [ "Bitsery.hpp", "Bitsery_8hpp_source.html", null ],
     [ "Client.hpp", "Client_8hpp_source.html", null ],
     [ "Config.hpp", "Config_8hpp_source.html", null ],
     [ "Foundation.hpp", "Foundation_8hpp_source.html", null ],
