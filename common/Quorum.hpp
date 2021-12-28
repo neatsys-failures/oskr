@@ -40,7 +40,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 
 template <class IDTYPE, class MSGTYPE> class Quorum
@@ -106,6 +106,6 @@ private:
     std::unordered_map<IDTYPE, std::map<ReplicaId, MSGTYPE>> messages;
 };
 
-} // namespace oscar
+} // namespace oskr
 
 #endif // _COMMON_QUORUMSET_H_

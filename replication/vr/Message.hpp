@@ -2,7 +2,7 @@
 #include "common/BasicClient.hpp"
 #include "core/Foundation.hpp"
 
-namespace oscar::vr
+namespace oskr::vr
 {
 struct PrepareMessage {
     ViewNumber view_number;
@@ -71,4 +71,4 @@ using ReplicaMessage = std::variant<
     RequestMessage, PrepareMessage, PrepareOkMessage, CommitMessage,
     StartViewChangeMessage, DoViewChangeMessage, StartViewMessage>;
 
-} // namespace oscar::vr
+} // namespace oskr::vr

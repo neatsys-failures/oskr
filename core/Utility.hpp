@@ -10,7 +10,7 @@
 #include "core/Log.hpp"
 #include "core/Type.hpp"
 
-namespace oscar
+namespace oskr
 {
 using //
     std::literals::chrono_literals::operator""ms,
@@ -26,7 +26,7 @@ template <typename... Args>
 }
 
 // TODO explore a at-least-equally convinent but better way
-#ifndef OSCAR_NO_RLOGGING
+#ifndef OSKR_NO_RLOGGING
 #define rdebug(fmt, ...) debug("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
 #define rinfo(fmt, ...) info("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
 #define rwarn(fmt, ...) warn("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
@@ -40,15 +40,16 @@ std::default_random_engine &random_engine()
     return engine;
 }
 
-template <typename Buffer, typename Message>
-std::size_t bitserySerialize(Buffer &buffer, const Message &message)
+template <typename Message, std::size_t BUFFER_SIZE>
+std::size_t bitserySerialize(TxSpan<BUFFER_SIZE> buffer, const Message &message)
 {
     return bitsery::quickSerialization<
-        bitsery::OutputBufferAdapter<Buffer>, Message>(buffer, message);
+        bitsery::OutputBufferAdapter<std::uint8_t[BUFFER_SIZE]>, Message>(
+        *(std::uint8_t(*)[BUFFER_SIZE])buffer.data(), message);
 }
 
 template <typename Message>
-void bitseryDeserialize(const Span span, Message &message)
+void bitseryDeserialize(const RxSpan span, Message &message)
 {
     auto state = bitsery::quickDeserialization<
         bitsery::InputBufferAdapter<std::uint8_t *>, Message>(
@@ -60,34 +61,4 @@ void bitseryDeserialize(const Span span, Message &message)
             state.second);
     }
 }
-} // namespace oscar
-
-namespace bitsery::traits
-{
-// should work... i think?
-template <>
-struct ContainerTraits<oscar::Data>
-    : public StdContainer<oscar::Data, true, true> {
-};
-} // namespace bitsery::traits
-
-namespace bitsery
-{
-template <typename S> void serialize(S &s, oscar::Data &data)
-{
-    s.container1b(data, 240);
-}
-
-template <typename S> void serialize(S &s, oscar::Log<>::Entry &entry)
-{
-    s(entry.client_id, entry.request_number, entry.op);
-}
-
-template <typename S> void serialize(S &s, oscar::Log<>::List::Block &block)
-{
-    s(block.n_entry);
-    for (int i = 0; i < block.n_entry; i += 1) {
-        s(block.entry_buffer[i]);
-    }
-}
-} // namespace bitsery
+} // namespace oskr

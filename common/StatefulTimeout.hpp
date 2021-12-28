@@ -5,7 +5,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 template <typename Transport> class StatefulTimeout
 {
@@ -32,7 +32,7 @@ public:
     {
         timeout_id += 1;
         current_id = timeout_id;
-        transport.scheduleTimeout(delay, [this, current_id = this->current_id] {
+        transport.spawn(delay, [&, current_id = current_id] {
             if (this->current_id != current_id) {
                 return;
             }
@@ -50,4 +50,4 @@ public:
     void disable() { current_id = std::nullopt; }
 };
 
-} // namespace oscar
+} // namespace oskr

@@ -3,30 +3,26 @@
 #include "core/Foundation.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar; // NOLINT
+using namespace oskr; // NOLINT
 
-class SimpleClient : public Client<SimulatedTransport>
+class SimpleClient : public Client<Simulated>
 {
 public:
-    explicit SimpleClient(SimulatedTransport &transport) :
-        Client<SimulatedTransport>(transport)
+    explicit SimpleClient(Simulated &transport) : Client<Simulated>(transport)
     {
     }
 
     std::uint32_t GetId() const { return client_id; }
 
-    void
-    receiveMessage(const typename SimulatedTransport::Address &, Span) override
-    {
-    }
+    void receiveMessage(const typename Simulated::Address &, RxSpan) override {}
 
     void invoke(Data, InvokeCallback) override {}
 };
 
 TEST(Misc, ClientId)
 {
-    Config<SimulatedTransport> config{0, {}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {}, {}};
+    Simulated transport(config);
     SimpleClient client1(transport), client2(transport);
     ASSERT_NE(client1.GetId(), client2.GetId());
 }
@@ -41,14 +37,14 @@ struct SimpleMessage {
 TEST(Misc, Bitsery)
 {
     SimpleMessage message{42, {12, 11}};
-    auto write = [message](auto &buffer) {
+    auto write = [message](auto buffer) {
         return bitserySerialize(buffer, message);
     };
-    Buffer<100> buffer;
-    std::size_t len = write(buffer);
+    std::uint8_t buffer[100];
+    std::size_t len = write(TxSpan<100>(buffer));
     ASSERT_GT(len, 0);
 
-    Span buffer_span(buffer, len);
+    std::span buffer_span(buffer, len);
     SimpleMessage out_message;
     bitseryDeserialize(buffer_span, out_message);
     ASSERT_EQ(out_message.op_number, 42);

@@ -5,16 +5,17 @@
 #include "core/TransportReceiver.hpp"
 #include "core/Utility.hpp"
 
-namespace oscar
+namespace oskr
 {
-template <typename Transport> class Client : public TransportReceiver<Transport>
+template <TransportTrait Transport>
+class Client : public TransportReceiver<Transport>
 {
 protected:
     ClientId client_id;
 
 public:
     Client(Transport &transport) :
-        TransportReceiver<Transport>(transport.allocateAddress())
+        TransportReceiver<Transport>(transport, transport.allocateAddress())
     {
         client_id = std::uniform_int_distribution<ClientId>()(random_engine());
     }
@@ -23,4 +24,4 @@ public:
     virtual void invoke(Data op, InvokeCallback callback) = 0;
 };
 
-} // namespace oscar
+} // namespace oskr

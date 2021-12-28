@@ -1,18 +1,23 @@
-#include <rte_cycles.h>
-#include <rte_eal.h>
-
+#include "app/Null.hpp"
+#include "common/ListLog.hpp"
+#include "replication/unreplicated/Replica.hpp"
 #include "transport/DPDKClient.hpp"
 
-using oscar::info;
+using namespace oskr; // NOLINT
 
-int main(int argc, char *argv[])
+int main(int, char *argv[])
 {
-    rte_eal_init(argc, argv);
-    info("Client start: TSC = {}hz", rte_get_tsc_hz());
-    uint64_t instant = rte_rdtsc();
-    rte_delay_us_sleep(64 * 1000);
-    info(
-        "Sleep end after {} sec",
-        static_cast<long double>(rte_rdtsc() - instant) / rte_get_tsc_hz());
+    Config<DPDKClient> config{
+        0,
+        {
+            {{0x00, 0x15, 0x5d, 0xa0, 0x24, 0x09}, 0},
+        }};
+    DPDKClient transport(config, argv[0]);
+    info("Transport initialized");
+
+    NullApp app;
+    ListLog log(app);
+
+    unreplicated::Replica replica(transport, log);
     return 0;
 }

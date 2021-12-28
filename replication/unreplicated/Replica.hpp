@@ -3,15 +3,15 @@
 #include "core/Foundation.hpp"
 #include "replication/unreplicated/Message.hpp"
 
-namespace oscar::unreplicated
+namespace oskr::unreplicated
 {
 // work with:
 // BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
 
-template <typename Transport>
+template <TransportTrait Transport>
 class Replica : public TransportReceiver<Transport>
 {
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
 
     OpNumber op_number;
     ClientTable<Transport, ReplyMessage> client_table;
@@ -19,14 +19,15 @@ class Replica : public TransportReceiver<Transport>
 
 public:
     Replica(Transport &transport, Log<>::List &log) :
-        TransportReceiver<Transport>(transport.config.replica_address_list[0]),
-        transport(transport), log(log)
+        TransportReceiver<Transport>(
+            transport, transport.config.replica_address_list[0]),
+        log(log)
     {
         op_number = 0;
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, Span span) override
+        const typename Transport::Address &remote, RxSpan span) override
     {
         using std::placeholders::_1;
 
@@ -41,19 +42,19 @@ private:
         const RequestMessage &request);
 };
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
     using std::placeholders::_1;
 
-    auto send_reply = [this](auto &remote, const ReplyMessage &reply) {
+    auto send_reply = [&](auto &remote, const ReplyMessage &reply) {
         transport.sendMessage(
             *this, remote,
             std::bind(
                 // C++'s type inference still not as perfect as Rust :|
-                bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>,
-                _1, reply));
+                bitserySerialize<ReplyMessage, Transport::BUFFER_SIZE>, _1,
+                reply));
     };
 
     if (auto apply = client_table.check(
@@ -79,4 +80,4 @@ void Replica<Transport>::handle(
         });
 }
 
-} // namespace oscar::unreplicated
+} // namespace oskr::unreplicated

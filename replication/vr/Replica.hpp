@@ -6,15 +6,15 @@
 #include "core/Foundation.hpp"
 #include "replication/vr/Message.hpp"
 
-namespace oscar::vr
+namespace oskr::vr
 {
 // work with:
 // BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
 
-template <typename Transport>
+template <TransportTrait Transport>
 class Replica : public TransportReceiver<Transport>
 {
-    Transport &transport;
+    using TransportReceiver<Transport>::transport;
     ReplicaId replica_id;
     int batch_size;
 
@@ -35,8 +35,8 @@ public:
         Transport &transport, Log<>::List &log, ReplicaId replica_id,
         int batch_size) :
         TransportReceiver<Transport>(
-            transport.config.replica_address_list[replica_id]),
-        transport(transport), log(log), prepare_set(transport.config.n_fault)
+            transport, transport.config.replica_address_list[replica_id]),
+        log(log), prepare_set(transport.config.n_fault)
     {
         if (batch_size > Log<>::BLOCK_SIZE) {
             panic("Batch size too large");
@@ -51,7 +51,7 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, Span span) override
+        const typename Transport::Address &remote, RxSpan span) override
     {
         ReplicaMessage message;
         bitseryDeserialize(span, message);
@@ -63,7 +63,7 @@ private:
     static constexpr auto _2 = std::placeholders::_2;
     template <typename Message = ReplicaMessage>
     static constexpr auto bitserySerialize =
-        oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, Message>;
+        oskr::bitserySerialize<Message, Transport::BUFFER_SIZE>;
 
     bool isPrimary() const
     {
@@ -102,7 +102,7 @@ private:
     void commitUpTo(OpNumber op_number);
 };
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
@@ -124,7 +124,7 @@ void Replica<Transport>::handle(
     }
 }
 
-template <typename Transport> void Replica<Transport>::closeBatch()
+template <TransportTrait Transport> void Replica<Transport>::closeBatch()
 {
     op_number += 1;
     log.prepare(op_number, batch);
@@ -140,7 +140,7 @@ template <typename Transport> void Replica<Transport>::closeBatch()
     }
 }
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareMessage &prepare)
 {
@@ -184,7 +184,7 @@ void Replica<Transport>::handle(
     }
 }
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareOkMessage &prepare_ok)
 {
@@ -208,7 +208,7 @@ void Replica<Transport>::handle(
     }
 }
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::commitUpTo(OpNumber op_number)
 {
     for (OpNumber i = commit_number; i <= op_number; i += 1) {
@@ -226,7 +226,7 @@ void Replica<Transport>::commitUpTo(OpNumber op_number)
     commit_number = op_number;
 }
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const CommitMessage &commit)
 {
@@ -242,7 +242,7 @@ void Replica<Transport>::handle(
     commitUpTo(commit.commit_number);
 }
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::send(
     const ReplyMessage &reply, const typename Transport::Address &remote)
 {
@@ -250,4 +250,4 @@ void Replica<Transport>::send(
         *this, remote, std::bind(bitserySerialize<ReplyMessage>, _1, reply));
 }
 
-} // namespace oscar::vr
+} // namespace oskr::vr

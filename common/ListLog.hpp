@@ -3,7 +3,7 @@
 
 #include "core/Foundation.hpp"
 
-namespace oscar
+namespace oskr
 {
 class ListLog : public Log<>::List
 {
@@ -22,7 +22,7 @@ public:
         start_number = 0;
         commit_number = 0;
 
-#ifdef OSCAR_BENCHMARK
+#ifdef OSKR_BENCHMARK
         // guess what batch size will be used?
         // benchmark env should feel well even preallocate for no batch :)
         block_list.reserve(Log<>::N_RESERVED_ENTRY);
@@ -105,4 +105,4 @@ private:
     }
 };
 
-} // namespace oscar
+} // namespace oskr

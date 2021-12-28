@@ -5,13 +5,13 @@
 #include "replication/vr/Replica.hpp"
 #include "transport/Simulated.hpp"
 
-using namespace oscar;     // NOLINT
-using namespace oscar::vr; // NOLINT
+using namespace oskr;     // NOLINT
+using namespace oskr::vr; // NOLINT
 
 TEST(VR, Noop)
 {
-    Config<SimulatedTransport> config{0, {"replica-0"}, {}};
-    SimulatedTransport transport(config);
+    Config<Simulated> config{0, {"replica-0"}, {}};
+    Simulated transport(config);
     MockApp app;
     ListLog log(app);
     Replica replica(transport, log, 0, 1);
