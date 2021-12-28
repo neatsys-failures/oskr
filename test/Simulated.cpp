@@ -32,7 +32,9 @@ public:
         n_message = 0;
     }
 
-    void receiveMessage(const typename Transport::Address &remote, Span buffer)
+    void receiveMessage(
+        const typename Transport::Address &remote,
+        typename Transport::Span buffer)
     {
         n_message += 1;
         latest_remote = remote;
@@ -80,7 +82,8 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, Span span) override
+        const typename Transport::Address &remote,
+        typename Transport::Span span) override
     {
         if (span.size() == 100) {
             on_exit(*this);

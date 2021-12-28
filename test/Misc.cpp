@@ -14,7 +14,10 @@ public:
 
     std::uint32_t GetId() const { return client_id; }
 
-    void receiveMessage(const typename Simulated::Address &, Span) override {}
+    void receiveMessage(
+        const typename Simulated::Address &, Simulated::Span) override
+    {
+    }
 
     void invoke(Data, InvokeCallback) override {}
 };
@@ -44,7 +47,7 @@ TEST(Misc, Bitsery)
     std::size_t len = write(buffer);
     ASSERT_GT(len, 0);
 
-    Span buffer_span(buffer, len);
+    std::span buffer_span(buffer, len);
     SimpleMessage out_message;
     bitseryDeserialize(buffer_span, out_message);
     ASSERT_EQ(out_message.op_number, 42);

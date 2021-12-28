@@ -11,6 +11,7 @@ namespace oscar
 class Simulated;
 template <> struct TransportMeta<Simulated> {
     using Address = std::string;
+    using Span = Data;
     static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
 };
 
@@ -154,8 +155,7 @@ void Simulated::run(microseconds time_limit)
             }
 
             concurrent_id = -1;
-            receiver_table.at(box.dest)(
-                box.source, Span(box.message.data(), box.message.size()));
+            receiver_table.at(box.dest)(box.source, box.message);
             processScheduled();
             message_iter = message_queue.begin();
         }

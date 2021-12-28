@@ -51,7 +51,8 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote, Span span) override
+        const typename Transport::Address &remote,
+        typename Transport::Span span) override
     {
         ReplicaMessage message;
         bitseryDeserialize(span, message);

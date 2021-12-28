@@ -34,16 +34,15 @@ public:
         address(address)
     {
         transport.registerReceiver(address, [&](auto &remote, auto span) {
-            transport.spawn([&, span] { this->receiveMessage(remote, span); });
+            transport.spawn(
+                [&, span = std::move(span)] { receiveMessage(remote, span); });
         });
     }
     virtual ~TransportReceiver() {}
 
-    //! Handle received raw message. The underlying memory that backs `span`
-    //! will go out of lifetime after this method returns, so receiver need to
-    //! own everything necessary for later processing.
-    virtual void
-    receiveMessage(const typename Transport::Address &remote, Span span) = 0;
+    virtual void receiveMessage(
+        const typename Transport::Address &remote,
+        typename Transport::Span span) = 0;
 };
 
 } // namespace oscar

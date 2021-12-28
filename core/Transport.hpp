@@ -15,6 +15,7 @@ template <typename Self> class TransportBase
 {
 public:
     using Address = typename TransportMeta<Self>::Address;
+    using Span = typename TransportMeta<Self>::Span;
     static constexpr std::size_t BUFFER_SIZE = TransportMeta<Self>::BUFFER_SIZE;
 
     using Receiver = std::function<void(const Address &remote, Span span)>;

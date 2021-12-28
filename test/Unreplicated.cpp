@@ -27,15 +27,18 @@ protected:
     {
     }
 
-    std::vector<BasicClient<Simulated, ReplicaMessage>> client;
+    std::vector<std::unique_ptr<BasicClient<Simulated, ReplicaMessage>>> client;
 
     void spawnClient(int n_client)
     {
         client.reserve(n_client);
         for (int i = 0; i < n_client; i += 1) {
-            client.push_back(BasicClient<Simulated, ReplicaMessage>(
-                transport,
-                {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1}));
+            client.push_back(
+                std::make_unique<BasicClient<Simulated, ReplicaMessage>>(
+                    transport,
+                    BasicClient<>::Config{
+                        BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms,
+                        1}));
         }
     }
 };
@@ -51,7 +54,7 @@ TEST_F(Unreplicated, OneRequest)
     bool completed = false;
 
     transport.spawn(0ms, [&] {
-        client[0].invoke(op, [&](Data result) {
+        client[0]->invoke(op, [&](Data result) {
             ASSERT_EQ(
                 std::string(result.begin(), result.end()),
                 "Re: Test operation");
@@ -75,7 +78,7 @@ TEST_F(Unreplicated, TenClientOneRequest)
 
     for (int i = 0; i < 10; i += 1) {
         transport.spawn(0ms, [&, i] {
-            client[i].invoke(op, [&](Data result) {
+            client[i]->invoke(op, [&](Data result) {
                 ASSERT_EQ(
                     std::string(result.begin(), result.end()),
                     "Re: Test operation");
@@ -107,7 +110,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
                     debug(
                         "i = {}, client[i] = {}", i,
                         reinterpret_cast<void *>(&client[i]));
-                    client[i].invoke(Data(), [&, i](auto) {
+                    client[i]->invoke(Data(), [&, i](auto) {
                         n_completed += 1;
                         close_loop[i]();
                     });
@@ -130,7 +133,7 @@ TEST_F(Unreplicated, ResendUndone)
         transport.addFilter(1, [](auto, auto, auto) { return false; });
     });
     transport.spawn(10us, [&] {
-        client[0].invoke(Data(), [&](auto) { completed = true; });
+        client[0]->invoke(Data(), [&](auto) { completed = true; });
     });
     transport.spawn(20us, [&] { transport.removeFilter(1); });
     transport.run();
@@ -147,7 +150,7 @@ TEST_F(Unreplicated, ResendDuplicated)
         });
     });
     transport.spawn(10us, [&] {
-        client[0].invoke(Data(), [&](auto) { completed = true; });
+        client[0]->invoke(Data(), [&](auto) { completed = true; });
     });
     transport.spawn(20us, [&] { transport.removeFilter(1); });
     transport.spawn(30us, [&] { ASSERT_FALSE(completed); });

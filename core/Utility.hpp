@@ -47,8 +47,8 @@ std::size_t bitserySerialize(Buffer &buffer, const Message &message)
         bitsery::OutputBufferAdapter<Buffer>, Message>(buffer, message);
 }
 
-template <typename Message>
-void bitseryDeserialize(const Span span, Message &message)
+template <typename Span, typename Message>
+void bitseryDeserialize(const Span &span, Message &message)
 {
     auto state = bitsery::quickDeserialization<
         bitsery::InputBufferAdapter<std::uint8_t *>, Message>(

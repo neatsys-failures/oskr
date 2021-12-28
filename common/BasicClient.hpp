@@ -78,7 +78,9 @@ public:
     void
     invoke(Data op, typename BasicClient::InvokeCallback callback) override;
 
-    void receiveMessage(const typename Transport::Address &, Span span) override
+    void receiveMessage(
+        const typename Transport::Address &,
+        typename Transport::Span span) override
     {
         ReplyMessage reply;
         deserializeReplyMessage(span, reply);
@@ -92,7 +94,8 @@ public:
         return bitserySerialize(buffer, request);
     }
 
-    virtual void deserializeReplyMessage(const Span &span, ReplyMessage &reply)
+    virtual void deserializeReplyMessage(
+        const typename Transport::Span &span, ReplyMessage &reply)
     {
         bitseryDeserialize(span, reply);
     }
