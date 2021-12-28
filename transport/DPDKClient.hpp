@@ -10,17 +10,17 @@
 namespace oskr
 {
 class DPDKClient;
-struct MBufDescriptor {
+struct MBufDesc {
     DPDKClient &transport;
 
-    explicit MBufDescriptor(struct rte_mbuf *, DPDKClient &transport) :
+    explicit MBufDesc(struct rte_mbuf *, DPDKClient &transport) :
         transport(transport)
     {
     }
-    ~MBufDescriptor();
+    ~MBufDesc();
 
-    MBufDescriptor(const MBufDescriptor &span) = delete;
-    MBufDescriptor(const MBufDescriptor &&span) : transport(span.transport) {}
+    MBufDesc(const MBufDesc &span) = delete;
+    MBufDesc(const MBufDesc &&span) : transport(span.transport) {}
 
     std::uint8_t *data() const { return nullptr; }
     std::size_t size() const { return 0; }
@@ -29,8 +29,8 @@ struct MBufDescriptor {
 class DPDKClient;
 template <> struct TransportMeta<DPDKClient> {
     using Address = std::pair<struct rte_ether_addr, std::uint16_t>;
-    static constexpr std::size_t BUFFER_SIZE = 1500;
-    using Desc = MBufDescriptor;
+    static constexpr std::size_t BUFFER_SIZE = RTE_MBUF_DEFAULT_BUF_SIZE;
+    using Desc = MBufDesc;
 };
 
 class DPDKClient : public TransportBase<DPDKClient>
@@ -48,7 +48,7 @@ public:
 
     void registerReceiver(Address, Receiver) { panic("Todo"); }
 
-    void spawn(Callback &&) { panic("Todo"); }
+    void spawn(Callback) { panic("Todo"); }
 
     template <typename Sender>
     void sendMessage(const Sender &, const Address &, Write)
@@ -56,10 +56,10 @@ public:
         panic("Todo");
     }
 
-    void releaseDescriptor(MBufDescriptor &) { panic("Todo"); }
+    void releaseDescriptor(MBufDesc &) { panic("Todo"); }
 };
 
-MBufDescriptor::~MBufDescriptor()
+MBufDesc::~MBufDesc()
 {
     // TODO counting
     transport.releaseDescriptor(*this);

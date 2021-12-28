@@ -11,5 +11,8 @@ TEST(BasicClient, Noop)
     Config<Simulated> config{0, {}, {}};
     Simulated transport(config);
     BasicClient<Simulated, ReplicaMessage> client(
-        transport, {BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms, 1});
+        transport,
+        {BasicClient<
+             Simulated, ReplicaMessage>::Config::Strategy::PRIMARY_FIRST,
+         1000ms, 1});
 }

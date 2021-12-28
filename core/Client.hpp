@@ -7,7 +7,8 @@
 
 namespace oskr
 {
-template <typename Transport> class Client : public TransportReceiver<Transport>
+template <TransportTrait Transport>
+class Client : public TransportReceiver<Transport>
 {
 protected:
     ClientId client_id;

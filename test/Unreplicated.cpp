@@ -35,10 +35,10 @@ protected:
         for (int i = 0; i < n_client; i += 1) {
             client.push_back(
                 std::make_unique<BasicClient<Simulated, ReplicaMessage>>(
-                    transport,
-                    BasicClient<>::Config{
-                        BasicClient<>::Config::Strategy::PRIMARY_FIRST, 1000ms,
-                        1}));
+                    transport, BasicClient<Simulated, ReplicaMessage>::Config{
+                                   BasicClient<Simulated, ReplicaMessage>::
+                                       Config::Strategy::PRIMARY_FIRST,
+                                   1000ms, 1}));
         }
     }
 };

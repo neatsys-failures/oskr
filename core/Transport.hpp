@@ -52,4 +52,32 @@ public:
     }
 };
 
+template <typename Transport> struct SenderArchetype {
+    const typename Transport::Address address;
+};
+template <typename T>
+concept TransportTrait = requires
+{
+    typename TransportMeta<T>::Address;
+    typename TransportMeta<T>::Desc;
+    typename std::integral_constant<std::size_t, TransportMeta<T>::BUFFER_SIZE>;
+}
+&&std::derived_from<T, TransportBase<T>> &&requires(
+    T transport, const typename T::Address address,
+    typename T::Receiver receiver)
+{
+    transport.registerReceiver(address, receiver);
+    // TODO multicast
+}
+&&requires(T transport, typename T::Callback callback)
+{
+    transport.spawn(callback);
+}
+&&requires(
+    T transport, const SenderArchetype<T> &sender,
+    const typename T::Address &dest, typename T::Write write)
+{
+    transport.sendMessage(sender, dest, write);
+};
+
 } // namespace oskr

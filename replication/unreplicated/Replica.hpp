@@ -8,7 +8,7 @@ namespace oskr::unreplicated
 // work with:
 // BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
 
-template <typename Transport>
+template <TransportTrait Transport>
 class Replica : public TransportReceiver<Transport>
 {
     using TransportReceiver<Transport>::transport;
@@ -42,7 +42,7 @@ private:
         const RequestMessage &request);
 };
 
-template <typename Transport>
+template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {

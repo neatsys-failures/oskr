@@ -1,4 +1,5 @@
 #pragma once
+#include "core/Transport.hpp"
 #include "core/Type.hpp"
 #include "core/Utility.hpp"
 
@@ -20,7 +21,7 @@ reference of `Transport` instance when constructing subclass. Because the
 `Transport` base class follows CRTP, `Transport &` is basically equals to
 `oskr::Transport<Transport> &` in every situation.
 */
-template <typename Transport> class TransportReceiver
+template <TransportTrait Transport> class TransportReceiver
 {
 protected:
     Transport &transport;

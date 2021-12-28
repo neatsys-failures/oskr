@@ -30,8 +30,8 @@ struct ReplyMessage {
     }
 };
 
-template <typename Transport, typename ReplicaMessage> class BasicClient;
-template <> class BasicClient<void, void>
+template <TransportTrait Transport, typename ReplicaMessage>
+class BasicClient : public Client<Transport>
 {
 public:
     struct Config {
@@ -43,13 +43,6 @@ public:
         std::chrono::microseconds resend_interval;
         std::size_t n_matched;
     };
-};
-
-template <typename Transport = void, typename ReplicaMessage = void>
-class BasicClient : public Client<Transport>
-{
-public:
-    using Config = BasicClient<>::Config;
 
 private:
     using TransportReceiver<Transport>::transport;
@@ -104,7 +97,7 @@ private:
     void handleReply(const ReplyMessage &reply);
 };
 
-template <typename Transport, typename ReplicaMessage>
+template <TransportTrait Transport, typename ReplicaMessage>
 void BasicClient<Transport, ReplicaMessage>::invoke(
     Data op, typename BasicClient::InvokeCallback callback)
 {
@@ -117,7 +110,7 @@ void BasicClient<Transport, ReplicaMessage>::invoke(
     sendRequest(false);
 }
 
-template <typename Transport, typename ReplicaMessage>
+template <TransportTrait Transport, typename ReplicaMessage>
 void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
 {
     RequestMessage request;
@@ -158,7 +151,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
         });
 }
 
-template <typename Transport, typename ReplicaMessage>
+template <TransportTrait Transport, typename ReplicaMessage>
 void BasicClient<Transport, ReplicaMessage>::handleReply(
     const ReplyMessage &reply)
 {
