@@ -51,8 +51,7 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote,
-        typename Transport::Span span) override
+        const typename Transport::Address &remote, RxSpan span) override
     {
         ReplicaMessage message;
         bitseryDeserialize(span, message);
@@ -64,7 +63,7 @@ private:
     static constexpr auto _2 = std::placeholders::_2;
     template <typename Message = ReplicaMessage>
     static constexpr auto bitserySerialize =
-        oscar::bitserySerialize<Buffer<Transport::BUFFER_SIZE>, Message>;
+        oscar::bitserySerialize<Message, Transport::BUFFER_SIZE>;
 
     bool isPrimary() const
     {

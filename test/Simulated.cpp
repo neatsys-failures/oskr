@@ -34,11 +34,12 @@ public:
 
     void receiveMessage(
         const typename Transport::Address &remote,
-        typename Transport::Span buffer)
+        typename Transport::Desc buffer)
     {
         n_message += 1;
         latest_remote = remote;
-        latest_message = Data(buffer.begin(), buffer.end());
+        RxSpan span(buffer.data(), buffer.size());
+        latest_message = Data(span.begin(), span.end());
     }
 };
 
@@ -52,8 +53,8 @@ TEST(Simulated, OneMessage)
     });
     Data message{0, 1, 2, 3};
     transport.spawn(0us, [&]() {
-        transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
-            std::copy(message.begin(), message.end(), buffer);
+        transport.sendMessage(receiver2, "receiver-1", [&](auto buffer) {
+            std::copy(message.begin(), message.end(), buffer.data());
             return message.size();
         });
     });
@@ -82,8 +83,7 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote,
-        typename Transport::Span span) override
+        const typename Transport::Address &remote, RxSpan span) override
     {
         if (span.size() == 100) {
             on_exit(*this);
@@ -92,8 +92,8 @@ public:
 
         Data reply(span.begin(), span.end());
         reply.push_back(span.size());
-        auto write = [reply](auto &buffer) {
-            std::memcpy(buffer, reply.data(), reply.size());
+        auto write = [reply](auto buffer) {
+            std::copy(reply.begin(), reply.end(), buffer.data());
             return reply.size();
         };
 
@@ -108,7 +108,7 @@ public:
 
     void Start()
     {
-        transport.sendMessageToAll(*this, [](auto &) { return 0; });
+        transport.sendMessageToAll(*this, [](auto) { return 0; });
     }
 };
 
@@ -164,16 +164,16 @@ TEST(Simulated, DropMessage)
 
     for (auto i = 0us; i < 10us; i += 1us) {
         transport.spawn(i, [&]() {
-            transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
+            transport.sendMessage(receiver2, "receiver-1", [&](auto buffer) {
                 std::string message("Bad network");
-                std::copy(message.begin(), message.end(), buffer);
+                std::copy(message.begin(), message.end(), buffer.data());
                 return message.size();
             });
         });
         transport.spawn(i, [&]() {
-            transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
+            transport.sendMessage(receiver1, "receiver-2", [&](auto buffer) {
                 std::string message("Good network");
-                std::copy(message.begin(), message.end(), buffer);
+                std::copy(message.begin(), message.end(), buffer.data());
                 return message.size();
             });
         });
@@ -206,16 +206,16 @@ TEST(Simulated, DelayMessage)
 
     for (auto i = 0us; i < 10us; i += 1us) {
         transport.spawn(i, [&]() {
-            transport.sendMessage(receiver2, "receiver-1", [&](auto &buffer) {
+            transport.sendMessage(receiver2, "receiver-1", [&](auto buffer) {
                 std::string message("Slow network");
-                std::copy(message.begin(), message.end(), buffer);
+                std::copy(message.begin(), message.end(), buffer.data());
                 return message.size();
             });
         });
         transport.spawn(i, [&]() {
-            transport.sendMessage(receiver1, "receiver-2", [&](auto &buffer) {
+            transport.sendMessage(receiver1, "receiver-2", [&](auto buffer) {
                 std::string message("Good network");
-                std::copy(message.begin(), message.end(), buffer);
+                std::copy(message.begin(), message.end(), buffer.data());
                 return message.size();
             });
         });

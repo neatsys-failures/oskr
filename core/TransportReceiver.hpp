@@ -33,16 +33,18 @@ public:
         transport(transport),
         address(address)
     {
-        transport.registerReceiver(address, [&](auto &remote, auto span) {
+        transport.registerReceiver(address, [&](auto &remote, auto desc) {
             transport.spawn(
-                [&, span = std::move(span)] { receiveMessage(remote, span); });
+                [&, desc = std::make_shared<typename Transport::Desc>(
+                        std::move(desc))] {
+                    receiveMessage(remote, RxSpan(desc->data(), desc->size()));
+                });
         });
     }
     virtual ~TransportReceiver() {}
 
-    virtual void receiveMessage(
-        const typename Transport::Address &remote,
-        typename Transport::Span span) = 0;
+    virtual void
+    receiveMessage(const typename Transport::Address &remote, RxSpan span) = 0;
 };
 
 } // namespace oscar

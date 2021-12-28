@@ -78,24 +78,22 @@ public:
     void
     invoke(Data op, typename BasicClient::InvokeCallback callback) override;
 
-    void receiveMessage(
-        const typename Transport::Address &,
-        typename Transport::Span span) override
+    void
+    receiveMessage(const typename Transport::Address &, RxSpan span) override
     {
         ReplyMessage reply;
         deserializeReplyMessage(span, reply);
-        transport.spawn(std::bind(&BasicClient::handleReply, this, reply));
+        handleReply(reply);
     }
 
-    using Buffer = oscar::Buffer<Transport::BUFFER_SIZE>;
+    using Buffer = oscar::TxSpan<Transport::BUFFER_SIZE>;
     virtual std::size_t
     serializeRequestMessage(Buffer &buffer, const ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
     }
 
-    virtual void deserializeReplyMessage(
-        const typename Transport::Span &span, ReplyMessage &reply)
+    virtual void deserializeReplyMessage(RxSpan span, ReplyMessage &reply)
     {
         bitseryDeserialize(span, reply);
     }
@@ -125,7 +123,7 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     request.client_id = this->client_id;
     request.request_number = pending->request_number;
     request.op = pending->op;
-    auto write = [this, request](auto &buffer) {
+    auto write = [this, request](auto buffer) {
         return serializeRequestMessage(buffer, ReplicaMessage(request));
     };
     auto send_to_primary = [this, write] {

@@ -15,10 +15,9 @@ using ViewNumber = std::uint32_t;
 using ReplicaId = std::int8_t;
 using ClientId = std::uint32_t;
 
-// for tx
-//! The thing similar to `Span` is `Buffer &`, and use `auto &` in lambdas.
-//!
-template <std::size_t BUFFER_SIZE> using Buffer = std::uint8_t[BUFFER_SIZE];
+using RxSpan = std::span<std::uint8_t>;
+template <std::size_t BUFFER_SIZE>
+using TxSpan = std::span<std::uint8_t, BUFFER_SIZE>;
 //! For general storage of opaque things
 //!
 // TODO configurable preallocate size

@@ -11,7 +11,7 @@ namespace oscar
 class Simulated;
 template <> struct TransportMeta<Simulated> {
     using Address = std::string;
-    using Span = Data;
+    using Desc = Data;
     static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
 };
 
@@ -113,7 +113,7 @@ void Simulated::sendMessage(
     }
 
     Data message(BUFFER_SIZE);
-    message.resize(write(*(Buffer<BUFFER_SIZE> *)message.data()));
+    message.resize(write(TxSpan<BUFFER_SIZE>(message.data(), BUFFER_SIZE)));
     message_queue.insert(
         {{now_us + delay.count(), MessageBox{sender.address, dest, message}}});
 }

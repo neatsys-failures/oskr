@@ -14,10 +14,7 @@ public:
 
     std::uint32_t GetId() const { return client_id; }
 
-    void receiveMessage(
-        const typename Simulated::Address &, Simulated::Span) override
-    {
-    }
+    void receiveMessage(const typename Simulated::Address &, RxSpan) override {}
 
     void invoke(Data, InvokeCallback) override {}
 };
@@ -40,11 +37,11 @@ struct SimpleMessage {
 TEST(Misc, Bitsery)
 {
     SimpleMessage message{42, {12, 11}};
-    auto write = [message](auto &buffer) {
+    auto write = [message](auto buffer) {
         return bitserySerialize(buffer, message);
     };
-    Buffer<100> buffer;
-    std::size_t len = write(buffer);
+    std::uint8_t buffer[100];
+    std::size_t len = write(TxSpan<100>(buffer));
     ASSERT_GT(len, 0);
 
     std::span buffer_span(buffer, len);

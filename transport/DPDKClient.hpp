@@ -10,17 +10,17 @@
 namespace oscar
 {
 class DPDKClient;
-struct DPDKSpan {
+struct MBufDescriptor {
     DPDKClient &transport;
 
-    explicit DPDKSpan(struct rte_mbuf *, DPDKClient &transport) :
+    explicit MBufDescriptor(struct rte_mbuf *, DPDKClient &transport) :
         transport(transport)
     {
     }
-    ~DPDKSpan();
+    ~MBufDescriptor();
 
-    DPDKSpan(const DPDKSpan &span) : transport(span.transport) {}
-    DPDKSpan(const DPDKSpan &&span) : transport(span.transport) {}
+    MBufDescriptor(const MBufDescriptor &span) = delete;
+    MBufDescriptor(const MBufDescriptor &&span) : transport(span.transport) {}
 
     std::uint8_t *data() const { return nullptr; }
     std::size_t size() const { return 0; }
@@ -30,7 +30,7 @@ class DPDKClient;
 template <> struct TransportMeta<DPDKClient> {
     using Address = std::pair<struct rte_ether_addr, std::uint16_t>;
     static constexpr std::size_t BUFFER_SIZE = 1500;
-    using Span = DPDKSpan;
+    using Desc = MBufDescriptor;
 };
 
 class DPDKClient : public TransportBase<DPDKClient>
@@ -56,13 +56,13 @@ public:
         panic("Todo");
     }
 
-    void releaseSpan(DPDKSpan &) { panic("Todo"); }
+    void releaseDescriptor(MBufDescriptor &) { panic("Todo"); }
 };
 
-DPDKSpan::~DPDKSpan()
+MBufDescriptor::~MBufDescriptor()
 {
     // TODO counting
-    transport.releaseSpan(*this);
+    transport.releaseDescriptor(*this);
 }
 
 } // namespace oscar

@@ -27,8 +27,7 @@ public:
     }
 
     void receiveMessage(
-        const typename Transport::Address &remote,
-        typename Transport::Span span) override
+        const typename Transport::Address &remote, RxSpan span) override
     {
         using std::placeholders::_1;
 
@@ -54,8 +53,8 @@ void Replica<Transport>::handle(
             *this, remote,
             std::bind(
                 // C++'s type inference still not as perfect as Rust :|
-                bitserySerialize<Buffer<Transport::BUFFER_SIZE>, ReplyMessage>,
-                _1, reply));
+                bitserySerialize<ReplyMessage, Transport::BUFFER_SIZE>, _1,
+                reply));
     };
 
     if (auto apply = client_table.check(

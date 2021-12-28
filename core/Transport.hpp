@@ -15,12 +15,13 @@ template <typename Self> class TransportBase
 {
 public:
     using Address = typename TransportMeta<Self>::Address;
-    using Span = typename TransportMeta<Self>::Span;
+    using Desc = typename TransportMeta<Self>::Desc;
     static constexpr std::size_t BUFFER_SIZE = TransportMeta<Self>::BUFFER_SIZE;
 
-    using Receiver = std::function<void(const Address &remote, Span span)>;
+    using Receiver =
+        std::function<void(const Address &remote, Desc descriptor)>;
     using Callback = std::function<void()>;
-    using Write = std::function<std::size_t(Buffer<BUFFER_SIZE> &buffer)>;
+    using Write = std::function<std::size_t(TxSpan<BUFFER_SIZE> buffer)>;
 
     template <typename Sender>
     void sendMessageToReplica(

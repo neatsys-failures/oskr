@@ -40,15 +40,16 @@ std::default_random_engine &random_engine()
     return engine;
 }
 
-template <typename Buffer, typename Message>
-std::size_t bitserySerialize(Buffer &buffer, const Message &message)
+template <typename Message, std::size_t BUFFER_SIZE>
+std::size_t bitserySerialize(TxSpan<BUFFER_SIZE> buffer, const Message &message)
 {
     return bitsery::quickSerialization<
-        bitsery::OutputBufferAdapter<Buffer>, Message>(buffer, message);
+        bitsery::OutputBufferAdapter<std::uint8_t[BUFFER_SIZE]>, Message>(
+        *(std::uint8_t(*)[BUFFER_SIZE])buffer.data(), message);
 }
 
-template <typename Span, typename Message>
-void bitseryDeserialize(const Span &span, Message &message)
+template <typename Message>
+void bitseryDeserialize(const RxSpan span, Message &message)
 {
     auto state = bitsery::quickDeserialization<
         bitsery::InputBufferAdapter<std::uint8_t *>, Message>(
