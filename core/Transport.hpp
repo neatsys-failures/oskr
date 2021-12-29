@@ -100,8 +100,9 @@ superclass, the name `Transport` is intended to be preserved as protocol
 classes' template parameter.
 */
 template <typename T>
-//! TransportMeta specialization.
-concept TransportTrait = requires
+concept TransportTrait =
+    //! TransportMeta specialization.
+    requires
 {
     //! The address type used by transport implementation. The type should has
     //! value semantic, and avoid heap allocation.
