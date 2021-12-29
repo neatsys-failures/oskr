@@ -8,7 +8,7 @@ The document is built in two steps:
 * Use Sphinx to merge Doxygen's output with other documents (with the help of
   Breathe extension), and produce final assets.
 
-Sphinx is avialable as apt pachage ``python3-sphinx``, while two other pypi 
+Sphinx is avialable as apt package ``python3-sphinx``, while two other pypi 
 packages are required: ``furo`` as Sphinx theme, and ``m2r2`` as markdown 
 convertor.
 
