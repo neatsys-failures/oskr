@@ -4,6 +4,15 @@ project(oskr VERSION 0.1.0 LANGUAGES CXX)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
+include(CheckSymbolExists)
+check_symbol_exists(accept4 sys/socket.h FOLLY_HAVE_ACCEPT4)
+check_symbol_exists(getrandom sys/random.h FOLLY_HAVE_GETRANDOM)
+check_symbol_exists(preadv sys/uio.h FOLLY_HAVE_PREADV)
+check_symbol_exists(pwritev sys/uio.h FOLLY_HAVE_PWRITEV)
+check_symbol_exists(clock_gettime time.h FOLLY_HAVE_CLOCK_GETTIME)
+check_symbol_exists(pipe2 unistd.h FOLLY_HAVE_PIPE2)
+check_symbol_exists(sendmmsg sys/socket.h FOLLY_HAVE_SENDMMSG)
+check_symbol_exists(recvmmsg sys/socket.h FOLLY_HAVE_RECVMMSG)
 
 # happy easy way to set up DPDK
 execute_process(
@@ -20,9 +29,7 @@ file(MAKE_DIRECTORY ${DPDK_INCLUDE_DIRS}) # https://stackoverflow.com/a/47358004
 add_subdirectory(dependency/spdlog EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
-# there is an option to add Boost as submodule as well, but the cloning is too
-# painful
-find_package(Boost REQUIRED)
+add_subdirectory(dependency/folly EXCLUDE_FROM_ALL)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -54,6 +61,7 @@ target_link_libraries(oskr_doxygen PRIVATE
     Bitsery::bitsery
     spdlog::spdlog
     PkgConfig::DPDK
+    folly
 )
 
 # prevent side effects

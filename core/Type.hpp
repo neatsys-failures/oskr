@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <span>
 
-#include <boost/container/small_vector.hpp>
+// #include <boost/container/small_vector.hpp>
+#include <folly/small_vector.h>
 
 namespace oskr
 {
@@ -33,7 +34,8 @@ using TxSpan = std::span<std::uint8_t, BUFFER_SIZE>;
 //! For general storage of opaque things.
 //!
 // TODO configurable preallocate size
-using Data = boost::container::small_vector<std::uint8_t, 16>;
+// using Data = boost::container::small_vector<std::uint8_t, 16>;
+using Data = folly::small_vector<std::uint8_t, 16>;
 
 using Hash = std::uint8_t[32]; // SHA256
 } // namespace oskr

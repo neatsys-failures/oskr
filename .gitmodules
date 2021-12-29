@@ -16,3 +16,6 @@
 [submodule "dependency/doxygen"]
 	path = dependency/doxygen
 	url = https://github.com/doxygen/doxygen
+[submodule "dependency/folly"]
+	path = dependency/folly
+	url = https://github.com/facebook/folly
