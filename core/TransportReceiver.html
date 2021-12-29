@@ -2,7 +2,7 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Articles" href="../article/index.html" /><link rel="prev" title="Transport" href="Transport.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Foundamental Types" href="Type.html" /><link rel="prev" title="Transport" href="Transport.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
         <title>(Ordinary) Transport Receiver - Oskr 0.1.0 documentation</title>
@@ -160,9 +160,14 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Core Abstractions</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Transport.html">Transport</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Type.html">Foundamental Types</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../article/00-generate-document.html">Meta-instruction on generating this document</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../article/01-write-protocol.html">Write distributed protocol on Oscar</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../article/02-setup-benchmark.html">Set up for benchmarking</a></li>
@@ -199,9 +204,9 @@
 <h1>(Ordinary) Transport Receiver<a class="headerlink" href="#ordinary-transport-receiver" title="Permalink to this headline">¶</a></h1>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE">
-<span id="_CPPv3I_14TransportTraitEN4oskr17TransportReceiverE"></span><span id="_CPPv2I_14TransportTraitEN4oskr17TransportReceiverE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Transport.html#_CPPv4I0EN4oskr14TransportTraitE" title="oskr::TransportTrait"><span class="n"><span class="pre">TransportTrait</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Transport</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="classoskr_1_1TransportReceiver"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">oskr</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">TransportReceiver</span></span></span><a class="headerlink" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="Permalink to this definition">¶</a><br/></dt>
+<span id="_CPPv3I_14TransportTraitEN4oskr17TransportReceiverE"></span><span id="_CPPv2I_14TransportTraitEN4oskr17TransportReceiverE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Transport.html#_CPPv4I0EN4oskr14TransportTraitE" title="oskr::TransportTrait"><span class="n"><span class="pre">TransportTrait</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Transport</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="classoskr_1_1TransportReceiver"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">TransportReceiver</span></span></span><a class="headerlink" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="Permalink to this definition">¶</a><br/></dt>
 <dd><p>A conventional receiver abstraction mostly for some kind of backward compatibility. </p>
-<p>With the new design of <code class="docutils literal notranslate"><span class="pre">TransportTrait</span></code>, transport is not longer requiring to register with <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1TransportReceiver"><span class="std std-ref"><span class="pre">TransportReceiver</span></span></a> <span class="pre">&amp;</span></code> but instead with general closure. As the result, protocol implementation is not required to inherit from <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1TransportReceiver"><span class="std std-ref"><span class="pre">TransportReceiver</span></span></a></code>. This base class still exists to provide an adapted and simpler interface to straightforward protocol implementation.</p>
+<p>With the new design of <code class="docutils literal notranslate"><span class="pre">TransportTrait</span></code>, transport is not longer requiring to register with <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1TransportReceiver"><span class="std std-ref"><span class="pre">TransportReceiver</span></span></a> <span class="pre">&amp;</span></code> but instead with general closure. As the result, protocol implementation is not required to inherit from <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1TransportReceiver"><span class="std std-ref"><span class="pre">TransportReceiver</span></span></a></code>. This base class still exists to provide an adapted and simpler interface for some straightforward protocol implementation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If subclass want to access protected <code class="docutils literal notranslate"><span class="pre">transport</span></code> member, it need to <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">using</span> <span class="n">TransportReceiver</span><span class="o">&lt;</span><span class="n">Transport</span><span class="o">&gt;</span><span class="p">::</span><span class="n">transport</span><span class="p">;</span>
@@ -222,7 +227,7 @@
 <dd></dd></dl>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan">
-<span id="_CPPv3N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan"></span><span id="_CPPv2N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan"></span><span id="oskr::TransportReceiver::receiveMessage__Transport::AddressCR.RxSpan"></span><span class="target" id="classoskr_1_1TransportReceiver_1a498a81c4a14c623d4bbb846a12979e5e"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">receiveMessage</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="oskr::TransportReceiver::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Address</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">remote</span></span>, <span class="n"><span class="pre">RxSpan</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">span</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan" title="Permalink to this definition">¶</a><br/></dt>
+<span id="_CPPv3N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan"></span><span id="_CPPv2N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan"></span><span id="oskr::TransportReceiver::receiveMessage__Transport::AddressCR.RxSpan"></span><span class="target" id="classoskr_1_1TransportReceiver_1a498a81c4a14c623d4bbb846a12979e5e"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">receiveMessage</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="oskr::TransportReceiver::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Address</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">remote</span></span>, <a class="reference internal" href="Type.html#_CPPv4N4oskr6RxSpanE" title="oskr::RxSpan"><span class="n"><span class="pre">RxSpan</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">span</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan" title="Permalink to this definition">¶</a><br/></dt>
 <dd></dd></dl>
 </div>
 <div class="breathe-sectiondef docutils container">
@@ -230,6 +235,13 @@
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr17TransportReceiver7addressE">
 <span id="_CPPv3N4oskr17TransportReceiver7addressE"></span><span id="_CPPv2N4oskr17TransportReceiver7addressE"></span><span id="oskr::TransportReceiver::address__Transport::AddressC"></span><span class="target" id="classoskr_1_1TransportReceiver_1aa746e8bcb10cd122441a010a6440188e"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="oskr::TransportReceiver::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Address</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">address</span></span></span><a class="headerlink" href="#_CPPv4N4oskr17TransportReceiver7addressE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-protected-attributes">Protected Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr17TransportReceiver9transportE">
+<span id="_CPPv3N4oskr17TransportReceiver9transportE"></span><span id="_CPPv2N4oskr17TransportReceiver9transportE"></span><span id="oskr::TransportReceiver::transport__TransportR"></span><span class="target" id="classoskr_1_1TransportReceiver_1a244b09cac653eb0130138854cc2f99dc"></span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="oskr::TransportReceiver::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">transport</span></span></span><a class="headerlink" href="#_CPPv4N4oskr17TransportReceiver9transportE" title="Permalink to this definition">¶</a><br/></dt>
 <dd></dd></dl>
 </div>
 </dd></dl>
@@ -240,12 +252,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../article/index.html">
+          <a class="next-page" href="Type.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Articles</div>
+                <div class="title">Foundamental Types</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -263,7 +275,7 @@
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2021 sgdxbc |
+              Copyright &#169; 2021, sgdxbc |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
             | <a class="muted-link" href="../_sources/core/TransportReceiver.rst.txt"

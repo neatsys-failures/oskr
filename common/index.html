@@ -2,10 +2,10 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Set up for benchmarking" href="02-setup-benchmark.html" /><link rel="prev" title="Meta-instruction on generating this document" href="00-generate-document.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="At-most-once Client Table" href="ClientTable.html" /><link rel="prev" title="Foundamental Types" href="../core/Type.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
-        <title>Write distributed protocol on Oscar - Oskr 0.1.0 documentation</title>
+        <title>Common Reusable Components - Oskr 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=7f0192ddeb2adecfbaa87ffbcf67d16358b30bc1" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
@@ -158,28 +158,20 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<<<<<<< Updated upstream
-<li class="toctree-l2"><a class="reference internal" href="../core/transport.html">Transport</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core/transport-receiver.html">(Ordinary) Transport Receiver</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Articles</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-=======
 <li class="toctree-l2"><a class="reference internal" href="../core/Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Common Reusable Components</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="ClientTable.html">At-most-once Client Table</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Articles</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
->>>>>>> Stashed changes
-<li class="toctree-l2"><a class="reference internal" href="00-generate-document.html">Meta-instruction on generating this document</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Write distributed protocol on Oscar</a></li>
-<li class="toctree-l2"><a class="reference internal" href="02-setup-benchmark.html">Set up for benchmarking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="03-optimize-for-dropping.html">Optimize protocol performance under dropping network</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../article/00-generate-document.html">Meta-instruction on generating this document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/01-write-protocol.html">Write distributed protocol on Oscar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/02-setup-benchmark.html">Set up for benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/03-optimize-for-dropping.html">Optimize protocol performance under dropping network</a></li>
 </ul>
 </li>
 </ul>
@@ -208,9 +200,13 @@
           </label>
         </div>
         <article role="main">
-          <div class="section" id="write-distributed-protocol-on-oscar">
-<h1>Write distributed protocol on Oscar<a class="headerlink" href="#write-distributed-protocol-on-oscar" title="Permalink to this headline">¶</a></h1>
-<p><strong>Work in progress</strong></p>
+          <div class="section" id="common-reusable-components">
+<h1>Common Reusable Components<a class="headerlink" href="#common-reusable-components" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ClientTable.html">At-most-once Client Table</a></li>
+</ul>
+</div>
 </div>
 
         </article>
@@ -218,37 +214,33 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="02-setup-benchmark.html">
+          <a class="next-page" href="ClientTable.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Set up for benchmarking</div>
+                <div class="title">At-most-once Client Table</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="00-generate-document.html">
+          <a class="prev-page" href="../core/Type.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Meta-instruction on generating this document</div>
+                <div class="title">Foundamental Types</div>
                 
               </div>
             </a>
         </div>
 
         <div class="related-information">
-<<<<<<< Updated upstream
-              Copyright &#169; 2021 sgdxbc |
-=======
               Copyright &#169; 2021, sgdxbc |
->>>>>>> Stashed changes
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
-            | <a class="muted-link" href="../_sources/article/01-write-protocol.rst.txt"
+            | <a class="muted-link" href="../_sources/common/index.rst.txt"
                rel="nofollow">
               Show Source
             </a>

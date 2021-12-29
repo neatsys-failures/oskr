@@ -159,9 +159,14 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="core/Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="common/ClientTable.html">At-most-once Client Table</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="article/00-generate-document.html">Meta-instruction on generating this document</a></li>
 <li class="toctree-l2"><a class="reference internal" href="article/01-write-protocol.html">Write distributed protocol on Oscar</a></li>
 <li class="toctree-l2"><a class="reference internal" href="article/02-setup-benchmark.html">Set up for benchmarking</a></li>
@@ -203,12 +208,38 @@
   <h2>O</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core/Type.html#_CPPv44oskr">oskr (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr8ClientIdE">oskr::ClientId (C++ type)</a>
+</li>
+        <li><a href="common/ClientTable.html#_CPPv4I00EN4oskr11ClientTableE">oskr::ClientTable (C++ class)</a>
+</li>
+        <li><a href="common/ClientTable.html#_CPPv4N4oskr11ClientTable5ApplyE">oskr::ClientTable::Apply (C++ type)</a>
+</li>
+        <li><a href="common/ClientTable.html#_CPPv4N4oskr11ClientTable5checkERKN9Transport7AddressE8ClientId13RequestNumber">oskr::ClientTable::check (C++ function)</a>
+</li>
+        <li><a href="common/ClientTable.html#_CPPv4N4oskr11ClientTable6updateE8ClientId13RequestNumber">oskr::ClientTable::update (C++ function)</a>, <a href="common/ClientTable.html#_CPPv4N4oskr11ClientTable6updateE8ClientId13RequestNumber12ReplyMessage">[1]</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr4DataE">oskr::Data (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr4HashE">oskr::Hash (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr8OpNumberE">oskr::OpNumber (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr9ReplicaIdE">oskr::ReplicaId (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr13RequestNumberE">oskr::RequestNumber (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr6RxSpanE">oskr::RxSpan (C++ type)</a>
+</li>
         <li><a href="core/Transport.html#_CPPv4I0EN4oskr13TransportBaseE">oskr::TransportBase (C++ struct)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase7AddressE">oskr::TransportBase::Address (C++ type)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase11BUFFER_SIZEE">oskr::TransportBase::BUFFER_SIZE (C++ member)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase8CallbackE">oskr::TransportBase::Callback (C++ type)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase4DescE">oskr::TransportBase::Desc (C++ type)</a>
@@ -219,8 +250,6 @@
 </li>
         <li><a href="core/Transport.html#_CPPv4I0EN4oskr13TransportBase22sendMessageToMulticastEvRK6Sender5Write">oskr::TransportBase::sendMessageToMulticast (C++ function)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Transport.html#_CPPv4I0EN4oskr13TransportBase20sendMessageToReplicaEvRK6Sender9ReplicaId5Write">oskr::TransportBase::sendMessageToReplica (C++ function)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase5WriteE">oskr::TransportBase::Write (C++ type)</a>
@@ -231,11 +260,17 @@
 </li>
         <li><a href="core/TransportReceiver.html#_CPPv4N4oskr17TransportReceiver14receiveMessageERKN9Transport7AddressE6RxSpan">oskr::TransportReceiver::receiveMessage (C++ function)</a>
 </li>
+        <li><a href="core/TransportReceiver.html#_CPPv4N4oskr17TransportReceiver9transportE">oskr::TransportReceiver::transport (C++ member)</a>
+</li>
         <li><a href="core/TransportReceiver.html#_CPPv4N4oskr17TransportReceiver17TransportReceiverER9TransportN9Transport7AddressE">oskr::TransportReceiver::TransportReceiver (C++ function)</a>
 </li>
         <li><a href="core/TransportReceiver.html#_CPPv4N4oskr17TransportReceiverD0Ev">oskr::TransportReceiver::~TransportReceiver (C++ function)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4I0EN4oskr14TransportTraitE">oskr::TransportTrait (C++ concept)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4I_NSt6size_tEEN4oskr6TxSpanE">oskr::TxSpan (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4N4oskr10ViewNumberE">oskr::ViewNumber (C++ type)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -252,7 +287,7 @@
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2021 sgdxbc |
+              Copyright &#169; 2021, sgdxbc |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
         </div>
