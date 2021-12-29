@@ -1,110 +1,324 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Core Abstractions" href="core/index.html" />
 
-<!DOCTYPE html>
+    <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
+        <title>Oskr 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=7f0192ddeb2adecfbaa87ffbcf67d16358b30bc1" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
+    <link rel="stylesheet" type="text/css" href="_static/overwrite.css" />
+    
+    
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome to Oskr’s documentation! &#8212; Oskr 0.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --font-stack: Fira Sans, sans-serif;
+  --font-stack--monospace: Fira Mono, monospace;
+  
+  }
+  body[data-theme="dark"] {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="#"><div class="brand">Oskr 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+  
+  
+  <span class="sidebar-brand-text">Oskr 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="core/Transport.html">Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="article/00-generate-document.html">Meta-instruction on generating this document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="article/01-write-protocol.html">Write distributed protocol on Oscar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="article/02-setup-benchmark.html">Set up for benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="article/03-optimize-for-dropping.html">Optimize protocol performance under dropping network</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="toctree-wrapper compound">
+</div>
+<p><span class="raw-html-m2r"><!-- prevent doxygen adapt title from below --></span></p>
+<div class="section" id="high-performance-distributed-protocols-collection">
+<h1>High Performance Distributed Protocols Collection<a class="headerlink" href="#high-performance-distributed-protocols-collection" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://img.shields.io/github/repo-size/sgdxbc/oskr"><img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sgdxbc/oskr"/></a>
+<a class="reference external image-reference" href="https://img.shields.io/github/languages/code-size/sgdxbc/oskr"><img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/sgdxbc/oskr"/></a>
+<a class="reference external image-reference" href="https://img.shields.io/tokei/lines/github/sgdxbc/oskr"><img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/sgdxbc/oskr"/></a>
+<a class="reference external image-reference" href="https://img.shields.io/github/contributors/sgdxbc/oskr"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/sgdxbc/oskr"/></a>
+<a class="reference external image-reference" href="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr"/></a>
+<p><strong>Motivation.</strong> This is an attempt to improve based on <a class="reference external" href="https://github.com/UWSysLab/specpaxos">specpaxos</a>. The detail
+of consideration is listed in <a class="reference external" href="https://sgdxbc.github.io/ideas/2021-12-15/p0">a piece of blog</a>.</p>
+<p><strong>Why named Oskr?</strong> The name is derived from the Oscars (Academy Awards),
+because the core of this project is based on a specialized actor model.</p>
+<p><strong>Present issues:</strong></p>
+<ul class="simple">
+<li><p>Heavily-used template programming + self-contained header result in terrible
+error reporting long compilation time. Because most class in header are
+templated, precompiled header not help much.</p>
+<ul>
+<li><p>Template programming also make interface more cumbersome with <code class="docutils literal notranslate"><span class="pre">typename</span></code> and
+such.</p></li>
+</ul>
+</li>
+<li><p>Serialization leverage Bitsery, which is a little bit lack of document.</p></li>
+<li><p>CMake makes me feel good, meson makes me feel better, but at the end of the
+day I have to use CMake because of the supportness of most dependencies. This
+causes the setup of DPDK a little bit hacky and maybe fragile.</p></li>
+<li><p>The <em>executors</em> draft is not standardized yet. Once it
+is done, certain part of the project (i.e. <code class="docutils literal notranslate"><span class="pre">Transport</span></code>) may be invalidated by
+it:</p>
+<ul>
+<li><p>For non-DPDK <code class="docutils literal notranslate"><span class="pre">Transport</span></code>, standard may provide a better alternative but the
+migration could be hard.</p></li>
+<li><p>Althrough standard or anyone else probably will not provide DPDK
+<code class="docutils literal notranslate"><span class="pre">Transport</span></code>s, its non-standard shape may impede other projects to adapt it.</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Roadmap:</strong></p>
+<ul class="simple">
+<li><p>[ ] Architecture design + Viewstamped Replication</p></li>
+<li><p>[ ] PBFT</p></li>
+<li><p>[ ] HotStuff</p></li>
+<li><p>[ ] Two-phase commit</p></li>
+</ul>
+<hr class="docutils"/>
+<p>Develop on Ubuntu 21.10, with Clang version 13. Required apt packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clang</span> <span class="n">cmake</span> <span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="n">meson</span> <span class="n">ninja</span><span class="o">-</span><span class="n">build</span> <span class="n">python3</span><span class="o">-</span><span class="n">pyelftools</span> <span class="n">libboost</span><span class="o">-</span><span class="n">dev</span> <span class="n">clang</span><span class="o">-</span><span class="n">tidy</span>
+</pre></div>
+</div>
+<p>Step 1, clone the repo with <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>.</p>
+<p>Step 2, build CMake project as usual. Initial configuration will build a DPDK,
+which takes some time. Notable targets:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Client</span></code> benchmark client, executable at <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;/benchmark/Client</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Test*</span></code> unit tests (to get full list run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">Test</span></code>), executable
+at <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;/test/Test*</span></code></p></li>
+</ul>
+<p><em>Work in progress.</em></p>
+<hr class="docutils"/>
+<p>Project structure:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code><a class="footnote-reference brackets" href="#fn-1" id="id1">1</a> behavioral definition of abstraction components. Pure interfaces
+without concrete logic.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Foundation.hpp</span></code> an all-in-one header for protocol implementation.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code>[^1] common behavior logic prepared for reusing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">app</span></code>[^1] builtin applications to be supported by protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transport</span></code>[^1] runtime implementations that support protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replication</span></code> replication protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transactional</span></code> transactional protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dependency</span></code> git submodule stubs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test</span></code> flat directory for tests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark</span></code> universal entry executable for running all protocols.</p></li>
+</ul>
+<dl class="footnote brackets">
+<dt class="label" id="fn-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Document of these source is hosted on <a class="reference external" href="https://sgdxbc.github.io/oskr">project site</a>.</p>
+</dd>
+</dl>
+</div>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="core/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Core Abstractions</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2021 sgdxbc |
+          Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            | <a class="muted-link" href="_sources/index.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
-
-          <div class="body" role="main">
-            
-  <div class="section" id="welcome-to-oskr-s-documentation">
-<h1>Welcome to Oskr’s documentation!<a class="headerlink" href="#welcome-to-oskr-s-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-</div>
-
-
-          </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">Oskr</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2021, sgdxbc.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/index.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
-
-    
-
-    
-  </body>
+    <script src="_static/scripts/furo.js"></script>
+    </body>
 </html>
