@@ -55,6 +55,9 @@ public:
 template <typename Transport> struct SenderArchetype {
     const typename Transport::Address address;
 };
+
+//! Transport concept.
+//!
 template <typename T>
 concept TransportTrait = requires
 {

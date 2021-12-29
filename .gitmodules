@@ -10,3 +10,6 @@
 [submodule "dependency/dpdk"]
 	path = dependency/dpdk
 	url = https://dpdk.org/git/dpdk
+[submodule "dependency/breathe"]
+	path = dependency/breathe
+	url = https://github.com/michaeljones/breathe
