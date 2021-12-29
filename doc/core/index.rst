@@ -3,5 +3,5 @@ Core Abstractions
 =================
 
 .. toctree::
-    transport
-    transport-receiver
+    Transport
+    TransportReceiver
