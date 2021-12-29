@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Oskr'
-copyright = '2021 sgdxbc'
+copyright = '2021, sgdxbc'
 author = 'sgdxbc'
 
 # The full version, including alpha/beta/rc tags

@@ -1,4 +1,3 @@
-<!-- prevent doxygen adapt title from below -->
 ## High Performance Distributed Protocols Collection
 ![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oskr)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oskr)
