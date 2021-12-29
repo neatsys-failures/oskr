@@ -5,21 +5,20 @@
 
 namespace oskr
 {
-/*! @brief The base class for packet-listeners, i.e., all participants of
-protocols. The receiving half of the actor model.
+/*! @brief A conventional receiver abstraction mostly for some kind of backward
+compatibility.
 
-Each instance of `TransportReceiver` has a static address throughout its
-lifetime. It also can only work with one specific `Transport` type.
+With the new design of `TransportTrait`, transport is not longer requiring to
+register with `TransportReceiver &` but instead with general closure. As the
+result, protocol implementation is not required to inherit from
+`TransportReceiver`. This base class still exists to provide an adapted and
+simpler interface for some straightforward protocol implementation.
 
-After registered to a `Transport` instance, virtual method `receiveMessage` will
-be called whenever messages arrives receiver's address.
-
-The `TransportReceiver` itself does not make any assumption on how to process
-received message, but a subclass will probably want to call `Transport` methods
-to send message and schedule timeout. So it is conventional to ask for a
-reference of `Transport` instance when constructing subclass. Because the
-`Transport` base class follows CRTP, `Transport &` is basically equals to
-`oskr::Transport<Transport> &` in every situation.
+* @note If subclass want to access protected `transport` member, it need to 
+```
+using TransportReceiver<Transport>::transport;
+```
+first.
 */
 template <TransportTrait Transport> class TransportReceiver
 {

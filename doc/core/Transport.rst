@@ -4,4 +4,6 @@ Transport
 
 .. doxygenconcept:: oskr::TransportTrait
 
-.. doxygenclass:: oskr::TransportBase
+.. doxygenstruct:: oskr::TransportBase
+    :members:
+    :undoc-members:

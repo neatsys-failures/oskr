@@ -3,3 +3,5 @@
 =============================
 
 .. doxygenclass:: oskr::TransportReceiver
+    :members:
+    :undoc-members:
