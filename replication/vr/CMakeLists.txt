@@ -1,1 +1,0 @@
-add_library(oskr_replication_vr INTERFACE)

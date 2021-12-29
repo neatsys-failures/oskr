@@ -1,2 +1,0 @@
-add_library(oskr_common INTERFACE)
-target_link_libraries(oskr_common INTERFACE oskr_core)
