@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="write-protocol" kind="page">
+    <compoundname>write-protocol</compoundname>
+    <title>Write distributed protocol on Oscar</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><bold>Work in progress</bold> </para>
+    </detaileddescription>
+    <location file="article/01-write-protocol.md"/>
+  </compounddef>
+</doxygen>

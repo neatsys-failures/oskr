@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1SenderArchetype" kind="struct" language="C++" prot="public">
+    <compoundname>oskr::SenderArchetype</compoundname>
+    <templateparamlist>
+      <param>
+        <type>typename Transport</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structoskr_1_1SenderArchetype_1a6fba43a256e47bc43c36d48cde09a602" prot="public" static="no" mutable="no">
+        <type>const Transport::Address</type>
+        <definition>const Transport::Address oskr::SenderArchetype&lt; Transport &gt;::address</definition>
+        <argsstring></argsstring>
+        <name>address</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Transport.hpp" line="56" column="39" bodyfile="core/Transport.hpp" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="core/Transport.hpp" line="55" column="12" bodyfile="core/Transport.hpp" bodystart="55" bodyend="57"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1SenderArchetype_1a6fba43a256e47bc43c36d48cde09a602" prot="public" virt="non-virtual"><scope>oskr::SenderArchetype</scope><name>address</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

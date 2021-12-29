@@ -1,0 +1,176 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1DPDKClient" kind="class" language="C++" prot="public">
+    <compoundname>oskr::DPDKClient</compoundname>
+    <basecompoundref refid="classoskr_1_1TransportBase" prot="public" virt="non-virtual">oskr::TransportBase&lt; DPDKClient &gt;</basecompoundref>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classoskr_1_1DPDKClient_1a4954653b14d669ad9eb050539f4d9272" prot="public" static="no" mutable="no">
+        <type>const <ref refid="structoskr_1_1Config" kindref="compound">Config</ref>&lt; <ref refid="classoskr_1_1DPDKClient" kindref="compound">DPDKClient</ref> &gt; &amp;</type>
+        <definition>const Config&lt;DPDKClient&gt;&amp; oskr::DPDKClient::config</definition>
+        <argsstring></argsstring>
+        <name>config</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="39" column="18" bodyfile="transport/DPDKClient.hpp" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1DPDKClient_1aa7ac910e1c4bb038cb8ba0e6d7572c7b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::DPDKClient::DPDKClient</definition>
+        <argsstring>(Config&lt; DPDKClient &gt; &amp;config, char *prog_name)</argsstring>
+        <name>DPDKClient</name>
+        <param>
+          <type><ref refid="structoskr_1_1Config" kindref="compound">Config</ref>&lt; <ref refid="classoskr_1_1DPDKClient" kindref="compound">DPDKClient</ref> &gt; &amp;</type>
+          <declname>config</declname>
+        </param>
+        <param>
+          <type>char *</type>
+          <declname>prog_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="41" column="5" bodyfile="transport/DPDKClient.hpp" bodystart="41" bodyend="47"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1DPDKClient_1ae1589881374d07c28e4897c8587628c4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::DPDKClient::registerReceiver</definition>
+        <argsstring>(Address, Receiver)</argsstring>
+        <name>registerReceiver</name>
+        <param>
+          <type>Address</type>
+        </param>
+        <param>
+          <type>Receiver</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="49" column="10" bodyfile="transport/DPDKClient.hpp" bodystart="49" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1DPDKClient_1a0d70e5d2d42fc98926f88094eb9f48f3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::DPDKClient::spawn</definition>
+        <argsstring>(Callback)</argsstring>
+        <name>spawn</name>
+        <param>
+          <type>Callback</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="51" column="10" bodyfile="transport/DPDKClient.hpp" bodystart="51" bodyend="51"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1DPDKClient_1a252418552b06e60cba69de655fc822e1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename Sender</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void oskr::DPDKClient::sendMessage</definition>
+        <argsstring>(const Sender &amp;, const Address &amp;, Write)</argsstring>
+        <name>sendMessage</name>
+        <param>
+          <type>const Sender &amp;</type>
+        </param>
+        <param>
+          <type>const Address &amp;</type>
+        </param>
+        <param>
+          <type>Write</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="54" column="10" bodyfile="transport/DPDKClient.hpp" bodystart="54" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1DPDKClient_1ad85cabc3a3f44f9c0376ccad24a824dc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::DPDKClient::releaseDescriptor</definition>
+        <argsstring>(MBufDesc &amp;)</argsstring>
+        <name>releaseDescriptor</name>
+        <param>
+          <type><ref refid="structoskr_1_1MBufDesc" kindref="compound">MBufDesc</ref> &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="59" column="10" bodyfile="transport/DPDKClient.hpp" bodystart="59" bodyend="59"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>oskr::DPDKClient</label>
+        <link refid="classoskr_1_1DPDKClient"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>oskr::TransportBase&lt; DPDKClient &gt;</label>
+        <link refid="classoskr_1_1TransportBase"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>oskr::DPDKClient</label>
+        <link refid="classoskr_1_1DPDKClient"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>config</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>oskr::TransportBase&lt; DPDKClient &gt;</label>
+        <link refid="classoskr_1_1TransportBase"/>
+      </node>
+      <node id="3">
+        <label>oskr::Config&lt; oskr::DPDKClient &gt;</label>
+        <link refid="structoskr_1_1Config"/>
+      </node>
+    </collaborationgraph>
+    <location file="transport/DPDKClient.hpp" line="36" column="1" bodyfile="transport/DPDKClient.hpp" bodystart="37" bodyend="60"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1TransportBase_1ae636b6a30bd2530e887938ac4a6e4a2b" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>Address</name></member>
+      <member refid="classoskr_1_1TransportBase_1ab517e94334362d31829305f4a8cf9d5b" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>BUFFER_SIZE</name></member>
+      <member refid="classoskr_1_1TransportBase_1a12801dbac42462fc6ed32ce2d8e5c98a" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>Callback</name></member>
+      <member refid="classoskr_1_1DPDKClient_1a4954653b14d669ad9eb050539f4d9272" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>config</name></member>
+      <member refid="classoskr_1_1TransportBase_1a982ec33e821077b95be7908506988c3f" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>Desc</name></member>
+      <member refid="classoskr_1_1DPDKClient_1aa7ac910e1c4bb038cb8ba0e6d7572c7b" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>DPDKClient</name></member>
+      <member refid="classoskr_1_1TransportBase_1a95370b96d043a802e86ca545e44c50e8" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>Receiver</name></member>
+      <member refid="classoskr_1_1DPDKClient_1ae1589881374d07c28e4897c8587628c4" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>registerReceiver</name></member>
+      <member refid="classoskr_1_1DPDKClient_1ad85cabc3a3f44f9c0376ccad24a824dc" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>releaseDescriptor</name></member>
+      <member refid="classoskr_1_1DPDKClient_1a252418552b06e60cba69de655fc822e1" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>sendMessage</name></member>
+      <member refid="classoskr_1_1TransportBase_1a1b354f1040dd4be4d33bc8383a68a914" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>sendMessageToAll</name></member>
+      <member refid="classoskr_1_1TransportBase_1aa754d6f04fa00bd5e2fa43e2b17c72d1" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>sendMessageToMulticast</name></member>
+      <member refid="classoskr_1_1TransportBase_1abcb4328b073771525ae5c245f7a92d4f" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>sendMessageToReplica</name></member>
+      <member refid="classoskr_1_1DPDKClient_1a0d70e5d2d42fc98926f88094eb9f48f3" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>spawn</name></member>
+      <member refid="classoskr_1_1TransportBase_1a241647f08d6aeae4df2f2c38cb9e4d11" prot="public" virt="non-virtual"><scope>oskr::DPDKClient</scope><name>Write</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

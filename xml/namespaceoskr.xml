@@ -1,0 +1,305 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespaceoskr" kind="namespace" language="C++">
+    <compoundname>oskr</compoundname>
+    <innerclass refid="classoskr_1_1MockApp" prot="public">oskr::MockApp</innerclass>
+    <innerclass refid="classoskr_1_1NullApp" prot="public">oskr::NullApp</innerclass>
+    <innerclass refid="structoskr_1_1RequestMessage" prot="public">oskr::RequestMessage</innerclass>
+    <innerclass refid="structoskr_1_1ReplyMessage" prot="public">oskr::ReplyMessage</innerclass>
+    <innerclass refid="classoskr_1_1BasicClient" prot="public">oskr::BasicClient</innerclass>
+    <innerclass refid="classoskr_1_1ChainLog" prot="public">oskr::ChainLog</innerclass>
+    <innerclass refid="classoskr_1_1ClientTable" prot="public">oskr::ClientTable</innerclass>
+    <innerclass refid="classoskr_1_1ListLog" prot="public">oskr::ListLog</innerclass>
+    <innerclass refid="classoskr_1_1Quorum" prot="public">oskr::Quorum</innerclass>
+    <innerclass refid="classoskr_1_1StatefulTimeout" prot="public">oskr::StatefulTimeout</innerclass>
+    <innerclass refid="classoskr_1_1Client" prot="public">oskr::Client</innerclass>
+    <innerclass refid="structoskr_1_1Config" prot="public">oskr::Config</innerclass>
+    <innerclass refid="classoskr_1_1App" prot="public">oskr::App</innerclass>
+    <innerclass refid="classoskr_1_1Log" prot="public">oskr::Log</innerclass>
+    <innerclass refid="structoskr_1_1Log_3_01void_01_4" prot="public">oskr::Log&lt; void &gt;</innerclass>
+    <innerclass refid="structoskr_1_1TransportMeta" prot="public">oskr::TransportMeta</innerclass>
+    <innerclass refid="classoskr_1_1TransportBase" prot="public">oskr::TransportBase</innerclass>
+    <innerclass refid="structoskr_1_1SenderArchetype" prot="public">oskr::SenderArchetype</innerclass>
+    <innerclass refid="classoskr_1_1TransportReceiver" prot="public">oskr::TransportReceiver</innerclass>
+    <innerclass refid="structoskr_1_1MBufDesc" prot="public">oskr::MBufDesc</innerclass>
+    <innerclass refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4" prot="public">oskr::TransportMeta&lt; DPDKClient &gt;</innerclass>
+    <innerclass refid="classoskr_1_1DPDKClient" prot="public">oskr::DPDKClient</innerclass>
+    <innerclass refid="structoskr_1_1TransportMeta_3_01Simulated_01_4" prot="public">oskr::TransportMeta&lt; Simulated &gt;</innerclass>
+    <innerclass refid="classoskr_1_1Simulated" prot="public">oskr::Simulated</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="Type_8hpp_1a229225968f791961a683105e27c7b95e" prot="public" static="no">
+        <type>std::uint64_t</type>
+        <definition>using oskr::OpNumber = typedef std::uint64_t</definition>
+        <argsstring></argsstring>
+        <name>OpNumber</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="11" column="1" bodyfile="core/Type.hpp" bodystart="11" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a787451a8a1db32f4b9f1d2e7d705fd91" prot="public" static="no">
+        <type>std::uint32_t</type>
+        <definition>using oskr::RequestNumber = typedef std::uint32_t</definition>
+        <argsstring></argsstring>
+        <name>RequestNumber</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="12" column="1" bodyfile="core/Type.hpp" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a45f56675eea0bd18eb18230485377a28" prot="public" static="no">
+        <type>std::uint32_t</type>
+        <definition>using oskr::ViewNumber = typedef std::uint32_t</definition>
+        <argsstring></argsstring>
+        <name>ViewNumber</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="13" column="1" bodyfile="core/Type.hpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1ae8ce2db69f20d0b2e1d85a85224688be" prot="public" static="no">
+        <type>std::int8_t</type>
+        <definition>using oskr::ReplicaId = typedef std::int8_t</definition>
+        <argsstring></argsstring>
+        <name>ReplicaId</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="15" column="1" bodyfile="core/Type.hpp" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a9d30334273e29f01e63cd9c689e58e18" prot="public" static="no">
+        <type>std::uint32_t</type>
+        <definition>using oskr::ClientId = typedef std::uint32_t</definition>
+        <argsstring></argsstring>
+        <name>ClientId</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="16" column="1" bodyfile="core/Type.hpp" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1ab52c56c69ac4d31366a5045e47deee0a" prot="public" static="no">
+        <type>std::span&lt; std::uint8_t &gt;</type>
+        <definition>using oskr::RxSpan = typedef std::span&lt;std::uint8_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>RxSpan</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="18" column="1" bodyfile="core/Type.hpp" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a1ca2d6a73093238724b4e13786fcf355" prot="public" static="no">
+        <templateparamlist>
+          <param>
+            <type>std::size_t</type>
+            <declname>BUFFER_SIZE</declname>
+            <defname>BUFFER_SIZE</defname>
+          </param>
+        </templateparamlist>
+        <type>std::span&lt; std::uint8_t, BUFFER_SIZE &gt;</type>
+        <definition>using oskr::TxSpan = typedef std::span&lt;std::uint8_t, BUFFER_SIZE&gt;</definition>
+        <argsstring></argsstring>
+        <name>TxSpan</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="20" column="1" bodyfile="core/Type.hpp" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" prot="public" static="no">
+        <type>boost::container::small_vector&lt; std::uint8_t, 16 &gt;</type>
+        <definition>using oskr::Data = typedef boost::container::small_vector&lt;std::uint8_t, 16&gt;</definition>
+        <argsstring></argsstring>
+        <name>Data</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>For general storage of opaque things </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="24" column="1" bodyfile="core/Type.hpp" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="Type_8hpp_1a769e77bec79e403259e46dc3602ccd18" prot="public" static="no">
+        <type>std::uint8_t[32]</type>
+        <definition>using oskr::Hash = typedef std::uint8_t[32]</definition>
+        <argsstring></argsstring>
+        <name>Hash</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Type.hpp" line="26" column="1" bodyfile="core/Type.hpp" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="Transport_8hpp_1ad4759fd0062fb74fa62b01088b2e8b1e" prot="public" static="no" mutable="no">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>concept</type>
+        <definition>concept oskr::TransportTrait</definition>
+        <argsstring></argsstring>
+        <name>TransportTrait</name>
+        <initializer>= requires
+{
+    typename <ref refid="structoskr_1_1TransportMeta" kindref="compound">TransportMeta</ref>&lt;T&gt;::Address;
+    typename <ref refid="structoskr_1_1TransportMeta" kindref="compound">TransportMeta</ref>&lt;T&gt;::Desc;
+    typename std::integral_constant&lt;std::size_t, <ref refid="structoskr_1_1TransportMeta" kindref="compound">TransportMeta</ref>&lt;T&gt;::BUFFER_SIZE&gt;;
+}
+&amp;&amp;std::derived_from&lt;T, <ref refid="classoskr_1_1TransportBase" kindref="compound">TransportBase</ref>&lt;T&gt;&gt; &amp;&amp;requires(
+    T transport, const typename T::Address address,
+    typename T::Receiver receiver)
+{
+    transport.registerReceiver(address, receiver);
+    
+}
+&amp;&amp;requires(T transport, typename T::Callback callback)
+{
+    transport.spawn(callback);
+}
+&amp;&amp;requires(
+    T transport, const <ref refid="structoskr_1_1SenderArchetype" kindref="compound">SenderArchetype</ref>&lt;T&gt; &amp;sender,
+    const typename T::Address &amp;dest, typename T::Write write)
+{
+    transport.sendMessage(sender, dest, write);
+}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Transport.hpp" line="59" column="9" bodyfile="core/Transport.hpp" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="Utility_8hpp_1a01dbfff20ff0079cdec29d3dde829694" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename...</type>
+            <declname>Args</declname>
+            <defname>Args</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void oskr::panic</definition>
+        <argsstring>(spdlog::format_string_t&lt; Args... &gt; fmt, Args &amp;&amp;...args)</argsstring>
+        <name>panic</name>
+        <param>
+          <type>spdlog::format_string_t&lt; Args... &gt;</type>
+          <declname>fmt</declname>
+        </param>
+        <param>
+          <type>Args &amp;&amp;...</type>
+          <declname>args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Utility.hpp" line="21" column="7" bodyfile="core/Utility.hpp" bodystart="21" bodyend="25"/>
+      </memberdef>
+      <memberdef kind="function" id="Utility_8hpp_1a7f375665dee518d2d65d777586669884" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::default_random_engine &amp;</type>
+        <definition>std::default_random_engine&amp; oskr::random_engine</definition>
+        <argsstring>()</argsstring>
+        <name>random_engine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Utility.hpp" line="35" column="28" bodyfile="core/Utility.hpp" bodystart="35" bodyend="40"/>
+      </memberdef>
+      <memberdef kind="function" id="Utility_8hpp_1a4250bf496f4f5761d877c3f59224de38" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename Message</type>
+          </param>
+          <param>
+            <type>std::size_t</type>
+            <declname>BUFFER_SIZE</declname>
+            <defname>BUFFER_SIZE</defname>
+          </param>
+        </templateparamlist>
+        <type>std::size_t</type>
+        <definition>std::size_t oskr::bitserySerialize</definition>
+        <argsstring>(TxSpan&lt; BUFFER_SIZE &gt; buffer, const Message &amp;message)</argsstring>
+        <name>bitserySerialize</name>
+        <param>
+          <type>TxSpan&lt; BUFFER_SIZE &gt;</type>
+          <declname>buffer</declname>
+        </param>
+        <param>
+          <type>const Message &amp;</type>
+          <declname>message</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Utility.hpp" line="43" column="13" bodyfile="core/Utility.hpp" bodystart="43" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="Utility_8hpp_1a648e5ecf30935b39491c39a6ce6ab2ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename Message</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void oskr::bitseryDeserialize</definition>
+        <argsstring>(const RxSpan span, Message &amp;message)</argsstring>
+        <name>bitseryDeserialize</name>
+        <param>
+          <type>const RxSpan</type>
+          <declname>span</declname>
+        </param>
+        <param>
+          <type>Message &amp;</type>
+          <declname>message</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Utility.hpp" line="51" column="6" bodyfile="core/Utility.hpp" bodystart="51" bodyend="62"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="app/Mock.hpp" line="6" column="1"/>
+  </compounddef>
+</doxygen>

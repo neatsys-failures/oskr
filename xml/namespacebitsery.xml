@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacebitsery" kind="namespace" language="C++">
+    <compoundname>bitsery</compoundname>
+    <innernamespace refid="namespacebitsery_1_1traits">bitsery::traits</innernamespace>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="Bitsery_8hpp_1ae4da195d6dd1cfb5d29a73974147b425" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename S</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void bitsery::serialize</definition>
+        <argsstring>(S &amp;s, oskr::Data &amp;data)</argsstring>
+        <name>serialize</name>
+        <param>
+          <type>S &amp;</type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">oskr::Data</ref> &amp;</type>
+          <declname>data</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Bitsery.hpp" line="19" column="18" bodyfile="core/Bitsery.hpp" bodystart="19" bodyend="22"/>
+      </memberdef>
+      <memberdef kind="function" id="Bitsery_8hpp_1a128a4bebc8c3a216c51a1898b2d73407" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename S</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void bitsery::serialize</definition>
+        <argsstring>(S &amp;s, oskr::Log&lt;&gt;::Entry &amp;entry)</argsstring>
+        <name>serialize</name>
+        <param>
+          <type>S &amp;</type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type><ref refid="classoskr_1_1Log" kindref="compound">oskr::Log</ref>&lt;&gt;::Entry &amp;</type>
+          <declname>entry</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Bitsery.hpp" line="24" column="18" bodyfile="core/Bitsery.hpp" bodystart="24" bodyend="27"/>
+      </memberdef>
+      <memberdef kind="function" id="Bitsery_8hpp_1a51f7a0f794bfbf47c9cf39a068ea8fa7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename S</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void bitsery::serialize</definition>
+        <argsstring>(S &amp;s, oskr::Log&lt;&gt;::List::Block &amp;block)</argsstring>
+        <name>serialize</name>
+        <param>
+          <type>S &amp;</type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type><ref refid="classoskr_1_1Log" kindref="compound">oskr::Log</ref>&lt;&gt;::List::Block &amp;</type>
+          <declname>block</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Bitsery.hpp" line="29" column="18" bodyfile="core/Bitsery.hpp" bodystart="29" bodyend="35"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="core/Bitsery.hpp" line="8" column="1"/>
+  </compounddef>
+</doxygen>

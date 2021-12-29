@@ -1,6 +1,0 @@
-<map id="BasicClient&lt; Transport, ReplicaMessage &gt;" name="BasicClient&lt; Transport, ReplicaMessage &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,275,257,321"/>
-<area shape="rect" id="node2" href="$classoskr_1_1Client.html" title=" " alt="" coords="25,196,237,225"/>
-<area shape="rect" id="node3" href="$classoskr_1_1TransportReceiver.html" title="The base class for packet&#45;listeners, i.e., all participants of protocols. The receiving half of the a..." alt="" coords="30,100,233,147"/>
-<area shape="rect" id="node4" title=" " alt="" coords="75,5,187,35"/>
-</map>

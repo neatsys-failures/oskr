@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1BasicClient_1_1PendingRequest" kind="struct" language="C++" prot="private">
+    <compoundname>oskr::BasicClient::PendingRequest</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structoskr_1_1BasicClient_1_1PendingRequest_1aee78db217bcaf94d320e125d6edd0cae" prot="public" static="no" mutable="no">
+        <type>RequestNumber</type>
+        <definition>RequestNumber oskr::BasicClient&lt; Transport, ReplicaMessage &gt;::PendingRequest::request_number</definition>
+        <argsstring></argsstring>
+        <name>request_number</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="57" column="23" bodyfile="common/BasicClient.hpp" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1BasicClient_1_1PendingRequest_1a4dd603163612a61a48bc016b3708d849" prot="public" static="no" mutable="no">
+        <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        <definition>Data oskr::BasicClient&lt; Transport, ReplicaMessage &gt;::PendingRequest::op</definition>
+        <argsstring></argsstring>
+        <name>op</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="58" column="14" bodyfile="common/BasicClient.hpp" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1BasicClient_1_1PendingRequest_1acb068896622cadccd068f39bf1ac8b63" prot="public" static="no" mutable="no">
+        <type>std::map&lt; <ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>, std::set&lt; ReplicaId &gt; &gt;</type>
+        <definition>std::map&lt;Data, std::set&lt;ReplicaId&gt; &gt; oskr::BasicClient&lt; Transport, ReplicaMessage &gt;::PendingRequest::result_table</definition>
+        <argsstring></argsstring>
+        <name>result_table</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="59" column="18" bodyfile="common/BasicClient.hpp" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1BasicClient_1_1PendingRequest_1ade82fcfe8a23f97b57256b9f9054aa03" prot="public" static="no" mutable="no">
+        <type>BasicClient::InvokeCallback</type>
+        <definition>BasicClient::InvokeCallback oskr::BasicClient&lt; Transport, ReplicaMessage &gt;::PendingRequest::callback</definition>
+        <argsstring></argsstring>
+        <name>callback</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="60" column="46" bodyfile="common/BasicClient.hpp" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/BasicClient.hpp" line="56" column="5" bodyfile="common/BasicClient.hpp" bodystart="56" bodyend="61"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1ade82fcfe8a23f97b57256b9f9054aa03" prot="public" virt="non-virtual"><scope>oskr::BasicClient::PendingRequest</scope><name>callback</name></member>
+      <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1a4dd603163612a61a48bc016b3708d849" prot="public" virt="non-virtual"><scope>oskr::BasicClient::PendingRequest</scope><name>op</name></member>
+      <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1aee78db217bcaf94d320e125d6edd0cae" prot="public" virt="non-virtual"><scope>oskr::BasicClient::PendingRequest</scope><name>request_number</name></member>
+      <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1acb068896622cadccd068f39bf1ac8b63" prot="public" virt="non-virtual"><scope>oskr::BasicClient::PendingRequest</scope><name>result_table</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

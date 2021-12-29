@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="03-optimize-for-dropping_8md" kind="file" language="Markdown">
+    <compoundname>03-optimize-for-dropping.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">@page<sp/>optimize-for-dropping<sp/>Optimize<sp/>protocol<sp/>performance<sp/>under<sp/>dropping<sp/>network</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">**Work<sp/>in<sp/>progress**</highlight></codeline>
+    </programlisting>
+    <location file="article/03-optimize-for-dropping.md"/>
+  </compounddef>
+</doxygen>

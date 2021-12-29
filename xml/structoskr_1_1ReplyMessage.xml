@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1ReplyMessage" kind="struct" language="C++" prot="public">
+    <compoundname>oskr::ReplyMessage</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structoskr_1_1ReplyMessage_1a8112915d1b9448774f076c3fcefd5943" prot="public" static="no" mutable="no">
+        <type>RequestNumber</type>
+        <definition>RequestNumber oskr::ReplyMessage::request_number</definition>
+        <argsstring></argsstring>
+        <name>request_number</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="22" column="19" bodyfile="common/BasicClient.hpp" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1ReplyMessage_1a8b92ac54da04ff4ecaec08e60b151f38" prot="public" static="no" mutable="no">
+        <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        <definition>Data oskr::ReplyMessage::result</definition>
+        <argsstring></argsstring>
+        <name>result</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="23" column="10" bodyfile="common/BasicClient.hpp" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1ReplyMessage_1a1d9c3e0b0d3c2ce0a6420854810907d0" prot="public" static="no" mutable="no">
+        <type>ViewNumber</type>
+        <definition>ViewNumber oskr::ReplyMessage::view_number</definition>
+        <argsstring></argsstring>
+        <name>view_number</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="24" column="16" bodyfile="common/BasicClient.hpp" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1ReplyMessage_1a5a8cba72b4481b16668b7510261980df" prot="public" static="no" mutable="no">
+        <type>ReplicaId</type>
+        <definition>ReplicaId oskr::ReplyMessage::replica_id</definition>
+        <argsstring></argsstring>
+        <name>replica_id</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="25" column="15" bodyfile="common/BasicClient.hpp" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structoskr_1_1ReplyMessage_1aca43b9886ccc0ca3e7c4e662e2db966f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename S</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void oskr::ReplyMessage::serialize</definition>
+        <argsstring>(S &amp;s)</argsstring>
+        <name>serialize</name>
+        <param>
+          <type>S &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/BasicClient.hpp" line="27" column="22" bodyfile="common/BasicClient.hpp" bodystart="27" bodyend="30"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/BasicClient.hpp" line="21" column="1" bodyfile="common/BasicClient.hpp" bodystart="21" bodyend="31"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1ReplyMessage_1a5a8cba72b4481b16668b7510261980df" prot="public" virt="non-virtual"><scope>oskr::ReplyMessage</scope><name>replica_id</name></member>
+      <member refid="structoskr_1_1ReplyMessage_1a8112915d1b9448774f076c3fcefd5943" prot="public" virt="non-virtual"><scope>oskr::ReplyMessage</scope><name>request_number</name></member>
+      <member refid="structoskr_1_1ReplyMessage_1a8b92ac54da04ff4ecaec08e60b151f38" prot="public" virt="non-virtual"><scope>oskr::ReplyMessage</scope><name>result</name></member>
+      <member refid="structoskr_1_1ReplyMessage_1aca43b9886ccc0ca3e7c4e662e2db966f" prot="public" virt="non-virtual"><scope>oskr::ReplyMessage</scope><name>serialize</name></member>
+      <member refid="structoskr_1_1ReplyMessage_1a1d9c3e0b0d3c2ce0a6420854810907d0" prot="public" virt="non-virtual"><scope>oskr::ReplyMessage</scope><name>view_number</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

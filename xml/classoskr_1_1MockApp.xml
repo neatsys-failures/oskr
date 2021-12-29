@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1MockApp" kind="class" language="C++" prot="public">
+    <compoundname>oskr::MockApp</compoundname>
+    <basecompoundref refid="classoskr_1_1App" prot="public" virt="non-virtual">oskr::App</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classoskr_1_1MockApp_1ada519d46bce5cdd1b4c73c1bd4531f23" prot="private" static="no" mutable="no">
+        <type>std::function&lt; <ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>(<ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>)&gt;</type>
+        <definition>std::function&lt;Data(Data)&gt; oskr::MockApp::make_reply</definition>
+        <argsstring></argsstring>
+        <name>make_reply</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="app/Mock.hpp" line="10" column="19" bodyfile="app/Mock.hpp" bodystart="10" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classoskr_1_1MockApp_1ac32ff2f498cf2c18bb442f85fff157eb" prot="public" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref> &gt;</type>
+        <definition>std::vector&lt;Data&gt; oskr::MockApp::op_list</definition>
+        <argsstring></argsstring>
+        <name>op_list</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="app/Mock.hpp" line="13" column="17" bodyfile="app/Mock.hpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1MockApp_1af7b34412865d4052416032e6e3d29c92" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::MockApp::MockApp</definition>
+        <argsstring>(std::function&lt; Data(Data)&gt; make_reply=nullptr)</argsstring>
+        <name>MockApp</name>
+        <param>
+          <type>std::function&lt; <ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>(<ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>)&gt;</type>
+          <declname>make_reply</declname>
+          <defval>nullptr</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="app/Mock.hpp" line="15" column="5" bodyfile="app/Mock.hpp" bodystart="15" bodyend="25"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1MockApp_1a43d40916ca5f4fc2a6e16240610f5fe5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        <definition>Data oskr::MockApp::commit</definition>
+        <argsstring>(Data op) override</argsstring>
+        <name>commit</name>
+        <reimplements refid="classoskr_1_1App_1a6327344d083ba2f7c29ec35d4c89bbb0">commit</reimplements>
+        <param>
+          <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+          <declname>op</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="app/Mock.hpp" line="27" column="10" bodyfile="app/Mock.hpp" bodystart="27" bodyend="31"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>oskr::MockApp</label>
+        <link refid="classoskr_1_1MockApp"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>oskr::App</label>
+        <link refid="classoskr_1_1App"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>oskr::MockApp</label>
+        <link refid="classoskr_1_1MockApp"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>oskr::App</label>
+        <link refid="classoskr_1_1App"/>
+      </node>
+    </collaborationgraph>
+    <location file="app/Mock.hpp" line="8" column="1" bodyfile="app/Mock.hpp" bodystart="9" bodyend="32"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1MockApp_1a43d40916ca5f4fc2a6e16240610f5fe5" prot="public" virt="virtual"><scope>oskr::MockApp</scope><name>commit</name></member>
+      <member refid="classoskr_1_1MockApp_1ada519d46bce5cdd1b4c73c1bd4531f23" prot="private" virt="non-virtual"><scope>oskr::MockApp</scope><name>make_reply</name></member>
+      <member refid="classoskr_1_1MockApp_1af7b34412865d4052416032e6e3d29c92" prot="public" virt="non-virtual"><scope>oskr::MockApp</scope><name>MockApp</name></member>
+      <member refid="classoskr_1_1MockApp_1ac32ff2f498cf2c18bb442f85fff157eb" prot="public" virt="non-virtual"><scope>oskr::MockApp</scope><name>op_list</name></member>
+      <member refid="classoskr_1_1App_1aa04f2adee791fba57f4bcbcd1874df96" prot="public" virt="virtual"><scope>oskr::MockApp</scope><name>rollback</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

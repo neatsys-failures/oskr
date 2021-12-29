@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1TransportMeta_3_01DPDKClient_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>oskr::TransportMeta&lt; DPDKClient &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1ae190e32959f6a01f7e16edaf41c8826d" prot="public" static="no">
+        <type>std::pair&lt; struct rte_ether_addr, std::uint16_t &gt;</type>
+        <definition>using oskr::TransportMeta&lt; DPDKClient &gt;::Address =  std::pair&lt;struct rte_ether_addr, std::uint16_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>Address</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="31" column="5" bodyfile="transport/DPDKClient.hpp" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a88bd3634e15813e6655f84ee324f7613" prot="public" static="no">
+        <type><ref refid="structoskr_1_1MBufDesc" kindref="compound">MBufDesc</ref></type>
+        <definition>using oskr::TransportMeta&lt; DPDKClient &gt;::Desc =  MBufDesc</definition>
+        <argsstring></argsstring>
+        <name>Desc</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="33" column="5" bodyfile="transport/DPDKClient.hpp" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a04f0b37e3d5175371132c3b424d62f9d" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr std::size_t</type>
+        <definition>constexpr std::size_t oskr::TransportMeta&lt; DPDKClient &gt;::BUFFER_SIZE</definition>
+        <argsstring></argsstring>
+        <name>BUFFER_SIZE</name>
+        <initializer>= RTE_MBUF_DEFAULT_BUF_SIZE</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/DPDKClient.hpp" line="32" column="34" bodyfile="transport/DPDKClient.hpp" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="transport/DPDKClient.hpp" line="30" column="11" bodyfile="transport/DPDKClient.hpp" bodystart="30" bodyend="34"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1ae190e32959f6a01f7e16edaf41c8826d" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; DPDKClient &gt;</scope><name>Address</name></member>
+      <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a04f0b37e3d5175371132c3b424d62f9d" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; DPDKClient &gt;</scope><name>BUFFER_SIZE</name></member>
+      <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a88bd3634e15813e6655f84ee324f7613" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; DPDKClient &gt;</scope><name>Desc</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

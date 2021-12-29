@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1Quorum" kind="class" language="C++" prot="public">
+    <compoundname>oskr::Quorum</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class IDTYPE</type>
+      </param>
+      <param>
+        <type>class MSGTYPE</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classoskr_1_1Quorum_1adb4d85e2893c0cefb8b655c28e05afd1" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::numRequired</definition>
+        <argsstring></argsstring>
+        <name>numRequired</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="103" column="9" bodyfile="common/Quorum.hpp" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classoskr_1_1Quorum_1ab6a8831b96c3d14482e1612033d1228f" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; IDTYPE, std::map&lt; ReplicaId, MSGTYPE &gt; &gt;</type>
+        <definition>std::unordered_map&lt;IDTYPE, std::map&lt;ReplicaId, MSGTYPE&gt; &gt; oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::messages</definition>
+        <argsstring></argsstring>
+        <name>messages</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="106" column="24" bodyfile="common/Quorum.hpp" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1Quorum_1aa8670e9376392fa0ff00249f960c19c1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::Quorum</definition>
+        <argsstring>(int n_required)</argsstring>
+        <name>Quorum</name>
+        <param>
+          <type>int</type>
+          <declname>n_required</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="49" column="5" bodyfile="common/Quorum.hpp" bodystart="49" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1ad4137c3122f799a5bd7d8fc32f6b3749" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::clear</definition>
+        <argsstring>()</argsstring>
+        <name>clear</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="51" column="10" bodyfile="common/Quorum.hpp" bodystart="51" bodyend="51"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1a2b953e9291c432778e2a64ad02fbccaf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::clear</definition>
+        <argsstring>(IDTYPE vs)</argsstring>
+        <name>clear</name>
+        <param>
+          <type>IDTYPE</type>
+          <declname>vs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="53" column="10" bodyfile="common/Quorum.hpp" bodystart="53" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1a2de41023470e5b15e1ffd7695b68c517" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>ReplicaId</type>
+        <definition>ReplicaId oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::nRequired</definition>
+        <argsstring>() const</argsstring>
+        <name>nRequired</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="59" column="15" bodyfile="common/Quorum.hpp" bodystart="59" bodyend="59"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1abd8328d484c33aecd58dd26410c3dcde" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::map&lt; ReplicaId, MSGTYPE &gt; &amp;</type>
+        <definition>const std::map&lt;ReplicaId, MSGTYPE&gt;&amp; oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::getMessages</definition>
+        <argsstring>(IDTYPE vs)</argsstring>
+        <name>getMessages</name>
+        <param>
+          <type>IDTYPE</type>
+          <declname>vs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="61" column="20" bodyfile="common/Quorum.hpp" bodystart="61" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1a89d2f4a3059a31758a4b24ea1050e4f5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::map&lt; ReplicaId, MSGTYPE &gt; *</type>
+        <definition>const std::map&lt;ReplicaId, MSGTYPE&gt;* oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::checkForQuorum</definition>
+        <argsstring>(IDTYPE vs)</argsstring>
+        <name>checkForQuorum</name>
+        <param>
+          <type>IDTYPE</type>
+          <declname>vs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="67" column="20" bodyfile="common/Quorum.hpp" bodystart="67" bodyend="76"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1a49dc6ed1cde3487e307bf932010fbd3a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::map&lt; ReplicaId, MSGTYPE &gt; *</type>
+        <definition>const std::map&lt;ReplicaId, MSGTYPE&gt;* oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::addAndCheckForQuorum</definition>
+        <argsstring>(IDTYPE vs, ReplicaId replica_id, const MSGTYPE &amp;msg)</argsstring>
+        <name>addAndCheckForQuorum</name>
+        <param>
+          <type>IDTYPE</type>
+          <declname>vs</declname>
+        </param>
+        <param>
+          <type>ReplicaId</type>
+          <declname>replica_id</declname>
+        </param>
+        <param>
+          <type>const MSGTYPE &amp;</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="79" column="5" bodyfile="common/Quorum.hpp" bodystart="79" bodyend="95"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Quorum_1a0e7c2053f08672204e89fda0c5c747c5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::Quorum&lt; IDTYPE, MSGTYPE &gt;::add</definition>
+        <argsstring>(IDTYPE vs, ReplicaId replica_id, const MSGTYPE &amp;msg)</argsstring>
+        <name>add</name>
+        <param>
+          <type>IDTYPE</type>
+          <declname>vs</declname>
+        </param>
+        <param>
+          <type>ReplicaId</type>
+          <declname>replica_id</declname>
+        </param>
+        <param>
+          <type>const MSGTYPE &amp;</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/Quorum.hpp" line="97" column="10" bodyfile="common/Quorum.hpp" bodystart="97" bodyend="100"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/Quorum.hpp" line="46" column="14" bodyfile="common/Quorum.hpp" bodystart="47" bodyend="107"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1Quorum_1a0e7c2053f08672204e89fda0c5c747c5" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>add</name></member>
+      <member refid="classoskr_1_1Quorum_1a49dc6ed1cde3487e307bf932010fbd3a" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>addAndCheckForQuorum</name></member>
+      <member refid="classoskr_1_1Quorum_1a89d2f4a3059a31758a4b24ea1050e4f5" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>checkForQuorum</name></member>
+      <member refid="classoskr_1_1Quorum_1ad4137c3122f799a5bd7d8fc32f6b3749" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>clear</name></member>
+      <member refid="classoskr_1_1Quorum_1a2b953e9291c432778e2a64ad02fbccaf" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>clear</name></member>
+      <member refid="classoskr_1_1Quorum_1abd8328d484c33aecd58dd26410c3dcde" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>getMessages</name></member>
+      <member refid="classoskr_1_1Quorum_1ab6a8831b96c3d14482e1612033d1228f" prot="private" virt="non-virtual"><scope>oskr::Quorum</scope><name>messages</name></member>
+      <member refid="classoskr_1_1Quorum_1a2de41023470e5b15e1ffd7695b68c517" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>nRequired</name></member>
+      <member refid="classoskr_1_1Quorum_1adb4d85e2893c0cefb8b655c28e05afd1" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>numRequired</name></member>
+      <member refid="classoskr_1_1Quorum_1aa8670e9376392fa0ff00249f960c19c1" prot="public" virt="non-virtual"><scope>oskr::Quorum</scope><name>Quorum</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1StatefulTimeout" kind="class" language="C++" prot="public">
+    <compoundname>oskr::StatefulTimeout</compoundname>
+    <templateparamlist>
+      <param>
+        <type>typename Transport</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classoskr_1_1StatefulTimeout_1aae2ff4c2e89d729ba040f610658d8c66" prot="private" static="no" mutable="no">
+        <type>std::optional&lt; int &gt;</type>
+        <definition>std::optional&lt;int&gt; oskr::StatefulTimeout&lt; Transport &gt;::current_id</definition>
+        <argsstring></argsstring>
+        <name>current_id</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="12" column="19" bodyfile="common/StatefulTimeout.hpp" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classoskr_1_1StatefulTimeout_1abdfca4b8d8c8243ac3b188b55617ac79" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int oskr::StatefulTimeout&lt; Transport &gt;::timeout_id</definition>
+        <argsstring></argsstring>
+        <name>timeout_id</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="13" column="9" bodyfile="common/StatefulTimeout.hpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classoskr_1_1StatefulTimeout_1a720072a762c54e368bcce5e5af9ae233" prot="private" static="no" mutable="no">
+        <type>Transport &amp;</type>
+        <definition>Transport&amp; oskr::StatefulTimeout&lt; Transport &gt;::transport</definition>
+        <argsstring></argsstring>
+        <name>transport</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="15" column="15" bodyfile="common/StatefulTimeout.hpp" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classoskr_1_1StatefulTimeout_1a69be00b49a4df661b4a547593642d617" prot="private" static="no" mutable="no">
+        <type>std::function&lt; void()&gt;</type>
+        <definition>std::function&lt;void()&gt; oskr::StatefulTimeout&lt; Transport &gt;::callback</definition>
+        <argsstring></argsstring>
+        <name>callback</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="16" column="19" bodyfile="common/StatefulTimeout.hpp" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classoskr_1_1StatefulTimeout_1aba03ecce432aa9597068eee943c1bb61" prot="private" static="no" mutable="no">
+        <type>std::chrono::microseconds</type>
+        <definition>std::chrono::microseconds oskr::StatefulTimeout&lt; Transport &gt;::delay</definition>
+        <argsstring></argsstring>
+        <name>delay</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="17" column="31" bodyfile="common/StatefulTimeout.hpp" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1StatefulTimeout_1ab1e68580166dcacf58da932ec116b99d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::StatefulTimeout&lt; Transport &gt;::StatefulTimeout</definition>
+        <argsstring>(Transport &amp;transport, std::chrono::microseconds delay, std::function&lt; void()&gt; callback)</argsstring>
+        <name>StatefulTimeout</name>
+        <param>
+          <type>Transport &amp;</type>
+          <declname>transport</declname>
+        </param>
+        <param>
+          <type>std::chrono::microseconds</type>
+          <declname>delay</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void()&gt;</type>
+          <declname>callback</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="21" column="5" bodyfile="common/StatefulTimeout.hpp" bodystart="21" bodyend="29"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1StatefulTimeout_1a9a2d741eb836a23e08497f04d4e5edbc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::StatefulTimeout&lt; Transport &gt;::reset</definition>
+        <argsstring>()</argsstring>
+        <name>reset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="31" column="10" bodyfile="common/StatefulTimeout.hpp" bodystart="31" bodyend="41"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1StatefulTimeout_1a8121bba894a29fdaf22f5cad8d440808" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::StatefulTimeout&lt; Transport &gt;::enable</definition>
+        <argsstring>()</argsstring>
+        <name>enable</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="43" column="10" bodyfile="common/StatefulTimeout.hpp" bodystart="43" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1StatefulTimeout_1aa9f0cc028bedf28795ec28f32bc5587b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::StatefulTimeout&lt; Transport &gt;::disable</definition>
+        <argsstring>()</argsstring>
+        <name>disable</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/StatefulTimeout.hpp" line="50" column="10" bodyfile="common/StatefulTimeout.hpp" bodystart="50" bodyend="50"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/StatefulTimeout.hpp" line="10" column="12" bodyfile="common/StatefulTimeout.hpp" bodystart="11" bodyend="51"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1StatefulTimeout_1a69be00b49a4df661b4a547593642d617" prot="private" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>callback</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1aae2ff4c2e89d729ba040f610658d8c66" prot="private" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>current_id</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1aba03ecce432aa9597068eee943c1bb61" prot="private" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>delay</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1aa9f0cc028bedf28795ec28f32bc5587b" prot="public" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>disable</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1a8121bba894a29fdaf22f5cad8d440808" prot="public" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>enable</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1a9a2d741eb836a23e08497f04d4e5edbc" prot="public" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>reset</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1ab1e68580166dcacf58da932ec116b99d" prot="public" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>StatefulTimeout</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1abdfca4b8d8c8243ac3b188b55617ac79" prot="private" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>timeout_id</name></member>
+      <member refid="classoskr_1_1StatefulTimeout_1a720072a762c54e368bcce5e5af9ae233" prot="private" virt="non-virtual"><scope>oskr::StatefulTimeout</scope><name>transport</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

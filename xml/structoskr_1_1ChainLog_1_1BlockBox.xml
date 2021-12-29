@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1ChainLog_1_1BlockBox" kind="struct" language="C++" prot="private">
+    <compoundname>oskr::ChainLog::BlockBox</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structoskr_1_1ChainLog_1_1BlockBox_1a6ed1606bbb126f2400e56fcb8421ac3e" prot="public" static="no" mutable="no">
+        <type>Block</type>
+        <definition>Block oskr::ChainLog::BlockBox::block</definition>
+        <argsstring></argsstring>
+        <name>block</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ChainLog.hpp" line="11" column="15" bodyfile="common/ChainLog.hpp" bodystart="11" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structoskr_1_1ChainLog_1_1BlockBox_1a45f02d2ef382d529ffba07bad445f073" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool oskr::ChainLog::BlockBox::committed</definition>
+        <argsstring></argsstring>
+        <name>committed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ChainLog.hpp" line="12" column="14" bodyfile="common/ChainLog.hpp" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/ChainLog.hpp" line="10" column="5" bodyfile="common/ChainLog.hpp" bodystart="10" bodyend="13"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1ChainLog_1_1BlockBox_1a6ed1606bbb126f2400e56fcb8421ac3e" prot="public" virt="non-virtual"><scope>oskr::ChainLog::BlockBox</scope><name>block</name></member>
+      <member refid="structoskr_1_1ChainLog_1_1BlockBox_1a45f02d2ef382d529ffba07bad445f073" prot="public" virt="non-virtual"><scope>oskr::ChainLog::BlockBox</scope><name>committed</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1Client" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>oskr::Client</compoundname>
+    <basecompoundref refid="classoskr_1_1TransportReceiver" prot="public" virt="non-virtual">oskr::TransportReceiver&lt; Transport &gt;</basecompoundref>
+    <derivedcompoundref refid="classoskr_1_1BasicClient" prot="public" virt="non-virtual">oskr::BasicClient&lt; Transport, ReplicaMessage &gt;</derivedcompoundref>
+    <templateparamlist>
+      <param>
+        <type>TransportTrait</type>
+        <declname>Transport</declname>
+        <defname>Transport</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classoskr_1_1Client_1a72f0697342e452501fca24973bb56651" prot="public" static="no">
+        <type>std::function&lt; void(<ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref> result)&gt;</type>
+        <definition>using oskr::Client&lt; Transport &gt;::InvokeCallback =  std::function&lt;void(Data result)&gt;</definition>
+        <argsstring></argsstring>
+        <name>InvokeCallback</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Client.hpp" line="23" column="5" bodyfile="core/Client.hpp" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classoskr_1_1Client_1a6bd1efdc8218917a5bb17b216d939f2b" prot="protected" static="no" mutable="no">
+        <type>ClientId</type>
+        <definition>ClientId oskr::Client&lt; Transport &gt;::client_id</definition>
+        <argsstring></argsstring>
+        <name>client_id</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Client.hpp" line="14" column="14" bodyfile="core/Client.hpp" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1Client_1ab6d83148e6642ebc02e1b40ca4063e37" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::Client&lt; Transport &gt;::Client</definition>
+        <argsstring>(Transport &amp;transport)</argsstring>
+        <name>Client</name>
+        <param>
+          <type>Transport &amp;</type>
+          <declname>transport</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Client.hpp" line="17" column="5" bodyfile="core/Client.hpp" bodystart="17" bodyend="21"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Client_1a9ec3da51324f97763b7d2b05b4426b08" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Client&lt; Transport &gt;::invoke</definition>
+        <argsstring>(Data op, InvokeCallback callback)=0</argsstring>
+        <name>invoke</name>
+        <reimplementedby refid="classoskr_1_1BasicClient_1a423df2e6eeb40294cbc4cb99cf8e9c71">invoke</reimplementedby>
+        <param>
+          <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+          <declname>op</declname>
+        </param>
+        <param>
+          <type>InvokeCallback</type>
+          <declname>callback</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Client.hpp" line="24" column="18"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>oskr::TransportReceiver&lt; Transport &gt;</label>
+        <link refid="classoskr_1_1TransportReceiver"/>
+      </node>
+      <node id="3">
+        <label>oskr::BasicClient&lt; Transport, ReplicaMessage &gt;</label>
+        <link refid="classoskr_1_1BasicClient"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>oskr::Client&lt; Transport &gt;</label>
+        <link refid="classoskr_1_1Client"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>oskr::TransportReceiver&lt; Transport &gt;</label>
+        <link refid="classoskr_1_1TransportReceiver"/>
+        <childnode refid="3" relation="usage">
+          <edgelabel>transport</edgelabel>
+        </childnode>
+      </node>
+      <node id="1">
+        <label>oskr::Client&lt; Transport &gt;</label>
+        <link refid="classoskr_1_1Client"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>Transport</label>
+      </node>
+    </collaborationgraph>
+    <location file="core/Client.hpp" line="11" column="1" bodyfile="core/Client.hpp" bodystart="12" bodyend="25"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1TransportReceiver_1aa746e8bcb10cd122441a010a6440188e" prot="public" virt="non-virtual"><scope>oskr::Client</scope><name>address</name></member>
+      <member refid="classoskr_1_1Client_1ab6d83148e6642ebc02e1b40ca4063e37" prot="public" virt="non-virtual"><scope>oskr::Client</scope><name>Client</name></member>
+      <member refid="classoskr_1_1Client_1a6bd1efdc8218917a5bb17b216d939f2b" prot="protected" virt="non-virtual"><scope>oskr::Client</scope><name>client_id</name></member>
+      <member refid="classoskr_1_1Client_1a9ec3da51324f97763b7d2b05b4426b08" prot="public" virt="pure-virtual"><scope>oskr::Client</scope><name>invoke</name></member>
+      <member refid="classoskr_1_1Client_1a72f0697342e452501fca24973bb56651" prot="public" virt="non-virtual"><scope>oskr::Client</scope><name>InvokeCallback</name></member>
+      <member refid="classoskr_1_1TransportReceiver_1a498a81c4a14c623d4bbb846a12979e5e" prot="public" virt="pure-virtual"><scope>oskr::Client</scope><name>receiveMessage</name></member>
+      <member refid="classoskr_1_1TransportReceiver_1a244b09cac653eb0130138854cc2f99dc" prot="protected" virt="non-virtual"><scope>oskr::Client</scope><name>transport</name></member>
+      <member refid="classoskr_1_1TransportReceiver_1a6634f735aeea18352165d88c687ffa69" prot="public" virt="non-virtual"><scope>oskr::Client</scope><name>TransportReceiver</name></member>
+      <member refid="classoskr_1_1TransportReceiver_1a352d4c0453f2dd2c9f51d6bd5f6a64c4" prot="public" virt="virtual"><scope>oskr::Client</scope><name>~TransportReceiver</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

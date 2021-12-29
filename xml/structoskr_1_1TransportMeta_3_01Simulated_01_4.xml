@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="structoskr_1_1TransportMeta_3_01Simulated_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>oskr::TransportMeta&lt; Simulated &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a58907f4192d96ee428d7210bd06a16eb" prot="public" static="no">
+        <type>std::string</type>
+        <definition>using oskr::TransportMeta&lt; Simulated &gt;::Address =  std::string</definition>
+        <argsstring></argsstring>
+        <name>Address</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/Simulated.hpp" line="13" column="5" bodyfile="transport/Simulated.hpp" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="structoskr_1_1TransportMeta_3_01Simulated_01_4_1ab70f128c3b1329a6eac1ce55a86c50d0" prot="public" static="no">
+        <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        <definition>using oskr::TransportMeta&lt; Simulated &gt;::Desc =  Data</definition>
+        <argsstring></argsstring>
+        <name>Desc</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/Simulated.hpp" line="14" column="5" bodyfile="transport/Simulated.hpp" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a875c4f420248514776609d2318676f62" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr std::size_t</type>
+        <definition>constexpr std::size_t oskr::TransportMeta&lt; Simulated &gt;::BUFFER_SIZE</definition>
+        <argsstring></argsstring>
+        <name>BUFFER_SIZE</name>
+        <initializer>= 9000</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="transport/Simulated.hpp" line="15" column="34" bodyfile="transport/Simulated.hpp" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="transport/Simulated.hpp" line="12" column="11" bodyfile="transport/Simulated.hpp" bodystart="12" bodyend="16"/>
+    <listofallmembers>
+      <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a58907f4192d96ee428d7210bd06a16eb" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; Simulated &gt;</scope><name>Address</name></member>
+      <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a875c4f420248514776609d2318676f62" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; Simulated &gt;</scope><name>BUFFER_SIZE</name></member>
+      <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1ab70f128c3b1329a6eac1ce55a86c50d0" prot="public" virt="non-virtual"><scope>oskr::TransportMeta&lt; Simulated &gt;</scope><name>Desc</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

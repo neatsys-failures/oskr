@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1App" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>oskr::App</compoundname>
+    <derivedcompoundref refid="classoskr_1_1MockApp" prot="public" virt="non-virtual">oskr::MockApp</derivedcompoundref>
+    <derivedcompoundref refid="classoskr_1_1NullApp" prot="public" virt="non-virtual">oskr::NullApp</derivedcompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1App_1a6327344d083ba2f7c29ec35d4c89bbb0" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        <definition>virtual Data oskr::App::commit</definition>
+        <argsstring>(Data op)=0</argsstring>
+        <name>commit</name>
+        <reimplementedby refid="classoskr_1_1MockApp_1a43d40916ca5f4fc2a6e16240610f5fe5">commit</reimplementedby>
+        <reimplementedby refid="classoskr_1_1NullApp_1a37419ec115235a1bf05ec7c88596d2c8">commit</reimplementedby>
+        <param>
+          <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+          <declname>op</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="12" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1App_1aa04f2adee791fba57f4bcbcd1874df96" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void oskr::App::rollback</definition>
+        <argsstring>(Data)</argsstring>
+        <name>rollback</name>
+        <reimplementedby refid="classoskr_1_1NullApp_1a239475c70e78c121166a3401174ffee9">rollback</reimplementedby>
+        <param>
+          <type><ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref></type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="13" column="18" bodyfile="core/Log.hpp" bodystart="13" bodyend="13"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>oskr::MockApp</label>
+        <link refid="classoskr_1_1MockApp"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>oskr::NullApp</label>
+        <link refid="classoskr_1_1NullApp"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>oskr::App</label>
+        <link refid="classoskr_1_1App"/>
+      </node>
+    </inheritancegraph>
+    <location file="core/Log.hpp" line="9" column="1" bodyfile="core/Log.hpp" bodystart="10" bodyend="14"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1App_1a6327344d083ba2f7c29ec35d4c89bbb0" prot="public" virt="pure-virtual"><scope>oskr::App</scope><name>commit</name></member>
+      <member refid="classoskr_1_1App_1aa04f2adee791fba57f4bcbcd1874df96" prot="public" virt="virtual"><scope>oskr::App</scope><name>rollback</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

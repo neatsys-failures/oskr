@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="00-generate-document_8md" kind="file" language="Markdown">
+    <compoundname>00-generate-document.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">@page<sp/>generate-document<sp/>Generate<sp/>this<sp/>document<sp/>locally</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">**Work<sp/>in<sp/>progress**</highlight></codeline>
+    </programlisting>
+    <location file="article/00-generate-document.md"/>
+  </compounddef>
+</doxygen>

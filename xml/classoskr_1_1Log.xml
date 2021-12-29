@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1Log" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>oskr::Log</compoundname>
+    <templateparamlist>
+      <param>
+        <type>typename Preset</type>
+        <defval>void</defval>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classoskr_1_1Log_1a51d027178a39765753437b3120829b89" prot="public" static="no">
+        <type>typename Preset::Index</type>
+        <definition>using oskr::Log&lt; Preset &gt;::Index =  typename Preset::Index</definition>
+        <argsstring></argsstring>
+        <name>Index</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="31" column="5" bodyfile="core/Log.hpp" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classoskr_1_1Log_1a2e6809b21b365077ae012846532f1c25" prot="public" static="no">
+        <type>typename Preset::Block</type>
+        <definition>using oskr::Log&lt; Preset &gt;::Block =  typename Preset::Block</definition>
+        <argsstring></argsstring>
+        <name>Block</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="32" column="5" bodyfile="core/Log.hpp" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classoskr_1_1Log_1afe5a86ec10b3790a0f3efcfed60cc36a" prot="public" static="no">
+        <type>std::function&lt; void(ClientId, RequestNumber, <ref refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kindref="member">Data</ref>)&gt;</type>
+        <definition>using oskr::Log&lt; Preset &gt;::ReplyCallback =  std::function&lt;void(ClientId, RequestNumber, Data)&gt;</definition>
+        <argsstring></argsstring>
+        <name>ReplyCallback</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="38" column="5" bodyfile="core/Log.hpp" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classoskr_1_1Log_1ac04462ea94aee100073014c426ddf5aa" prot="protected" static="no" mutable="no">
+        <type><ref refid="classoskr_1_1App" kindref="compound">App</ref> &amp;</type>
+        <definition>App&amp; oskr::Log&lt; Preset &gt;::app</definition>
+        <argsstring></argsstring>
+        <name>app</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="21" column="9" bodyfile="core/Log.hpp" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classoskr_1_1Log_1a74c98a9bace86aad2c22a364cbff0347" prot="protected" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool oskr::Log&lt; Preset &gt;::enable_upcall</definition>
+        <argsstring></argsstring>
+        <name>enable_upcall</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="22" column="10" bodyfile="core/Log.hpp" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classoskr_1_1Log_1a236478bdbd30dd5d1d3ba3733a4346ee" prot="protected" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>oskr::Log&lt; Preset &gt;::Log</definition>
+        <argsstring>(App &amp;app)</argsstring>
+        <name>Log</name>
+        <param>
+          <type><ref refid="classoskr_1_1App" kindref="compound">App</ref> &amp;</type>
+          <declname>app</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="24" column="5" bodyfile="core/Log.hpp" bodystart="24" bodyend="28"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1Log_1aa6fdfed9437a4414eb0bb79b56066fd3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual oskr::Log&lt; Preset &gt;::~Log</definition>
+        <argsstring>()</argsstring>
+        <name>~Log</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="34" column="13" bodyfile="core/Log.hpp" bodystart="34" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Log_1a6026d297ee6ba8caeafcc05b5afe6fed" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Log&lt; Preset &gt;::prepare</definition>
+        <argsstring>(Index index, Block block)=0</argsstring>
+        <name>prepare</name>
+        <param>
+          <type>Index</type>
+          <declname>index</declname>
+        </param>
+        <param>
+          <type>Block</type>
+          <declname>block</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="36" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Log_1af74f23fc2e4c47bb4da0a7b67ae66dbe" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Log&lt; Preset &gt;::commit</definition>
+        <argsstring>(Index index, ReplyCallback callback)=0</argsstring>
+        <name>commit</name>
+        <param>
+          <type>Index</type>
+          <declname>index</declname>
+        </param>
+        <param>
+          <type>ReplyCallback</type>
+          <declname>callback</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="39" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Log_1a1cf1b49be1677859529246e76373cb75" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Log&lt; Preset &gt;::rollbackTo</definition>
+        <argsstring>(Index index)=0</argsstring>
+        <name>rollbackTo</name>
+        <param>
+          <type>Index</type>
+          <declname>index</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="42" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Log_1a0d5d38a22538266b6c0f0c0b162d2645" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Log&lt; Preset &gt;::enableUpcall</definition>
+        <argsstring>()=0</argsstring>
+        <name>enableUpcall</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="44" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1Log_1ac461f6fa8a8d28dadaf88d490e2d005d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void oskr::Log&lt; Preset &gt;::disableUpcall</definition>
+        <argsstring>()</argsstring>
+        <name>disableUpcall</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="core/Log.hpp" line="46" column="18" bodyfile="core/Log.hpp" bodystart="46" bodyend="46"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>oskr::Log&lt; Preset &gt;</label>
+        <link refid="classoskr_1_1Log"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>app</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>oskr::App</label>
+        <link refid="classoskr_1_1App"/>
+      </node>
+    </collaborationgraph>
+    <location file="core/Log.hpp" line="16" column="14" bodyfile="core/Log.hpp" bodystart="17" bodyend="47"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1Log_1ac04462ea94aee100073014c426ddf5aa" prot="protected" virt="non-virtual"><scope>oskr::Log</scope><name>app</name></member>
+      <member refid="classoskr_1_1Log_1a2e6809b21b365077ae012846532f1c25" prot="public" virt="non-virtual"><scope>oskr::Log</scope><name>Block</name></member>
+      <member refid="classoskr_1_1Log_1af74f23fc2e4c47bb4da0a7b67ae66dbe" prot="public" virt="pure-virtual"><scope>oskr::Log</scope><name>commit</name></member>
+      <member refid="classoskr_1_1Log_1ac461f6fa8a8d28dadaf88d490e2d005d" prot="public" virt="virtual"><scope>oskr::Log</scope><name>disableUpcall</name></member>
+      <member refid="classoskr_1_1Log_1a74c98a9bace86aad2c22a364cbff0347" prot="protected" virt="non-virtual"><scope>oskr::Log</scope><name>enable_upcall</name></member>
+      <member refid="classoskr_1_1Log_1a0d5d38a22538266b6c0f0c0b162d2645" prot="public" virt="pure-virtual"><scope>oskr::Log</scope><name>enableUpcall</name></member>
+      <member refid="classoskr_1_1Log_1a51d027178a39765753437b3120829b89" prot="public" virt="non-virtual"><scope>oskr::Log</scope><name>Index</name></member>
+      <member refid="classoskr_1_1Log_1a236478bdbd30dd5d1d3ba3733a4346ee" prot="protected" virt="non-virtual"><scope>oskr::Log</scope><name>Log</name></member>
+      <member refid="classoskr_1_1Log_1a6026d297ee6ba8caeafcc05b5afe6fed" prot="public" virt="pure-virtual"><scope>oskr::Log</scope><name>prepare</name></member>
+      <member refid="classoskr_1_1Log_1afe5a86ec10b3790a0f3efcfed60cc36a" prot="public" virt="non-virtual"><scope>oskr::Log</scope><name>ReplyCallback</name></member>
+      <member refid="classoskr_1_1Log_1a1cf1b49be1677859529246e76373cb75" prot="public" virt="pure-virtual"><scope>oskr::Log</scope><name>rollbackTo</name></member>
+      <member refid="classoskr_1_1Log_1aa6fdfed9437a4414eb0bb79b56066fd3" prot="public" virt="virtual"><scope>oskr::Log</scope><name>~Log</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,341 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.1" xml:lang="en-US">
+  <compound refid="classoskr_1_1App" kind="class"><name>oskr::App</name>
+    <member refid="classoskr_1_1App_1a6327344d083ba2f7c29ec35d4c89bbb0" kind="function"><name>commit</name></member>
+    <member refid="classoskr_1_1App_1aa04f2adee791fba57f4bcbcd1874df96" kind="function"><name>rollback</name></member>
+  </compound>
+  <compound refid="classoskr_1_1BasicClient" kind="class"><name>oskr::BasicClient</name>
+    <member refid="classoskr_1_1BasicClient_1a8536131bc3a09a4c58127aa928406f01" kind="variable"><name>config</name></member>
+    <member refid="classoskr_1_1BasicClient_1a3d40af67bc9ccd68133a90ba2f56ca9e" kind="variable"><name>request_number</name></member>
+    <member refid="classoskr_1_1BasicClient_1a652402ca2d944e8cc9dab9a7e4dc6a4c" kind="variable"><name>view_number</name></member>
+    <member refid="classoskr_1_1BasicClient_1aca9cd3ab323ee26433a42cb13e5360a2" kind="variable"><name>pending</name></member>
+    <member refid="classoskr_1_1BasicClient_1ad75502c24c79d85d0c79caf75ae48021" kind="function"><name>BasicClient</name></member>
+    <member refid="classoskr_1_1BasicClient_1a423df2e6eeb40294cbc4cb99cf8e9c71" kind="function"><name>invoke</name></member>
+    <member refid="classoskr_1_1BasicClient_1a9c7e81dcb64d7e877a71c67734a28e18" kind="function"><name>receiveMessage</name></member>
+    <member refid="classoskr_1_1BasicClient_1a35f048356a6a8251d50e3389ae2a53f4" kind="function"><name>serializeRequestMessage</name></member>
+    <member refid="classoskr_1_1BasicClient_1ad84d1f845594530b92dacb449e6e6903" kind="function"><name>deserializeReplyMessage</name></member>
+    <member refid="classoskr_1_1BasicClient_1a20d90e5c0d52bf9d97105df223fea8d2" kind="function"><name>sendRequest</name></member>
+    <member refid="classoskr_1_1BasicClient_1accf874aa2b165f407ff03bb9ad140cdf" kind="function"><name>handleReply</name></member>
+  </compound>
+  <compound refid="structoskr_1_1ChainLog_1_1BlockBox" kind="struct"><name>oskr::ChainLog::BlockBox</name>
+    <member refid="structoskr_1_1ChainLog_1_1BlockBox_1a6ed1606bbb126f2400e56fcb8421ac3e" kind="variable"><name>block</name></member>
+    <member refid="structoskr_1_1ChainLog_1_1BlockBox_1a45f02d2ef382d529ffba07bad445f073" kind="variable"><name>committed</name></member>
+  </compound>
+  <compound refid="classoskr_1_1ChainLog" kind="class"><name>oskr::ChainLog</name>
+    <member refid="classoskr_1_1ChainLog_1aa0ab0914c86d9c80244528186ff83424" kind="variable"><name>block_table</name></member>
+  </compound>
+  <compound refid="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset" kind="struct"><name>oskr::Log&lt; void &gt;::ChainPreset</name>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1a2fb0199a19bde0e25007b1703768a1a0" kind="typedef"><name>Index</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1a8c91d082a146cfe5c3d606236d977662" kind="typedef"><name>Block</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1a66692563893d640e9ab29ba8db1092b5" kind="variable"><name>n_entry</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1a3ddf3f9c5ceca879350025062018fb50" kind="variable"><name>previous</name></member>
+  </compound>
+  <compound refid="classoskr_1_1Client" kind="class"><name>oskr::Client</name>
+    <member refid="classoskr_1_1Client_1a72f0697342e452501fca24973bb56651" kind="typedef"><name>InvokeCallback</name></member>
+    <member refid="classoskr_1_1Client_1a6bd1efdc8218917a5bb17b216d939f2b" kind="variable"><name>client_id</name></member>
+    <member refid="classoskr_1_1Client_1ab6d83148e6642ebc02e1b40ca4063e37" kind="function"><name>Client</name></member>
+    <member refid="classoskr_1_1Client_1a9ec3da51324f97763b7d2b05b4426b08" kind="function"><name>invoke</name></member>
+  </compound>
+  <compound refid="classoskr_1_1ClientTable" kind="class"><name>oskr::ClientTable</name>
+    <member refid="classoskr_1_1ClientTable_1ac9c93ec691ec25ad02c5bb098f2ff70d" kind="typedef"><name>Apply</name></member>
+    <member refid="classoskr_1_1ClientTable_1afbaeaa24fe8959224f078633b47761c3" kind="variable"><name>record_table</name></member>
+    <member refid="classoskr_1_1ClientTable_1a615d06e426812efc4dd38f1eb92c6b01" kind="function"><name>check</name></member>
+    <member refid="classoskr_1_1ClientTable_1abecf72f239b8be2048d24ec274451b59" kind="function"><name>update</name></member>
+    <member refid="classoskr_1_1ClientTable_1a86f4e5770e529bb4a090b365c49dcf7d" kind="function"><name>update</name></member>
+  </compound>
+  <compound refid="structoskr_1_1BasicClient_1_1Config" kind="struct"><name>oskr::BasicClient::Config</name>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1aa709cf1145968de8320d8760365e683d" kind="enum"><name>Strategy</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1aa709cf1145968de8320d8760365e683da435bfcd79a62489a7677952855b9c0e8" kind="enumvalue"><name>UNSPECIFIED</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1aa709cf1145968de8320d8760365e683da4105652dff7a5dfa5e641664b42e43c9" kind="enumvalue"><name>ALL</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1aa709cf1145968de8320d8760365e683daecae64f2aeaef74c30eb5d8d08f8af28" kind="enumvalue"><name>PRIMARY_FIRST</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1a15812c7cbec007d2b4075991c31b5a72" kind="variable"><name>strategy</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1a5b66c5c631500f296ee85feb6c15b924" kind="variable"><name>resend_interval</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1Config_1a20814d56df54d54497e0df470132cd4a" kind="variable"><name>n_matched</name></member>
+  </compound>
+  <compound refid="structoskr_1_1Config" kind="struct"><name>oskr::Config</name>
+    <member refid="structoskr_1_1Config_1aac570ca2fd1f717e44c0b53d2cf4b048" kind="variable"><name>n_fault</name></member>
+    <member refid="structoskr_1_1Config_1aa9fb7746a76142789ccfee153dfd97bf" kind="variable"><name>replica_address_list</name></member>
+    <member refid="structoskr_1_1Config_1a6026b9f3c75a87f22290d2bbb6ed6cf3" kind="variable"><name>multicast_address</name></member>
+    <member refid="structoskr_1_1Config_1aefd956380d5a1c2fe4263951d12986cc" kind="function"><name>primaryId</name></member>
+  </compound>
+  <compound refid="structbitsery_1_1traits_1_1ContainerTraits_3_01oskr_1_1Data_01_4" kind="struct"><name>bitsery::traits::ContainerTraits&lt; oskr::Data &gt;</name>
+  </compound>
+  <compound refid="classoskr_1_1DPDKClient" kind="class"><name>oskr::DPDKClient</name>
+    <member refid="classoskr_1_1DPDKClient_1a4954653b14d669ad9eb050539f4d9272" kind="variable"><name>config</name></member>
+    <member refid="classoskr_1_1DPDKClient_1aa7ac910e1c4bb038cb8ba0e6d7572c7b" kind="function"><name>DPDKClient</name></member>
+    <member refid="classoskr_1_1DPDKClient_1ae1589881374d07c28e4897c8587628c4" kind="function"><name>registerReceiver</name></member>
+    <member refid="classoskr_1_1DPDKClient_1a0d70e5d2d42fc98926f88094eb9f48f3" kind="function"><name>spawn</name></member>
+    <member refid="classoskr_1_1DPDKClient_1a252418552b06e60cba69de655fc822e1" kind="function"><name>sendMessage</name></member>
+    <member refid="classoskr_1_1DPDKClient_1ad85cabc3a3f44f9c0376ccad24a824dc" kind="function"><name>releaseDescriptor</name></member>
+  </compound>
+  <compound refid="structoskr_1_1ListLog_1_1FlattenBlock" kind="struct"><name>oskr::ListLog::FlattenBlock</name>
+    <member refid="structoskr_1_1ListLog_1_1FlattenBlock_1a987c2c0d751db8714d7fbffd89ee25b8" kind="variable"><name>offset</name></member>
+    <member refid="structoskr_1_1ListLog_1_1FlattenBlock_1a68998836580818ae2e08cd0371b7a821" kind="variable"><name>n_entry</name></member>
+    <member refid="structoskr_1_1ListLog_1_1FlattenBlock_1a70ffc4e56ea7f15231e28e862b461d08" kind="variable"><name>committed</name></member>
+  </compound>
+  <compound refid="classoskr_1_1ListLog" kind="class"><name>oskr::ListLog</name>
+    <member refid="classoskr_1_1ListLog_1a8f022deba4900d1c525fecce8a3b9a4a" kind="variable"><name>block_list</name></member>
+    <member refid="classoskr_1_1ListLog_1a3b51c7aec3f837480620ceb909667a48" kind="variable"><name>entry_list</name></member>
+    <member refid="classoskr_1_1ListLog_1a637037aecc185113f7eff93943b9231e" kind="variable"><name>start_number</name></member>
+    <member refid="classoskr_1_1ListLog_1ae235fec18fb167b73158bf3a67a04d86" kind="variable"><name>commit_number</name></member>
+    <member refid="classoskr_1_1ListLog_1a207b88e5bebe4c087205d57e34f33bfb" kind="function"><name>ListLog</name></member>
+    <member refid="classoskr_1_1ListLog_1a0ea728c3c3fbe7063e0ed1dacb05bf0f" kind="function"><name>prepare</name></member>
+    <member refid="classoskr_1_1ListLog_1acecb7587914cde7779451252683ab16b" kind="function"><name>commit</name></member>
+    <member refid="classoskr_1_1ListLog_1a642f6bd7c68d6cb80d23e2a4edde0552" kind="function"><name>rollbackTo</name></member>
+    <member refid="classoskr_1_1ListLog_1a2379da4fe93aebcd05f5f76133c2f44f" kind="function"><name>enableUpcall</name></member>
+    <member refid="classoskr_1_1ListLog_1ad04192a1d5e2a134fbf7840fd62e4a4a" kind="function"><name>blockOffset</name></member>
+    <member refid="classoskr_1_1ListLog_1aeeb5926350586021a11f1b856285a786" kind="function"><name>makeUpcall</name></member>
+  </compound>
+  <compound refid="structoskr_1_1Log_3_01void_01_4_1_1ListPreset" kind="struct"><name>oskr::Log&lt; void &gt;::ListPreset</name>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1ab68cfbf9f241609c71ec28cc63c35e11" kind="typedef"><name>Index</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1ab8b36ce6abf411db013306a8f0707a08" kind="typedef"><name>Block</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1a0fe602884314c6b4808b3817ed62b972" kind="variable"><name>n_entry</name></member>
+  </compound>
+  <compound refid="classoskr_1_1Log" kind="class"><name>oskr::Log</name>
+    <member refid="classoskr_1_1Log_1a51d027178a39765753437b3120829b89" kind="typedef"><name>Index</name></member>
+    <member refid="classoskr_1_1Log_1a2e6809b21b365077ae012846532f1c25" kind="typedef"><name>Block</name></member>
+    <member refid="classoskr_1_1Log_1afe5a86ec10b3790a0f3efcfed60cc36a" kind="typedef"><name>ReplyCallback</name></member>
+    <member refid="classoskr_1_1Log_1ac04462ea94aee100073014c426ddf5aa" kind="variable"><name>app</name></member>
+    <member refid="classoskr_1_1Log_1a74c98a9bace86aad2c22a364cbff0347" kind="variable"><name>enable_upcall</name></member>
+    <member refid="classoskr_1_1Log_1a236478bdbd30dd5d1d3ba3733a4346ee" kind="function"><name>Log</name></member>
+    <member refid="classoskr_1_1Log_1aa6fdfed9437a4414eb0bb79b56066fd3" kind="function"><name>~Log</name></member>
+    <member refid="classoskr_1_1Log_1a6026d297ee6ba8caeafcc05b5afe6fed" kind="function"><name>prepare</name></member>
+    <member refid="classoskr_1_1Log_1af74f23fc2e4c47bb4da0a7b67ae66dbe" kind="function"><name>commit</name></member>
+    <member refid="classoskr_1_1Log_1a1cf1b49be1677859529246e76373cb75" kind="function"><name>rollbackTo</name></member>
+    <member refid="classoskr_1_1Log_1a0d5d38a22538266b6c0f0c0b162d2645" kind="function"><name>enableUpcall</name></member>
+    <member refid="classoskr_1_1Log_1ac461f6fa8a8d28dadaf88d490e2d005d" kind="function"><name>disableUpcall</name></member>
+  </compound>
+  <compound refid="structoskr_1_1Log_3_01void_01_4" kind="struct"><name>oskr::Log&lt; void &gt;</name>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1afa95eed90f678390f90ea8f3bffbd652" kind="typedef"><name>Entry</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1a94db163e629df784135268d9681b4634" kind="typedef"><name>List</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1a14fd133cba838646b08096716af170f8" kind="typedef"><name>Chain</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1ac0fe87d27c73c3dc0874c954abee5dc4" kind="variable"><name>request_number</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1aca7bd95daa1d4ff0b7dd5eefcbd84c7f" kind="variable"><name>op</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1a37690de3dd25096a7c2035afd635106e" kind="variable"><name>BLOCK_SIZE</name></member>
+    <member refid="structoskr_1_1Log_3_01void_01_4_1abde0c8d90a45a3e426ad01b9cf21036c" kind="variable"><name>N_RESERVED_ENTRY</name></member>
+  </compound>
+  <compound refid="structoskr_1_1MBufDesc" kind="struct"><name>oskr::MBufDesc</name>
+    <member refid="structoskr_1_1MBufDesc_1a3310b458077be5d60663a1bab9aa5aae" kind="variable"><name>transport</name></member>
+    <member refid="structoskr_1_1MBufDesc_1a69484875749c55694a431bf35deb3976" kind="function"><name>MBufDesc</name></member>
+    <member refid="structoskr_1_1MBufDesc_1a3e43701b74493525028b5b2e29bacf09" kind="function"><name>~MBufDesc</name></member>
+    <member refid="structoskr_1_1MBufDesc_1ac2eb7647da250cafd1b094593cb0102d" kind="function"><name>MBufDesc</name></member>
+    <member refid="structoskr_1_1MBufDesc_1a587e704226333ca45347a5bbda433e2b" kind="function"><name>MBufDesc</name></member>
+    <member refid="structoskr_1_1MBufDesc_1a2239a684fa70b9940f9a537d11b3826d" kind="function"><name>data</name></member>
+    <member refid="structoskr_1_1MBufDesc_1afb335245e52696ba3a6307ae2f980266" kind="function"><name>size</name></member>
+  </compound>
+  <compound refid="classoskr_1_1MockApp" kind="class"><name>oskr::MockApp</name>
+    <member refid="classoskr_1_1MockApp_1ada519d46bce5cdd1b4c73c1bd4531f23" kind="variable"><name>make_reply</name></member>
+    <member refid="classoskr_1_1MockApp_1ac32ff2f498cf2c18bb442f85fff157eb" kind="variable"><name>op_list</name></member>
+    <member refid="classoskr_1_1MockApp_1af7b34412865d4052416032e6e3d29c92" kind="function"><name>MockApp</name></member>
+    <member refid="classoskr_1_1MockApp_1a43d40916ca5f4fc2a6e16240610f5fe5" kind="function"><name>commit</name></member>
+  </compound>
+  <compound refid="classoskr_1_1NullApp" kind="class"><name>oskr::NullApp</name>
+    <member refid="classoskr_1_1NullApp_1a37419ec115235a1bf05ec7c88596d2c8" kind="function"><name>commit</name></member>
+    <member refid="classoskr_1_1NullApp_1a239475c70e78c121166a3401174ffee9" kind="function"><name>rollback</name></member>
+  </compound>
+  <compound refid="structoskr_1_1BasicClient_1_1PendingRequest" kind="struct"><name>oskr::BasicClient::PendingRequest</name>
+    <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1aee78db217bcaf94d320e125d6edd0cae" kind="variable"><name>request_number</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1a4dd603163612a61a48bc016b3708d849" kind="variable"><name>op</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1acb068896622cadccd068f39bf1ac8b63" kind="variable"><name>result_table</name></member>
+    <member refid="structoskr_1_1BasicClient_1_1PendingRequest_1ade82fcfe8a23f97b57256b9f9054aa03" kind="variable"><name>callback</name></member>
+  </compound>
+  <compound refid="classoskr_1_1Quorum" kind="class"><name>oskr::Quorum</name>
+    <member refid="classoskr_1_1Quorum_1adb4d85e2893c0cefb8b655c28e05afd1" kind="variable"><name>numRequired</name></member>
+    <member refid="classoskr_1_1Quorum_1ab6a8831b96c3d14482e1612033d1228f" kind="variable"><name>messages</name></member>
+    <member refid="classoskr_1_1Quorum_1aa8670e9376392fa0ff00249f960c19c1" kind="function"><name>Quorum</name></member>
+    <member refid="classoskr_1_1Quorum_1ad4137c3122f799a5bd7d8fc32f6b3749" kind="function"><name>clear</name></member>
+    <member refid="classoskr_1_1Quorum_1a2b953e9291c432778e2a64ad02fbccaf" kind="function"><name>clear</name></member>
+    <member refid="classoskr_1_1Quorum_1a2de41023470e5b15e1ffd7695b68c517" kind="function"><name>nRequired</name></member>
+    <member refid="classoskr_1_1Quorum_1abd8328d484c33aecd58dd26410c3dcde" kind="function"><name>getMessages</name></member>
+    <member refid="classoskr_1_1Quorum_1a89d2f4a3059a31758a4b24ea1050e4f5" kind="function"><name>checkForQuorum</name></member>
+    <member refid="classoskr_1_1Quorum_1a49dc6ed1cde3487e307bf932010fbd3a" kind="function"><name>addAndCheckForQuorum</name></member>
+    <member refid="classoskr_1_1Quorum_1a0e7c2053f08672204e89fda0c5c747c5" kind="function"><name>add</name></member>
+  </compound>
+  <compound refid="structoskr_1_1ClientTable_1_1Record" kind="struct"><name>oskr::ClientTable::Record</name>
+    <member refid="structoskr_1_1ClientTable_1_1Record_1a88baf7086dcd07134b842de42ac2c7f3" kind="variable"><name>remote</name></member>
+    <member refid="structoskr_1_1ClientTable_1_1Record_1a209c0492f6d0f36930afeb93205de28c" kind="variable"><name>request_number</name></member>
+    <member refid="structoskr_1_1ClientTable_1_1Record_1aeab64846b5184ff9128091a383bf697b" kind="variable"><name>reply_message</name></member>
+  </compound>
+  <compound refid="structoskr_1_1ReplyMessage" kind="struct"><name>oskr::ReplyMessage</name>
+    <member refid="structoskr_1_1ReplyMessage_1a8112915d1b9448774f076c3fcefd5943" kind="variable"><name>request_number</name></member>
+    <member refid="structoskr_1_1ReplyMessage_1a8b92ac54da04ff4ecaec08e60b151f38" kind="variable"><name>result</name></member>
+    <member refid="structoskr_1_1ReplyMessage_1a1d9c3e0b0d3c2ce0a6420854810907d0" kind="variable"><name>view_number</name></member>
+    <member refid="structoskr_1_1ReplyMessage_1a5a8cba72b4481b16668b7510261980df" kind="variable"><name>replica_id</name></member>
+    <member refid="structoskr_1_1ReplyMessage_1aca43b9886ccc0ca3e7c4e662e2db966f" kind="function"><name>serialize</name></member>
+  </compound>
+  <compound refid="structoskr_1_1RequestMessage" kind="struct"><name>oskr::RequestMessage</name>
+    <member refid="structoskr_1_1RequestMessage_1afb2f45c34c5036cac7d85dc0a2797a8b" kind="variable"><name>client_id</name></member>
+    <member refid="structoskr_1_1RequestMessage_1a51f94b17714359a57c4b50a693ebdff1" kind="variable"><name>request_number</name></member>
+    <member refid="structoskr_1_1RequestMessage_1a4fc4f7aa08330429bfae2c063396eeb9" kind="variable"><name>op</name></member>
+    <member refid="structoskr_1_1RequestMessage_1a50e42532d9601316466109ff550b3191" kind="function"><name>serialize</name></member>
+  </compound>
+  <compound refid="structoskr_1_1SenderArchetype" kind="struct"><name>oskr::SenderArchetype</name>
+    <member refid="structoskr_1_1SenderArchetype_1a6fba43a256e47bc43c36d48cde09a602" kind="variable"><name>address</name></member>
+  </compound>
+  <compound refid="classoskr_1_1Simulated" kind="class"><name>oskr::Simulated</name>
+    <member refid="classoskr_1_1Simulated_1a726f51c68ca41006df952bf9a23f7d9a" kind="typedef"><name>microseconds</name></member>
+    <member refid="classoskr_1_1Simulated_1aaa2f3a6ac2df26d395881301d3fdcf3f" kind="typedef"><name>Filter</name></member>
+    <member refid="classoskr_1_1Simulated_1ac969b8b576cfd7704df5b77125ac0bc3" kind="variable"><name>receiver_table</name></member>
+    <member refid="classoskr_1_1Simulated_1a380c7ed547cb44542cfb9763b504ffb2" kind="variable"><name>multicast_receiver_list</name></member>
+    <member refid="classoskr_1_1Simulated_1aee724b1d3a2e55cd9daf262d6192ef04" kind="variable"><name>now_us</name></member>
+    <member refid="classoskr_1_1Simulated_1ad1e0b6f694c936592814c99669d83ac1" kind="variable"><name>destiny_queue</name></member>
+    <member refid="classoskr_1_1Simulated_1a923e0b3be48f91560a749c79711b0e8f" kind="variable"><name>channel_id</name></member>
+    <member refid="classoskr_1_1Simulated_1a8e177fb80c43fefcdd48680c6118b03e" kind="variable"><name>filter_table</name></member>
+    <member refid="classoskr_1_1Simulated_1a6a2d1b1b3b095cf34878b1541936ebbc" kind="variable"><name>config</name></member>
+    <member refid="classoskr_1_1Simulated_1a36a4de91e68920d42b57515ee982a772" kind="function"><name>Simulated</name></member>
+    <member refid="classoskr_1_1Simulated_1a5d48348e5f5724c34678a2d8eabb4b5f" kind="function"><name>allocateAddress</name></member>
+    <member refid="classoskr_1_1Simulated_1a7b60d09b2e1069fe7a76ddfc0028bd8a" kind="function"><name>registerReceiver</name></member>
+    <member refid="classoskr_1_1Simulated_1adaa51067565d8fa042c7346da8090887" kind="function"><name>registerMulticastReceiver</name></member>
+    <member refid="classoskr_1_1Simulated_1a48f7e1afc27582e6d2099740386fbb42" kind="function"><name>sendMessage</name></member>
+    <member refid="classoskr_1_1Simulated_1a6568bfc24bd335dc6d14882ec964cb36" kind="function"><name>spawn</name></member>
+    <member refid="classoskr_1_1Simulated_1a493dffd683f52a0b657c24919f3f5ab7" kind="function"><name>spawn</name></member>
+    <member refid="classoskr_1_1Simulated_1a3b705d038a2688e046bc9539d33635b3" kind="function"><name>spawnConcurrent</name></member>
+    <member refid="classoskr_1_1Simulated_1a9870632c0347b099d80f4501618a2b71" kind="function"><name>channel</name></member>
+    <member refid="classoskr_1_1Simulated_1a60e9a5cc558bd3796e06cda77f5bec44" kind="function"><name>terminate</name></member>
+    <member refid="classoskr_1_1Simulated_1a4f3910f7a29492337c9a7bab24214ff7" kind="function"><name>run</name></member>
+    <member refid="classoskr_1_1Simulated_1aec01960aeb56f3cde0272eeebfca4a0e" kind="function"><name>addFilter</name></member>
+    <member refid="classoskr_1_1Simulated_1ac9e1e3f2e67166bb6364c10c15d5360e" kind="function"><name>removeFilter</name></member>
+  </compound>
+  <compound refid="classoskr_1_1StatefulTimeout" kind="class"><name>oskr::StatefulTimeout</name>
+    <member refid="classoskr_1_1StatefulTimeout_1aae2ff4c2e89d729ba040f610658d8c66" kind="variable"><name>current_id</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1abdfca4b8d8c8243ac3b188b55617ac79" kind="variable"><name>timeout_id</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1a720072a762c54e368bcce5e5af9ae233" kind="variable"><name>transport</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1a69be00b49a4df661b4a547593642d617" kind="variable"><name>callback</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1aba03ecce432aa9597068eee943c1bb61" kind="variable"><name>delay</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1ab1e68580166dcacf58da932ec116b99d" kind="function"><name>StatefulTimeout</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1a9a2d741eb836a23e08497f04d4e5edbc" kind="function"><name>reset</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1a8121bba894a29fdaf22f5cad8d440808" kind="function"><name>enable</name></member>
+    <member refid="classoskr_1_1StatefulTimeout_1aa9f0cc028bedf28795ec28f32bc5587b" kind="function"><name>disable</name></member>
+  </compound>
+  <compound refid="classoskr_1_1TransportBase" kind="class"><name>oskr::TransportBase</name>
+    <member refid="classoskr_1_1TransportBase_1ae636b6a30bd2530e887938ac4a6e4a2b" kind="typedef"><name>Address</name></member>
+    <member refid="classoskr_1_1TransportBase_1a982ec33e821077b95be7908506988c3f" kind="typedef"><name>Desc</name></member>
+    <member refid="classoskr_1_1TransportBase_1a95370b96d043a802e86ca545e44c50e8" kind="typedef"><name>Receiver</name></member>
+    <member refid="classoskr_1_1TransportBase_1a12801dbac42462fc6ed32ce2d8e5c98a" kind="typedef"><name>Callback</name></member>
+    <member refid="classoskr_1_1TransportBase_1a241647f08d6aeae4df2f2c38cb9e4d11" kind="typedef"><name>Write</name></member>
+    <member refid="classoskr_1_1TransportBase_1ab517e94334362d31829305f4a8cf9d5b" kind="variable"><name>BUFFER_SIZE</name></member>
+    <member refid="classoskr_1_1TransportBase_1abcb4328b073771525ae5c245f7a92d4f" kind="function"><name>sendMessageToReplica</name></member>
+    <member refid="classoskr_1_1TransportBase_1a1b354f1040dd4be4d33bc8383a68a914" kind="function"><name>sendMessageToAll</name></member>
+    <member refid="classoskr_1_1TransportBase_1aa754d6f04fa00bd5e2fa43e2b17c72d1" kind="function"><name>sendMessageToMulticast</name></member>
+  </compound>
+  <compound refid="structoskr_1_1TransportMeta" kind="struct"><name>oskr::TransportMeta</name>
+  </compound>
+  <compound refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4" kind="struct"><name>oskr::TransportMeta&lt; DPDKClient &gt;</name>
+    <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1ae190e32959f6a01f7e16edaf41c8826d" kind="typedef"><name>Address</name></member>
+    <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a88bd3634e15813e6655f84ee324f7613" kind="typedef"><name>Desc</name></member>
+    <member refid="structoskr_1_1TransportMeta_3_01DPDKClient_01_4_1a04f0b37e3d5175371132c3b424d62f9d" kind="variable"><name>BUFFER_SIZE</name></member>
+  </compound>
+  <compound refid="structoskr_1_1TransportMeta_3_01Simulated_01_4" kind="struct"><name>oskr::TransportMeta&lt; Simulated &gt;</name>
+    <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a58907f4192d96ee428d7210bd06a16eb" kind="typedef"><name>Address</name></member>
+    <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1ab70f128c3b1329a6eac1ce55a86c50d0" kind="typedef"><name>Desc</name></member>
+    <member refid="structoskr_1_1TransportMeta_3_01Simulated_01_4_1a875c4f420248514776609d2318676f62" kind="variable"><name>BUFFER_SIZE</name></member>
+  </compound>
+  <compound refid="classoskr_1_1TransportReceiver" kind="class"><name>oskr::TransportReceiver</name>
+    <member refid="classoskr_1_1TransportReceiver_1a244b09cac653eb0130138854cc2f99dc" kind="variable"><name>transport</name></member>
+    <member refid="classoskr_1_1TransportReceiver_1aa746e8bcb10cd122441a010a6440188e" kind="variable"><name>address</name></member>
+    <member refid="classoskr_1_1TransportReceiver_1a6634f735aeea18352165d88c687ffa69" kind="function"><name>TransportReceiver</name></member>
+    <member refid="classoskr_1_1TransportReceiver_1a352d4c0453f2dd2c9f51d6bd5f6a64c4" kind="function"><name>~TransportReceiver</name></member>
+    <member refid="classoskr_1_1TransportReceiver_1a498a81c4a14c623d4bbb846a12979e5e" kind="function"><name>receiveMessage</name></member>
+  </compound>
+  <compound refid="namespacebitsery" kind="namespace"><name>bitsery</name>
+    <member refid="Bitsery_8hpp_1ae4da195d6dd1cfb5d29a73974147b425" kind="function"><name>serialize</name></member>
+    <member refid="Bitsery_8hpp_1a128a4bebc8c3a216c51a1898b2d73407" kind="function"><name>serialize</name></member>
+    <member refid="Bitsery_8hpp_1a51f7a0f794bfbf47c9cf39a068ea8fa7" kind="function"><name>serialize</name></member>
+  </compound>
+  <compound refid="namespacebitsery_1_1traits" kind="namespace"><name>bitsery::traits</name>
+  </compound>
+  <compound refid="namespaceLog" kind="namespace"><name>Log</name>
+  </compound>
+  <compound refid="namespaceoskr" kind="namespace"><name>oskr</name>
+    <member refid="Type_8hpp_1a229225968f791961a683105e27c7b95e" kind="typedef"><name>OpNumber</name></member>
+    <member refid="Type_8hpp_1a787451a8a1db32f4b9f1d2e7d705fd91" kind="typedef"><name>RequestNumber</name></member>
+    <member refid="Type_8hpp_1a45f56675eea0bd18eb18230485377a28" kind="typedef"><name>ViewNumber</name></member>
+    <member refid="Type_8hpp_1ae8ce2db69f20d0b2e1d85a85224688be" kind="typedef"><name>ReplicaId</name></member>
+    <member refid="Type_8hpp_1a9d30334273e29f01e63cd9c689e58e18" kind="typedef"><name>ClientId</name></member>
+    <member refid="Type_8hpp_1ab52c56c69ac4d31366a5045e47deee0a" kind="typedef"><name>RxSpan</name></member>
+    <member refid="Type_8hpp_1a1ca2d6a73093238724b4e13786fcf355" kind="typedef"><name>TxSpan</name></member>
+    <member refid="Type_8hpp_1a78219b83ef8e007f284153e1a1e4894e" kind="typedef"><name>Data</name></member>
+    <member refid="Type_8hpp_1a769e77bec79e403259e46dc3602ccd18" kind="typedef"><name>Hash</name></member>
+    <member refid="Transport_8hpp_1ad4759fd0062fb74fa62b01088b2e8b1e" kind="variable"><name>TransportTrait</name></member>
+    <member refid="Utility_8hpp_1a01dbfff20ff0079cdec29d3dde829694" kind="function"><name>panic</name></member>
+    <member refid="Utility_8hpp_1a7f375665dee518d2d65d777586669884" kind="function"><name>random_engine</name></member>
+    <member refid="Utility_8hpp_1a4250bf496f4f5761d877c3f59224de38" kind="function"><name>bitserySerialize</name></member>
+    <member refid="Utility_8hpp_1a648e5ecf30935b39491c39a6ce6ab2ab" kind="function"><name>bitseryDeserialize</name></member>
+  </compound>
+  <compound refid="Mock_8hpp" kind="file"><name>Mock.hpp</name>
+  </compound>
+  <compound refid="Null_8hpp" kind="file"><name>Null.hpp</name>
+  </compound>
+  <compound refid="00-generate-document_8md" kind="file"><name>00-generate-document.md</name>
+  </compound>
+  <compound refid="01-write-protocol_8md" kind="file"><name>01-write-protocol.md</name>
+  </compound>
+  <compound refid="02-setup-benchmark_8md" kind="file"><name>02-setup-benchmark.md</name>
+  </compound>
+  <compound refid="03-optimize-for-dropping_8md" kind="file"><name>03-optimize-for-dropping.md</name>
+  </compound>
+  <compound refid="index_8h" kind="file"><name>index.h</name>
+  </compound>
+  <compound refid="BasicClient_8hpp" kind="file"><name>BasicClient.hpp</name>
+  </compound>
+  <compound refid="ChainLog_8hpp" kind="file"><name>ChainLog.hpp</name>
+  </compound>
+  <compound refid="ClientTable_8hpp" kind="file"><name>ClientTable.hpp</name>
+  </compound>
+  <compound refid="ListLog_8hpp" kind="file"><name>ListLog.hpp</name>
+  </compound>
+  <compound refid="Quorum_8hpp" kind="file"><name>Quorum.hpp</name>
+  </compound>
+  <compound refid="StatefulTimeout_8hpp" kind="file"><name>StatefulTimeout.hpp</name>
+  </compound>
+  <compound refid="Bitsery_8hpp" kind="file"><name>Bitsery.hpp</name>
+  </compound>
+  <compound refid="Client_8hpp" kind="file"><name>Client.hpp</name>
+  </compound>
+  <compound refid="Config_8hpp" kind="file"><name>Config.hpp</name>
+  </compound>
+  <compound refid="Foundation_8hpp" kind="file"><name>Foundation.hpp</name>
+  </compound>
+  <compound refid="Log_8hpp" kind="file"><name>Log.hpp</name>
+  </compound>
+  <compound refid="Transport_8hpp" kind="file"><name>Transport.hpp</name>
+  </compound>
+  <compound refid="TransportReceiver_8hpp" kind="file"><name>TransportReceiver.hpp</name>
+  </compound>
+  <compound refid="Type_8hpp" kind="file"><name>Type.hpp</name>
+  </compound>
+  <compound refid="Utility_8hpp" kind="file"><name>Utility.hpp</name>
+    <member refid="Utility_8hpp_1a1dd4c62dac3d495dfcc19084571c828d" kind="define"><name>rdebug</name></member>
+    <member refid="Utility_8hpp_1a0e943f4735514f884fefe12215a1e399" kind="define"><name>rinfo</name></member>
+    <member refid="Utility_8hpp_1a2c1a4a18443f353a4d479e5df840ee4a" kind="define"><name>rwarn</name></member>
+    <member refid="Utility_8hpp_1a97be4390c6add105b990198238b9f597" kind="define"><name>rpanic</name></member>
+  </compound>
+  <compound refid="README_8md" kind="file"><name>README.md</name>
+  </compound>
+  <compound refid="DPDKClient_8hpp" kind="file"><name>DPDKClient.hpp</name>
+  </compound>
+  <compound refid="Simulated_8hpp" kind="file"><name>Simulated.hpp</name>
+  </compound>
+  <compound refid="generate-document" kind="page"><name>generate-document</name>
+  </compound>
+  <compound refid="write-protocol" kind="page"><name>write-protocol</name>
+  </compound>
+  <compound refid="setup-benchmark" kind="page"><name>setup-benchmark</name>
+  </compound>
+  <compound refid="optimize-for-dropping" kind="page"><name>optimize-for-dropping</name>
+  </compound>
+  <compound refid="article" kind="page"><name>article</name>
+  </compound>
+  <compound refid="dir_d422163b96683743ed3963d4aac17747" kind="dir"><name>app</name>
+  </compound>
+  <compound refid="dir_f879eb95526b98c484f304bb25f3e22a" kind="dir"><name>article</name>
+  </compound>
+  <compound refid="dir_bdd9a5d540de89e9fe90efdfc6973a4f" kind="dir"><name>common</name>
+  </compound>
+  <compound refid="dir_4270bfced15e0e73154b13468c7c9ad9" kind="dir"><name>core</name>
+  </compound>
+  <compound refid="dir_c1ce99697cbd6b458d23ed598f5ca49b" kind="dir"><name>transport</name>
+  </compound>
+  <compound refid="indexpage" kind="page"><name>index</name>
+  </compound>
+</doxygenindex>

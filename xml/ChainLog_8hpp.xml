@@ -1,0 +1,210 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="ChainLog_8hpp" kind="file" language="C++">
+    <compoundname>ChainLog.hpp</compoundname>
+    <includes local="no">unordered_map</includes>
+    <includes refid="Foundation_8hpp" local="yes">core/Foundation.hpp</includes>
+    <incdepgraph>
+      <node id="10">
+        <label>functional</label>
+      </node>
+      <node id="27">
+        <label>core/Config.hpp</label>
+        <link refid="Config_8hpp_source"/>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="11">
+        <label>core/Type.hpp</label>
+        <link refid="Type_8hpp"/>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>cstdint</label>
+      </node>
+      <node id="5">
+        <label>variant</label>
+      </node>
+      <node id="6">
+        <label>bitsery/brief_syntax/variant.h</label>
+      </node>
+      <node id="20">
+        <label>bitsery/brief_syntax/vector.h</label>
+      </node>
+      <node id="15">
+        <label>core/Utility.hpp</label>
+        <link refid="Utility_8hpp_source"/>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="14">
+        <label>boost/container/small_vector.hpp</label>
+      </node>
+      <node id="21">
+        <label>spdlog/spdlog.h</label>
+      </node>
+      <node id="16">
+        <label>random</label>
+      </node>
+      <node id="18">
+        <label>bitsery/bitsery.h</label>
+      </node>
+      <node id="4">
+        <label>optional</label>
+      </node>
+      <node id="26">
+        <label>vector</label>
+      </node>
+      <node id="8">
+        <label>bitsery/traits/core/std_defaults.h</label>
+      </node>
+      <node id="3">
+        <label>core/Foundation.hpp</label>
+        <link refid="Foundation_8hpp_source"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="9">
+        <label>core/Log.hpp</label>
+        <link refid="Log_8hpp_source"/>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>common/ChainLog.hpp</label>
+        <link refid="ChainLog_8hpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>core/Bitsery.hpp</label>
+        <link refid="Bitsery_8hpp_source"/>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>core/Transport.hpp</label>
+        <link refid="Transport_8hpp_source"/>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>unordered_map</label>
+      </node>
+      <node id="17">
+        <label>bitsery/adapter/buffer.h</label>
+      </node>
+      <node id="25">
+        <label>chrono</label>
+      </node>
+      <node id="13">
+        <label>span</label>
+      </node>
+      <node id="23">
+        <label>core/TransportReceiver.hpp</label>
+        <link refid="TransportReceiver_8hpp_source"/>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="22">
+        <label>core/Client.hpp</label>
+        <link refid="Client_8hpp_source"/>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+      </node>
+      <node id="19">
+        <label>bitsery/brief_syntax.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="classoskr_1_1ChainLog" prot="public">oskr::ChainLog</innerclass>
+    <innerclass refid="structoskr_1_1ChainLog_1_1BlockBox" prot="private">oskr::ChainLog::BlockBox</innerclass>
+    <innernamespace refid="namespaceoskr">oskr</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;unordered_map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;core/Foundation.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">oskr</highlight></codeline>
+<codeline lineno="7"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="8" refid="classoskr_1_1ChainLog" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classoskr_1_1ChainLog" kindref="compound">ChainLog</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classoskr_1_1Log" kindref="compound">Log</ref>&lt;&gt;::Chain</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">BlockBox<sp/>{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Block<sp/>block;</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>committed;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/>std::unordered_map&lt;Hash,<sp/>BlockBox&gt;<sp/>block_table;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="17"><highlight class="normal">}<sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>oskr</highlight><highlight class="normal"></highlight></codeline>
+    </programlisting>
+    <location file="common/ChainLog.hpp"/>
+  </compounddef>
+</doxygen>

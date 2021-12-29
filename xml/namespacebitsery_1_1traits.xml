@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="namespacebitsery_1_1traits" kind="namespace" language="C++">
+    <compoundname>bitsery::traits</compoundname>
+    <innerclass refid="structbitsery_1_1traits_1_1ContainerTraits_3_01oskr_1_1Data_01_4" prot="public">bitsery::traits::ContainerTraits&lt; oskr::Data &gt;</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="core/Bitsery.hpp" line="8" column="1"/>
+  </compounddef>
+</doxygen>

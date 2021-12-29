@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classoskr_1_1ClientTable" kind="class" language="C++" prot="public">
+    <compoundname>oskr::ClientTable</compoundname>
+    <innerclass refid="structoskr_1_1ClientTable_1_1Record" prot="private">oskr::ClientTable::Record</innerclass>
+    <templateparamlist>
+      <param>
+        <type>typename Transport</type>
+      </param>
+      <param>
+        <type>typename <ref refid="structoskr_1_1ReplyMessage" kindref="compound">ReplyMessage</ref></type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classoskr_1_1ClientTable_1ac9c93ec691ec25ad02c5bb098f2ff70d" prot="public" static="no">
+        <type>std::function&lt; void(std::function&lt; void(const typename Transport::Address &amp;remote, const <ref refid="structoskr_1_1ReplyMessage" kindref="compound">ReplyMessage</ref> &amp;)&gt;)&gt;</type>
+        <definition>using oskr::ClientTable&lt; Transport, ReplyMessage &gt;::Apply =  std::function&lt;void( std::function&lt;void( const typename Transport::Address &amp;remote, const ReplyMessage &amp;)&gt;)&gt;</definition>
+        <argsstring></argsstring>
+        <name>Apply</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ClientTable.hpp" line="20" column="5" bodyfile="common/ClientTable.hpp" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classoskr_1_1ClientTable_1afbaeaa24fe8959224f078633b47761c3" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; ClientId, Record &gt;</type>
+        <definition>std::unordered_map&lt;ClientId, Record&gt; oskr::ClientTable&lt; Transport, ReplyMessage &gt;::record_table</definition>
+        <argsstring></argsstring>
+        <name>record_table</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ClientTable.hpp" line="17" column="24" bodyfile="common/ClientTable.hpp" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classoskr_1_1ClientTable_1a615d06e426812efc4dd38f1eb92c6b01" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>Apply</type>
+        <definition>auto oskr::ClientTable&lt; Transport, ReplyMessage &gt;::check</definition>
+        <argsstring>(const typename Transport::Address &amp;remote, ClientId client_id, RequestNumber request_number)</argsstring>
+        <name>check</name>
+        <param>
+          <type>const typename Transport::Address &amp;</type>
+          <declname>remote</declname>
+        </param>
+        <param>
+          <type>ClientId</type>
+          <declname>client_id</declname>
+        </param>
+        <param>
+          <type>RequestNumber</type>
+          <declname>request_number</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>On handling direct request from client.</para>
+<para>If returned <computeroutput>Apply</computeroutput> is truthy, the request processing should be omit: <programlisting><codeline><highlight class="normal">if<sp/>(auto<sp/>apply<sp/>=</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>client_table.check(remote,<sp/>client_id,<sp/>request_number))<sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>apply([&amp;](auto<sp/>&amp;remote,<sp/>auto<sp/>&amp;reply)<sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>send<sp/>reply<sp/>to<sp/>remote</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>});</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>return;</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>normally<sp/>process<sp/>new<sp/>request<sp/>here</highlight></codeline>
+</programlisting> </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ClientTable.hpp" line="37" column="11" bodyfile="common/ClientTable.hpp" bodystart="53" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1ClientTable_1abecf72f239b8be2048d24ec274451b59" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void oskr::ClientTable&lt; Transport, ReplyMessage &gt;::update</definition>
+        <argsstring>(ClientId client_id, RequestNumber request_number)</argsstring>
+        <name>update</name>
+        <param>
+          <type>ClientId</type>
+          <declname>client_id</declname>
+        </param>
+        <param>
+          <type>RequestNumber</type>
+          <declname>request_number</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>On handling relayed request message. Caller assumes <computeroutput>request_number</computeroutput> corresponding to an currently outstanding request. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ClientTable.hpp" line="43" column="10" bodyfile="common/ClientTable.hpp" bodystart="93" bodyend="113"/>
+      </memberdef>
+      <memberdef kind="function" id="classoskr_1_1ClientTable_1a86f4e5770e529bb4a090b365c49dcf7d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>Apply</type>
+        <definition>auto oskr::ClientTable&lt; Transport, ReplyMessage &gt;::update</definition>
+        <argsstring>(ClientId client_id, RequestNumber request_number, ReplyMessage reply)</argsstring>
+        <name>update</name>
+        <param>
+          <type>ClientId</type>
+          <declname>client_id</declname>
+        </param>
+        <param>
+          <type>RequestNumber</type>
+          <declname>request_number</declname>
+        </param>
+        <param>
+          <type><ref refid="structoskr_1_1ReplyMessage" kindref="compound">ReplyMessage</ref></type>
+          <declname>reply</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>On committing.</para>
+<para>Always return callable (instead of <computeroutput>nullptr</computeroutput>) even when nothing to do. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="common/ClientTable.hpp" line="48" column="11" bodyfile="common/ClientTable.hpp" bodystart="116" bodyend="151"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/ClientTable.hpp" line="9" column="14" bodyfile="common/ClientTable.hpp" bodystart="10" bodyend="50"/>
+    <listofallmembers>
+      <member refid="classoskr_1_1ClientTable_1ac9c93ec691ec25ad02c5bb098f2ff70d" prot="public" virt="non-virtual"><scope>oskr::ClientTable</scope><name>Apply</name></member>
+      <member refid="classoskr_1_1ClientTable_1a615d06e426812efc4dd38f1eb92c6b01" prot="public" virt="non-virtual"><scope>oskr::ClientTable</scope><name>check</name></member>
+      <member refid="classoskr_1_1ClientTable_1afbaeaa24fe8959224f078633b47761c3" prot="private" virt="non-virtual"><scope>oskr::ClientTable</scope><name>record_table</name></member>
+      <member refid="classoskr_1_1ClientTable_1abecf72f239b8be2048d24ec274451b59" prot="public" virt="non-virtual"><scope>oskr::ClientTable</scope><name>update</name></member>
+      <member refid="classoskr_1_1ClientTable_1a86f4e5770e529bb4a090b365c49dcf7d" prot="public" virt="non-virtual"><scope>oskr::ClientTable</scope><name>update</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

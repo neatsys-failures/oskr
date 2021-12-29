@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="02-setup-benchmark_8md" kind="file" language="Markdown">
+    <compoundname>02-setup-benchmark.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">@page<sp/>setup-benchmark<sp/>Set<sp/>up<sp/>for<sp/>benchmarking</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">**Work<sp/>in<sp/>progress**</highlight></codeline>
+    </programlisting>
+    <location file="article/02-setup-benchmark.md"/>
+  </compounddef>
+</doxygen>

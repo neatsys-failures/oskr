@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_bdd9a5d540de89e9fe90efdfc6973a4f" kind="dir">
+    <compoundname>common</compoundname>
+    <innerfile refid="BasicClient_8hpp">BasicClient.hpp</innerfile>
+    <innerfile refid="ChainLog_8hpp">ChainLog.hpp</innerfile>
+    <innerfile refid="ClientTable_8hpp">ClientTable.hpp</innerfile>
+    <innerfile refid="ListLog_8hpp">ListLog.hpp</innerfile>
+    <innerfile refid="Quorum_8hpp">Quorum.hpp</innerfile>
+    <innerfile refid="StatefulTimeout_8hpp">StatefulTimeout.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="common/"/>
+  </compounddef>
+</doxygen>
