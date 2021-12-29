@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 
-#include <rte_eal.h>
 #include <rte_ether.h>
+#include <rte_eal.h>
 #include <rte_mbuf.h>
 
 #include "core/Foundation.hpp"

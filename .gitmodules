@@ -13,3 +13,6 @@
 [submodule "dependency/breathe"]
 	path = dependency/breathe
 	url = https://github.com/michaeljones/breathe
+[submodule "dependency/doxygen"]
+	path = dependency/doxygen
+	url = https://github.com/doxygen/doxygen

@@ -56,8 +56,12 @@ template <typename Transport> struct SenderArchetype {
     const typename Transport::Address address;
 };
 
-//! Transport concept.
-//!
+/*! Transport concept. The representation of the actor model used by this
+project.
+
+> Despite the name, `TransportReceiver` is not a necessary part of the
+abstraction, and transport does not depend on it.
+*/
 template <typename T>
 concept TransportTrait = requires
 {

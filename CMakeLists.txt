@@ -34,7 +34,6 @@ enable_testing()
 if (${OSKR_TIDY})
     set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
 endif()
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # https://stackoverflow.com/a/34234515
 set(OSKR_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_dummy.cpp")
@@ -45,8 +44,17 @@ add_subdirectory(core)
 add_subdirectory(common)
 add_subdirectory(replication/unreplicated)
 add_subdirectory(replication/vr)
-add_subdirectory(test)
 add_subdirectory(benchmark)
+add_subdirectory(test)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_library(oskr_doxygen STATIC ${OSKR_DUMMY_SOURCE})
+# TODO link to local targets
+target_link_libraries(oskr_doxygen PRIVATE
+    Bitsery::bitsery
+    spdlog::spdlog
+    PkgConfig::DPDK
+)
 
 # prevent side effects
 unset(CMAKE_BUILD_TYPE CACHE)

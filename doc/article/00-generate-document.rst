@@ -2,39 +2,30 @@
 Meta-instruction on generating this document
 ============================================
 
-The document can be built locally, within the same development environment 
-described in project's README. Additional required apt packages:
+The document is built in two steps: 
 
-.. code-block:: text
+* Use Doxygen to extract code annotations from source.
+* Use Sphinx to merge Doxygen's output with other documents (with the help of
+  Breathe extension), and produce final assets.
 
-    libclang1-9 libclang-cpp9 python3-sphinx python3-pip
+Sphinx is avialable as apt pachage ``python3-sphinx``, while two other pypi 
+packages are required: ``furo`` as Sphinx theme, and ``m2r2`` as markdown 
+convertor.
 
-The following pypi packages are also required:
+For Doxygen and Breathe, they have to be built from source, because they only
+support C++20 features in this project very recently. The following apt packages
+are required: ``libllvm-13-dev``, ``libclang-13-dev``. Their own source are
+submodule of this project located in ``dependency``.
 
-.. code-block:: text
+Build Doxygen as normal CMake project, with ``-Duse_clang=ON`` option.
 
-    furo m2r2
+Build and install Breathe as normal pypi project.
 
-Although there are also packages for Doxygen and Breathe, we need too recent
-version of them compare to the one presents in Ubuntu 21.10. The Doxygen can be
-downloaded `here`_, and Breathe as submodule can be found in ``dependency``
-directory. Make sure to put ``doxygen`` binary in path, and run
-
-.. code-block:: bash
-
-    python3 setup.py install --user
-
-In ``dependency/breathe`` directory before continuing.
-
-.. _here: https://www.doxygen.nl/files/doxygen-1.9.2.linux.bin.tar.gz
-
-----
-
-After setting up, in project directory run:
+After setting them up, from project directory run:
 
 .. code-block:: bash
 
-    doxygen
+    ./dependency/doxygen/build/bin/doxygen
     sphinx-build -M html doc doc/_build
 
 The built document (identical to gh-pages branch content) is located in 
