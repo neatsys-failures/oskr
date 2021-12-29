@@ -59,18 +59,19 @@ which takes some time. Notable targets:
 ----
 
 Project structure:
-* `core`[^1] behavioral definition of abstraction components. Pure interfaces
+* `core`<sup>&dagger;</sup> behavioral definition of abstraction components. Pure interfaces
   without concrete logic.
   * `Foundation.hpp` an all-in-one header for protocol implementation.
-* `common`[^1] common behavior logic prepared for reusing.
-* `app`[^1] builtin applications to be supported by protocols.
-* `transport`[^1] runtime implementations that support protocols.
+* `common`<sup>&dagger;</sup> common behavior logic prepared for reusing.
+* `app`<sup>&dagger;</sup> builtin applications to be supported by protocols.
+* `transport`<sup>&dagger;</sup> runtime implementations that support protocols.
 * `replication` replication protocols.
 * `transactional` transactional protocols.
 * `dependency` git submodule stubs.
 * `test` flat directory for tests.
 * `benchmark` universal entry executable for running all protocols.
+* `doc` out-of-source documents and format configuration.
 
-[^1]: Document of these source is hosted on [project site][site].
+&dagger; Document of these source is hosted on [project site][site].
 
 [site]: https://sgdxbc.github.io/oskr
