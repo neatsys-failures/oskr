@@ -31,7 +31,7 @@ release = '0.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'breathe', 'm2r2',
+    'breathe', 'myst_parser',
 ]
 breathe_projects = {'oskr': '../build/doc/xml'}
 breathe_default_project = 'oskr'

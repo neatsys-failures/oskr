@@ -10,7 +10,7 @@ The document is built in two steps:
   bundle.
 
 For Sphinx, install pypi packages ``sphinx``, ``furo`` as Sphinx theme, and 
-``m2r2`` as markdown convertor.
+``myst-parser`` as markdown convertor.
 
 For Doxygen and Breathe, they have to be built from source, because they only
 support C++20 features in this project very recently. The following apt packages
