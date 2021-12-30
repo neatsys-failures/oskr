@@ -103,7 +103,7 @@ public:
     int numRequired;
 
 private:
-    std::unordered_map<IDTYPE, std::map<ReplicaId, MSGTYPE>> messages;
+    HashMap<IDTYPE, std::map<ReplicaId, MSGTYPE>> messages;
 };
 
 } // namespace oskr

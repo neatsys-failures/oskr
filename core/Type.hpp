@@ -5,6 +5,7 @@
 #include <span>
 
 #include <folly/Function.h>
+#include <folly/container/F14Map.h>
 #include <folly/small_vector.h>
 
 namespace oskr
@@ -39,6 +40,7 @@ using Data = folly::small_vector<std::uint8_t, 16>;
 
 using Hash = std::uint8_t[32]; // SHA256
 
-template<typename T> using Fn = std::function<T>;
-template<typename T> using FnOnce = folly::Function<T>;
+template <typename T> using Fn = std::function<T>;
+template <typename T> using FnOnce = folly::Function<T>;
+template <typename K, typename V> using HashMap = folly::F14FastMap<K, V>;
 } // namespace oskr

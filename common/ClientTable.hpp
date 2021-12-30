@@ -14,7 +14,7 @@ template <typename Transport, typename ReplyMessage> class ClientTable
         std::optional<ReplyMessage> reply_message;
     };
 
-    std::unordered_map<ClientId, Record> record_table;
+    HashMap<ClientId, Record> record_table;
 
 public:
     using Apply = std::function<void(

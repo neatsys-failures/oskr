@@ -44,26 +44,34 @@ struct StartViewChangeMessage {
     template <typename S> void serialize(S &s) { s(view_number, replica_id); }
 };
 
+// we only support view change under no-drop network, when no log transfer
+// needed
+// if we don't want protocol to panic too much, new primary may give up its view
+// when missing packets, and new backups may do state transfer
+struct ZeroLog {
+    template <typename S> void serialize(S &s) {}
+};
+
 struct DoViewChangeMessage {
     ViewNumber view_number;
-    // TODO log
+    ZeroLog log;
     ViewNumber latest_normal;
     OpNumber op_number, commit_number;
 
     template <typename S> void serialize(S &s)
     {
-        s(view_number, latest_normal, op_number, commit_number);
+        s(view_number, log, latest_normal, op_number, commit_number);
     }
 };
 
 struct StartViewMessage {
     ViewNumber view_number;
-    // TODO log
+    ZeroLog log;
     OpNumber op_number, commit_number;
 
     template <typename S> void serialize(S &s)
     {
-        s(view_number, op_number, commit_number);
+        s(view_number, log, op_number, commit_number);
     }
 };
 
