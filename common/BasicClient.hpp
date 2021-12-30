@@ -164,10 +164,12 @@ void BasicClient<Transport, Protocol>::handleReply(const ReplyMessage &reply)
         view_number = reply.view_number;
     }
 
-    if (ClientSetting<Protocol>::N_MATCHED > 1) {
+    std::size_t n_matched =
+        ClientSetting<Protocol>::FAULT_MULTIPLIER * transport.config.n_fault +
+        1;
+    if (n_matched > 1) {
         pending->result_table[reply.result].insert(reply.replica_id);
-        if (pending->result_table.at(reply.result).size() <
-            ClientSetting<Protocol>::N_MATCHED) {
+        if (pending->result_table.at(reply.result).size() < n_matched) {
             return;
         }
     }
