@@ -1,7 +1,4 @@
-#include <cstring>
-
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
 
 #include "transport/Simulated.hpp"
 
@@ -124,7 +121,7 @@ TEST(Simulated, PingPong)
     PingPongReceiver<Simulated> ping("ping", transport, on_exit, 0us);
     PingPongReceiver<Simulated> pong("pong", transport, on_exit, 0us);
     transport.spawn(0us, [&] { ping.Start(); });
-    spdlog::debug("Transport run");
+    debug("Transport run");
     transport.run();
     ASSERT_TRUE(all_done);
 }

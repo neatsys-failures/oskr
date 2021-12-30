@@ -1,9 +1,6 @@
 [submodule "dependency/googletest"]
 	path = dependency/googletest
 	url = https://github.com/google/googletest
-[submodule "dependency/spdlog"]
-	path = dependency/spdlog
-	url = https://github.com/gabime/spdlog
 [submodule "dependency/bitsery"]
 	path = dependency/bitsery
 	url = https://github.com/fraillt/bitsery

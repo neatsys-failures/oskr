@@ -13,7 +13,7 @@ because the core of this project is based on a specialized actor model.
 
 **Present issues:**
 * Heavily-used template programming + self-contained header result in terrible 
-  error reporting long compilation time. Because most class in header are 
+  error reporting and long compilation time. Because most class in header are 
   templated, precompiled header not help much.
   * Template programming also make interface more cumbersome with `typename` and
     such.
@@ -21,13 +21,6 @@ because the core of this project is based on a specialized actor model.
 * CMake makes me feel good, meson makes me feel better, but at the end of the
   day I have to use CMake because of the supportness of most dependencies. This
   causes the setup of DPDK a little bit hacky and maybe fragile.
-* The *executors* draft is not standardized yet. Once it 
-  is done, certain part of the project (i.e. `Transport`) may be invalidated by 
-  it:
-  * For non-DPDK `Transport`, standard may provide a better alternative but the
-    migration could be hard.
-  * Althrough standard or anyone else probably will not provide DPDK 
-    `Transport`s, its non-standard shape may impede other projects to adapt it.
 
 **Roadmap:**
 - [ ] Architecture design + Viewstamped Replication

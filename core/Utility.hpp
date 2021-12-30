@@ -5,7 +5,9 @@
 #include <bitsery/bitsery.h>
 #include <bitsery/brief_syntax.h>
 #include <bitsery/brief_syntax/vector.h>
-#include <spdlog/spdlog.h>
+#include <folly/logging/Init.h>
+#include <folly/logging/xlog.h>
+// #include <spdlog/spdlog.h>
 
 #include "core/Type.hpp"
 
@@ -15,14 +17,10 @@ using //
     std::literals::chrono_literals::operator""ms,
     std::literals::chrono_literals::operator""us;
 
-using spdlog::debug, spdlog::info, spdlog::warn;
-
-template <typename... Args>
-[[noreturn]] void panic(spdlog::format_string_t<Args...> fmt, Args &&...args)
-{
-    spdlog::error(fmt, std::forward<Args>(args)...);
-    std::abort();
-}
+#define debug(fmt, ...) XLOG(DBG0, fmt, ##__VA_ARGS__)
+#define info(fmt, ...) XLOG(INFO, fmt, ##__VA_ARGS__)
+#define warn(fmt, ...) XLOG(WARN, fmt, ##__VA_ARGS__)
+#define panic(fmt, ...) XLOG(FATAL, fmt, ##__VA_ARGS__)
 
 // TODO explore a at-least-equally convinent but better way
 #ifndef OSKR_NO_RLOGGING

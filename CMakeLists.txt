@@ -4,15 +4,6 @@ project(oskr VERSION 0.1.0 LANGUAGES CXX)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
-include(CheckSymbolExists)
-check_symbol_exists(accept4 sys/socket.h FOLLY_HAVE_ACCEPT4)
-check_symbol_exists(getrandom sys/random.h FOLLY_HAVE_GETRANDOM)
-check_symbol_exists(preadv sys/uio.h FOLLY_HAVE_PREADV)
-check_symbol_exists(pwritev sys/uio.h FOLLY_HAVE_PWRITEV)
-check_symbol_exists(clock_gettime time.h FOLLY_HAVE_CLOCK_GETTIME)
-check_symbol_exists(pipe2 unistd.h FOLLY_HAVE_PIPE2)
-check_symbol_exists(sendmmsg sys/socket.h FOLLY_HAVE_SENDMMSG)
-check_symbol_exists(recvmmsg sys/socket.h FOLLY_HAVE_RECVMMSG)
 
 # happy easy way to set up DPDK
 execute_process(
@@ -26,17 +17,17 @@ set(ENV{PKG_CONFIG_PATH} "${CMAKE_SOURCE_DIR}/dependency/dpdk/build/meson-uninst
 pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
 file(MAKE_DIRECTORY ${DPDK_INCLUDE_DIRS}) # https://stackoverflow.com/a/47358004
 
-add_subdirectory(dependency/spdlog EXCLUDE_FROM_ALL)
-add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/folly EXCLUDE_FROM_ALL)
+add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
 
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(./)
 add_compile_options(-Wall -Wextra -Wpedantic)
-add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for r-logging
+add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for logging
+add_compile_options(-Wno-nullability-completeness) # for folly
 enable_testing()
 if (${OSKR_TIDY})
     set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
@@ -59,9 +50,8 @@ add_library(oskr_doxygen STATIC ${OSKR_DUMMY_SOURCE})
 # TODO link to local targets
 target_link_libraries(oskr_doxygen PRIVATE
     Bitsery::bitsery
-    spdlog::spdlog
-    PkgConfig::DPDK
     folly
+    PkgConfig::DPDK
 )
 
 # prevent side effects

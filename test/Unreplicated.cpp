@@ -108,8 +108,8 @@ TEST_F(Unreplicated, TenClientOneSecond)
             transport.spawn(
                 std::chrono::milliseconds(dist(random_engine())), [&, i] {
                     debug(
-                        "i = {}, client[i] = {}", i,
-                        reinterpret_cast<void *>(&client[i]));
+                        "i = {}, client[i] = {:x}", i,
+                        reinterpret_cast<std::uintptr_t>(&client[i]));
                     client[i]->invoke(Data(), [&, i](auto) {
                         n_completed += 1;
                         close_loop[i]();
