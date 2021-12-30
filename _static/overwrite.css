@@ -4,3 +4,7 @@ dd em {
     font-family: var(--font-stack--monospace);
     font-style: normal;
 }
+
+aside.sidebar-drawer {
+    width: calc(50% - 18.5em);
+}
