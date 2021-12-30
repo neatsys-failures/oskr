@@ -50,7 +50,7 @@ void Replica<Transport>::handle(
             *this, remote,
             std::bind(
                 // C++'s type inference still not as perfect as Rust :|
-                bitserySerialize<ReplyMessage, Transport::BUFFER_SIZE>, _1,
+                bitserySerialize<ReplyMessage, Transport::buffer_size>, _1,
                 reply));
     };
 

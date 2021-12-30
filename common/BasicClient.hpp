@@ -35,11 +35,39 @@ template <typename Protocol = void> struct ClientSetting {
 template <> struct ClientSetting<void> {
     enum Strategy {
         UNSPECIFIED,
-        ALL,
-        PRIMARY_FIRST,
+        all,
+        primary_first,
     };
 };
 
+/*! @brief General client logic that can be reused across several protocols,
+designed for replication protocols.
+
+The client does the following (and requires):
+- When invoked, construct a `RequestMessage` and send to replica. The message
+will be converted to replica message type before serializing, so replica message
+should be able to be converted from `RequestMessage`, e.g.,
+`std::variant<RequestMessage, ...>`.
+- The message will be sent according to configured strategy:
+  - `all` send to all replicas on everything (re)sending
+  - `primary_first` send to primary according to learned view first, then send
+    to every replicas on everything resending
+- Send one request at a time. Cannot be `invoke`d again before callback
+triggered.
+- Assume replica will reply `ReplyMessage`.
+- Finalize an invoking after collecting enough number of matched replies. The
+number is configured as `fault_multiplier`, which means should collect
+`fault_multiplier * n_fault + 1` replies. For example, for unreplicated and VR
+`fault_multiplier` should be 0, means only receives one reply, and
+`fault_multiplier` should be 1 for PBFT, etc.
+
+* @note The replies must be matched. Crash-tolerence protocols may not
+require/just assume matching but anyway.
+
+If need advanced customization, `BasicClient` can be inherited and subclass can
+override `serializeRequestMessage` and `deserializeReplyMessage`. For example
+BFT protocols may inject message signing/verifying inside.
+*/
 template <TransportTrait Transport, typename Protocol>
 class BasicClient : public Client<Transport>
 {
@@ -77,8 +105,11 @@ public:
         handleReply(reply);
     }
 
+protected:
+    //! Notice that this method accept `ReplicaMessage`, so implementation do
+    //! not convert from `RequestMessage` inside.
     virtual std::size_t serializeRequestMessage(
-        TxSpan<Transport::BUFFER_SIZE> buffer,
+        TxSpan<Transport::buffer_size> buffer,
         const typename ClientSetting<Protocol>::ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
@@ -124,11 +155,11 @@ void BasicClient<Transport, Protocol>::sendRequest(bool resend)
     };
     auto send_to_all = [&] { transport.sendMessageToAll(*this, write); };
 
-    switch (ClientSetting<Protocol>::STRATEGY) {
-    case ClientSetting<>::Strategy::ALL:
+    switch (ClientSetting<Protocol>::strategy) {
+    case ClientSetting<>::Strategy::all:
         send_to_all();
         break;
-    case ClientSetting<>::Strategy::PRIMARY_FIRST:
+    case ClientSetting<>::Strategy::primary_first:
         if (resend) {
             send_to_all();
         } else {
@@ -140,7 +171,7 @@ void BasicClient<Transport, Protocol>::sendRequest(bool resend)
     }
 
     transport.spawn(
-        ClientSetting<Protocol>::RESEND_INTERVAL,
+        ClientSetting<Protocol>::resend_interval,
         [&, current_number = request_number] {
             if (!pending || request_number != current_number) {
                 return;
@@ -165,7 +196,7 @@ void BasicClient<Transport, Protocol>::handleReply(const ReplyMessage &reply)
     }
 
     std::size_t n_matched =
-        ClientSetting<Protocol>::FAULT_MULTIPLIER * transport.config.n_fault +
+        ClientSetting<Protocol>::fault_multiplier * transport.config.n_fault +
         1;
     if (n_matched > 1) {
         pending->result_table[reply.result].insert(reply.replica_id);

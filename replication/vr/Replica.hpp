@@ -8,9 +8,6 @@
 
 namespace oskr::vr
 {
-// work with:
-// BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
-
 template <TransportTrait Transport>
 class Replica : public TransportReceiver<Transport>
 {
@@ -38,7 +35,7 @@ public:
             transport, transport.config.replica_address_list[replica_id]),
         log(log), prepare_set(transport.config.n_fault)
     {
-        if (batch_size > Log<>::BLOCK_SIZE) {
+        if (batch_size > Log<>::block_size) {
             panic("Batch size too large");
         }
 
@@ -63,7 +60,7 @@ private:
     static constexpr auto _2 = std::placeholders::_2;
     template <typename Message = ReplicaMessage>
     static constexpr auto bitserySerialize =
-        oskr::bitserySerialize<Message, Transport::BUFFER_SIZE>;
+        oskr::bitserySerialize<Message, Transport::buffer_size>;
 
     bool isPrimary() const
     {

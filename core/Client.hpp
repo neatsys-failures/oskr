@@ -7,6 +7,13 @@
 
 namespace oskr
 {
+/*! @brief Client model. Client is transport receiver which also provides method
+to initiate something from external of the system.
+
+Although not necessary, currently `Client` is derived from `TransportReceiver`,
+because normally client does not care much (because it is too simple), and a
+untyped client receiver is usually overkill.
+*/
 template <TransportTrait Transport>
 class Client : public TransportReceiver<Transport>
 {

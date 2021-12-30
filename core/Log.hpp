@@ -53,14 +53,14 @@ template <> struct Log<void> {
         RequestNumber request_number;
         Data op;
     };
-    static constexpr int BLOCK_SIZE = 50; // TODO
+    static constexpr int block_size = 50; // TODO
     // expect 600K~1M throughput @ <= 60 seconds
-    static constexpr std::size_t N_RESERVED_ENTRY = 80 * 1000 * 1000;
+    static constexpr std::size_t n_reserved_entry = 80 * 1000 * 1000;
 
     struct ListPreset {
         using Index = OpNumber;
         using Block = struct {
-            Entry entry_buffer[BLOCK_SIZE];
+            Entry entry_buffer[block_size];
             int n_entry;
         };
     };
@@ -69,7 +69,7 @@ template <> struct Log<void> {
     struct ChainPreset {
         using Index = Hash;
         using Block = struct {
-            Entry entry_buffer[BLOCK_SIZE];
+            Entry entry_buffer[block_size];
             int n_entry;
             Hash previous;
         };

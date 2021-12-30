@@ -11,9 +11,9 @@ namespace oskr
 {
 template <> struct ClientSetting<unreplicated::ClientTag> {
     using ReplicaMessage = unreplicated::ReplicaMessage;
-    static constexpr auto STRATEGY = ClientSetting<>::Strategy::PRIMARY_FIRST;
-    static constexpr std::size_t FAULT_MULTIPLIER = 0;
-    static constexpr std::chrono::microseconds RESEND_INTERVAL = 1000ms;
+    static constexpr auto strategy = ClientSetting<>::Strategy::primary_first;
+    static constexpr std::size_t fault_multiplier = 0;
+    static constexpr std::chrono::microseconds resend_interval = 1000ms;
 };
 } // namespace oskr
 namespace oskr::unreplicated

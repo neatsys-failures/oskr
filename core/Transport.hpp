@@ -19,7 +19,7 @@ polymorphism.
 template <typename Self> struct TransportBase {
     using Address = typename TransportMeta<Self>::Address;
     using Desc = typename TransportMeta<Self>::Desc;
-    static constexpr std::size_t BUFFER_SIZE = TransportMeta<Self>::BUFFER_SIZE;
+    static constexpr std::size_t buffer_size = TransportMeta<Self>::buffer_size;
 
     //! Receiver closure. Related states should be captured by needed.
     //!
@@ -45,12 +45,12 @@ template <typename Self> struct TransportBase {
 
     //! The common argument of `sendMessage*` methods, write message content
     //! into `buffer`, return written length, which should not be greater than
-    //! `BUFFER_SIZE`.
+    //! `buffer_size`.
     //!
     //! Transport promises that this callback will not be accessed any more
     //! after returning from `sendMessage*`. It is safe to capture local objects
     //! by reference.
-    using Write = Fn<std::size_t(TxSpan<BUFFER_SIZE> buffer)>;
+    using Write = Fn<std::size_t(TxSpan<buffer_size> buffer)>;
 
     template <typename Sender>
     void sendMessageToReplica(
@@ -107,7 +107,7 @@ concept TransportTrait =
     //! value semantic, and avoid heap allocation.
     typename TransportMeta<T>::Address;
     typename TransportMeta<T>::Desc;
-    typename std::integral_constant<std::size_t, TransportMeta<T>::BUFFER_SIZE>;
+    typename std::integral_constant<std::size_t, TransportMeta<T>::buffer_size>;
 }
 //! Subclassing `TransportBase`
 &&std::derived_from<T, TransportBase<T>>

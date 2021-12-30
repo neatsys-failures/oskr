@@ -39,7 +39,7 @@ because the core of this project is based on a specialized actor model.
 Develop on Ubuntu 21.10, with Clang version 13. Required apt packages (can be
 installed with `--no-install-recommends`):
 
-```
+```text
 General building:
     cmake clang clang-tidy
 For DPDK:
@@ -54,7 +54,7 @@ For Folly:
 Step 1, clone the repo with `--recursive`.
 
 Step 2, go to `dependency/folly` and run
-```
+```bash
 git apply ../folly-has_coroutine_check.patch
 ```
 

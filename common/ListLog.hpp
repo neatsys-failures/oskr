@@ -25,8 +25,8 @@ public:
 #ifdef OSKR_BENCHMARK
         // guess what batch size will be used?
         // benchmark env should feel well even preallocate for no batch :)
-        block_list.reserve(Log<>::N_RESERVED_ENTRY);
-        entry_list.reserve(Log<>::N_RESERVED_ENTRY);
+        block_list.reserve(Log<>::n_reserved_entry);
+        entry_list.reserve(Log<>::n_reserved_entry);
 #endif
     }
 

@@ -29,7 +29,7 @@ struct MBufDesc {
 class DPDKClient;
 template <> struct TransportMeta<DPDKClient> {
     using Address = std::pair<struct rte_ether_addr, std::uint16_t>;
-    static constexpr std::size_t BUFFER_SIZE = RTE_MBUF_DEFAULT_BUF_SIZE;
+    static constexpr std::size_t buffer_size = RTE_MBUF_DEFAULT_BUF_SIZE;
     using Desc = MBufDesc;
 };
 

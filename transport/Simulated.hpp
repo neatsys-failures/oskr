@@ -12,7 +12,7 @@ class Simulated;
 template <> struct TransportMeta<Simulated> {
     using Address = std::string;
     using Desc = Data;
-    static constexpr std::size_t BUFFER_SIZE = 9000; // TODO configurable
+    static constexpr std::size_t buffer_size = 9000; // TODO configurable
 };
 
 class Simulated : public TransportBase<Simulated>
@@ -111,8 +111,8 @@ void Simulated::sendMessage(
         info("Message delayed: {}us", delay.count());
     }
 
-    Data message(BUFFER_SIZE);
-    message.resize(write(TxSpan<BUFFER_SIZE>(message.data(), BUFFER_SIZE)));
+    Data message(buffer_size);
+    message.resize(write(TxSpan<buffer_size>(message.data(), buffer_size)));
     destiny_queue.insert({now_us + delay.count(), [&, dest, message]() mutable {
                               channel_id = -2;
                               // TODO multicast
