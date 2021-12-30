@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 
 #include "app/Mock.hpp"
-#include "common/BasicClient.hpp"
 #include "common/ListLog.hpp"
+#include "replication/unreplicated/Client.hpp"
 #include "replication/unreplicated/Replica.hpp"
 #include "transport/Simulated.hpp"
 
@@ -27,18 +27,13 @@ protected:
     {
     }
 
-    std::vector<std::unique_ptr<BasicClient<Simulated, ReplicaMessage>>> client;
+    std::vector<std::unique_ptr<unreplicated::Client<Simulated>>> client;
 
     void spawnClient(int n_client)
     {
-        client.reserve(n_client);
         for (int i = 0; i < n_client; i += 1) {
             client.push_back(
-                std::make_unique<BasicClient<Simulated, ReplicaMessage>>(
-                    transport, BasicClient<Simulated, ReplicaMessage>::Config{
-                                   BasicClient<Simulated, ReplicaMessage>::
-                                       Config::Strategy::PRIMARY_FIRST,
-                                   1000ms, 1}));
+                std::make_unique<unreplicated::Client<Simulated>>(transport));
         }
     }
 };

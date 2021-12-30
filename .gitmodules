@@ -16,3 +16,4 @@
 [submodule "dependency/folly"]
 	path = dependency/folly
 	url = https://github.com/facebook/folly
+	ignore = dirty

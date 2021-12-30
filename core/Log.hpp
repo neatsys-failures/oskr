@@ -9,6 +9,7 @@ namespace oskr
 class App
 {
 public:
+    virtual ~App() {}
     virtual Data commit(Data op) = 0;
     virtual void rollback(Data) { panic("Unsupported rollback operation"); }
 };

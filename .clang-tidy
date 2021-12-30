@@ -1,6 +1,7 @@
 # https://github.com/grpc/grpc/blob/master/.clang-tidy
 # + Enable "on purpose" & "good to have but it's not activated yet"
 # + Disable abseil stuff
+# + Disable bugprone-lambda-function-name for Folly logging
 
 ---
 # Note on checks are disabled on purpose
@@ -56,6 +57,7 @@ Checks: '-*,
   # abseil-*,
   # -abseil-no-namespace,
   bugprone-*,
+  -bugprone-lambda-function-name,
   # -bugprone-branch-clone,
   # -bugprone-infinite-loop,
   # -bugprone-narrowing-conversions,

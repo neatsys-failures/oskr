@@ -5,9 +5,6 @@
 
 namespace oskr::unreplicated
 {
-// work with:
-// BasicClient<_, ReplicaMessage>(_, {Strategy::PRIMARY_FIRST, 1000ms, 1})
-
 template <TransportTrait Transport>
 class Replica : public TransportReceiver<Transport>
 {

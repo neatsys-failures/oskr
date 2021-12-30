@@ -30,24 +30,22 @@ struct ReplyMessage {
     }
 };
 
-template <TransportTrait Transport, typename ReplicaMessage>
+template <typename Protocol = void> struct ClientSetting {
+};
+template <> struct ClientSetting<void> {
+    enum Strategy {
+        UNSPECIFIED,
+        ALL,
+        PRIMARY_FIRST,
+    };
+};
+
+template <TransportTrait Transport, typename Protocol>
 class BasicClient : public Client<Transport>
 {
 public:
-    struct Config {
-        enum Strategy {
-            UNSPECIFIED,
-            ALL,
-            PRIMARY_FIRST,
-        } strategy;
-        std::chrono::microseconds resend_interval;
-        std::size_t n_matched;
-    };
-
 private:
     using TransportReceiver<Transport>::transport;
-    Config config;
-
     using Client<Transport>::client_id;
 
     RequestNumber request_number;
@@ -62,10 +60,8 @@ private:
     std::optional<PendingRequest> pending;
 
 public:
-    BasicClient(Transport &transport, Config config) :
-        Client<Transport>(transport)
+    BasicClient(Transport &transport) : Client<Transport>(transport)
     {
-        this->config = config;
         request_number = 0;
         view_number = 0;
     }
@@ -82,7 +78,8 @@ public:
     }
 
     virtual std::size_t serializeRequestMessage(
-        TxSpan<Transport::BUFFER_SIZE> buffer, const ReplicaMessage &request)
+        TxSpan<Transport::BUFFER_SIZE> buffer,
+        const typename ClientSetting<Protocol>::ReplicaMessage &request)
     {
         return bitserySerialize(buffer, request);
     }
@@ -110,15 +107,16 @@ void BasicClient<Transport, ReplicaMessage>::invoke(
     sendRequest(false);
 }
 
-template <TransportTrait Transport, typename ReplicaMessage>
-void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
+template <TransportTrait Transport, typename Protocol>
+void BasicClient<Transport, Protocol>::sendRequest(bool resend)
 {
     RequestMessage request;
     request.client_id = client_id;
     request.request_number = pending->request_number;
     request.op = pending->op;
     auto write = [&](auto buffer) {
-        return serializeRequestMessage(buffer, ReplicaMessage(request));
+        return serializeRequestMessage(
+            buffer, typename ClientSetting<Protocol>::ReplicaMessage(request));
     };
     auto send_to_primary = [&] {
         transport.sendMessageToReplica(
@@ -126,11 +124,11 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     };
     auto send_to_all = [&] { transport.sendMessageToAll(*this, write); };
 
-    switch (config.strategy) {
-    case Config::Strategy::ALL:
+    switch (ClientSetting<Protocol>::STRATEGY) {
+    case ClientSetting<>::Strategy::ALL:
         send_to_all();
         break;
-    case Config::Strategy::PRIMARY_FIRST:
+    case ClientSetting<>::Strategy::PRIMARY_FIRST:
         if (resend) {
             send_to_all();
         } else {
@@ -142,7 +140,8 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
     }
 
     transport.spawn(
-        config.resend_interval, [&, current_number = request_number] {
+        ClientSetting<Protocol>::RESEND_INTERVAL,
+        [&, current_number = request_number] {
             if (!pending || request_number != current_number) {
                 return;
             }
@@ -151,9 +150,8 @@ void BasicClient<Transport, ReplicaMessage>::sendRequest(bool resend)
         });
 }
 
-template <TransportTrait Transport, typename ReplicaMessage>
-void BasicClient<Transport, ReplicaMessage>::handleReply(
-    const ReplyMessage &reply)
+template <TransportTrait Transport, typename Protocol>
+void BasicClient<Transport, Protocol>::handleReply(const ReplyMessage &reply)
 {
     if (!pending) {
         return;
@@ -166,9 +164,10 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
         view_number = reply.view_number;
     }
 
-    if (config.n_matched > 1) {
+    if (ClientSetting<Protocol>::N_MATCHED > 1) {
         pending->result_table[reply.result].insert(reply.replica_id);
-        if (pending->result_table.at(reply.result).size() < config.n_matched) {
+        if (pending->result_table.at(reply.result).size() <
+            ClientSetting<Protocol>::N_MATCHED) {
             return;
         }
     }
