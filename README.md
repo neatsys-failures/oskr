@@ -17,7 +17,10 @@ because the core of this project is based on a specialized actor model.
   templated, precompiled header not help much.
   * Template programming also make interface more cumbersome with `typename` and
     such.
-* Serialization leverage Bitsery, which is a little bit lack of document.
+* Dependencies:
+  * Using Folly in serveral places, which is hard to set up and currently 
+    requires hacking.
+  * Serialization leverage Bitsery, which is a little bit lack of document.
 * CMake makes me feel good, meson makes me feel better, but at the end of the
   day I have to use CMake because of the supportness of most dependencies. This
   causes the setup of DPDK a little bit hacky and maybe fragile.
@@ -33,13 +36,27 @@ because the core of this project is based on a specialized actor model.
 
 ----
 
-Develop on Ubuntu 21.10, with Clang version 13. Required apt packages:
+Develop on Ubuntu 21.10, with Clang version 13. Required apt packages (can be
+installed with `--no-install-recommends`):
 
 ```
-clang cmake pkg-config meson ninja-build python3-pyelftools libboost-dev clang-tidy
+General building:
+    cmake clang clang-tidy
+For DPDK:
+    pkg-config meson ninja-build python3-pyelftools 
+For Folly:
+    libboost-context-dev libboost-filesystem-dev libboost-program-options-dev
+    libboost-regex-dev libboost-system-dev libboost-thread-dev 
+    libdouble-conversion-dev libevent-dev libfmt-dev libgoogle-glog-dev 
+    libssl-dev
 ```
 
 Step 1, clone the repo with `--recursive`.
+
+Step 2, go to `dependency/folly` and run
+```
+git apply ../folly-has_coroutine_check.patch
+```
 
 Step 2, build CMake project as usual. Initial configuration will build a DPDK, 
 which takes some time. Notable targets:
