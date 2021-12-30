@@ -7,7 +7,6 @@
 #include <bitsery/brief_syntax/vector.h>
 #include <folly/logging/Init.h>
 #include <folly/logging/xlog.h>
-// #include <spdlog/spdlog.h>
 
 #include "core/Type.hpp"
 
@@ -17,10 +16,10 @@ using //
     std::literals::chrono_literals::operator""ms,
     std::literals::chrono_literals::operator""us;
 
-#define debug(fmt, ...) XLOG(DBG0, fmt, ##__VA_ARGS__)
-#define info(fmt, ...) XLOG(INFO, fmt, ##__VA_ARGS__)
-#define warn(fmt, ...) XLOG(WARN, fmt, ##__VA_ARGS__)
-#define panic(fmt, ...) XLOG(FATAL, fmt, ##__VA_ARGS__)
+#define debug(fmt, ...) XLOGF(DBG0, fmt "{}", ##__VA_ARGS__, "")
+#define info(fmt, ...) XLOGF(INFO, fmt "{}", ##__VA_ARGS__, "")
+#define warn(fmt, ...) XLOGF(WARN, fmt "{}", ##__VA_ARGS__, "")
+#define panic(fmt, ...) XLOGF(FATAL, fmt "{}", ##__VA_ARGS__, "")
 
 // TODO explore a at-least-equally convinent but better way
 #ifndef OSKR_NO_RLOGGING

@@ -46,7 +46,7 @@ public:
 
     void registerReceiver(Address address, Receiver receiver)
     {
-        receiver_table.insert({{address, receiver}});
+        receiver_table.insert({address, receiver});
     }
 
     void registerMulticastReceiver(Receiver receiver)
@@ -59,20 +59,23 @@ public:
 
     void spawn(microseconds delay, Callback callback)
     {
-        destiny_queue.insert({now_us + delay.count(), [&, callback] {
-                                  channel_id = -1;
-                                  callback();
-                              }});
+        destiny_queue.insert(
+            {now_us + delay.count(),
+             [&, callback = std::move(callback)]() mutable {
+                 channel_id = -1;
+                 callback();
+             }});
     }
 
-    void spawn(Callback callback) { spawn(0us, callback); }
+    void spawn(Callback callback) { spawn(0us, std::move(callback)); }
 
     void spawnConcurrent(Callback callback)
     {
-        destiny_queue.insert({now_us, [&, callback] {
-                                  channel_id = 0;
-                                  callback();
-                              }});
+        destiny_queue.insert(
+            {now_us, [&, callback = std::move(callback)]() mutable {
+                 channel_id = 0;
+                 callback();
+             }});
     }
 
     int channel() const { return channel_id; }
@@ -110,11 +113,11 @@ void Simulated::sendMessage(
 
     Data message(BUFFER_SIZE);
     message.resize(write(TxSpan<BUFFER_SIZE>(message.data(), BUFFER_SIZE)));
-    destiny_queue.insert({{now_us + delay.count(), [&, dest, message] {
-                               channel_id = -2;
-                               // TODO multicast
-                               receiver_table.at(dest)(sender.address, message);
-                           }}});
+    destiny_queue.insert({now_us + delay.count(), [&, dest, message]() mutable {
+                              channel_id = -2;
+                              // TODO multicast
+                              receiver_table.at(dest)(sender.address, message);
+                          }});
 }
 
 void Simulated::run(microseconds time_limit)

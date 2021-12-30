@@ -58,11 +58,12 @@ Step 2, go to `dependency/folly` and run
 git apply ../folly-has_coroutine_check.patch
 ```
 
-Step 2, build CMake project as usual. Initial configuration will build a DPDK, 
+Step 3, build CMake project as usual. Initial configuration will build a DPDK, 
 which takes some time. Notable targets:
+* `Test*` unit tests (to get full list run `make help | grep run-Test`)
+  * `run-Test*` to run one test unit
+  * `run-test` to run all test units
 * `Client` benchmark client, executable at `<build>/benchmark/Client`.
-* `Test*` unit tests (to get full list run `make help | grep Test`), executable
-  at `<build>/test/Test*`
 
 *Work in progress.*
 
@@ -82,6 +83,6 @@ Project structure:
 * `benchmark` universal entry executable for running all protocols.
 * `doc` out-of-source documents and format configuration.
 
-&dagger; Document of these source is hosted on [project site][site].
+<span>&dagger;</span> Document of these source is hosted on [project site][site].
 
 [site]: https://sgdxbc.github.io/oskr

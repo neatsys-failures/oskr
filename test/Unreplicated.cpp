@@ -99,7 +99,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
 
     bool time_up = false;
     int n_completed = 0;
-    Simulated::Callback close_loop[10];
+    Fn<void()> close_loop[10];
     for (int i = 0; i < 10; i += 1) {
         close_loop[i] = [&, i] {
             if (time_up) {
@@ -116,7 +116,7 @@ TEST_F(Unreplicated, TenClientOneSecond)
                     });
                 });
         };
-        transport.spawn(0ms, close_loop[i]);
+        transport.spawn(0ms, [&, i] { close_loop[i](); });
     }
     transport.spawn(1000ms, [&] { time_up = true; });
 

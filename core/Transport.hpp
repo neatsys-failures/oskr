@@ -40,9 +40,8 @@ template <typename Self> struct TransportBase {
     //! packets will be dropped in network interface, and such situation will be
     //! considered as **fatal error**. Understand what you are doing in
     //! receiver.
-    using Receiver =
-        std::function<void(const Address &remote, Desc descriptor)>;
-    using Callback = std::function<void()>;
+    using Receiver = Fn<void(const Address &remote, Desc descriptor)>;
+    using Callback = FnOnce<void()>;
 
     //! The common argument of `sendMessage*` methods, write message content
     //! into `buffer`, return written length, which should not be greater than
@@ -51,7 +50,7 @@ template <typename Self> struct TransportBase {
     //! Transport promises that this callback will not be accessed any more
     //! after returning from `sendMessage*`. It is safe to capture local objects
     //! by reference.
-    using Write = std::function<std::size_t(TxSpan<BUFFER_SIZE> buffer)>;
+    using Write = Fn<std::size_t(TxSpan<BUFFER_SIZE> buffer)>;
 
     template <typename Sender>
     void sendMessageToReplica(
@@ -117,20 +116,20 @@ concept TransportTrait =
         T transport, const typename T::Address address,
         typename T::Receiver receiver)
 {
-    transport.registerReceiver(address, receiver);
+    transport.registerReceiver(address, std::move(receiver));
     // TODO multicast
 }
 //! Scheduling interfaces
 &&requires(T transport, typename T::Callback callback)
 {
-    transport.spawn(callback);
+    transport.spawn(std::move(callback));
 }
 //! Sending interfaces
 &&requires(
     T transport, const SenderArchetype<T> &sender,
     const typename T::Address &dest, typename T::Write write)
 {
-    transport.sendMessage(sender, dest, write);
+    transport.sendMessage(sender, dest, std::move(write));
 };
 
 } // namespace oskr

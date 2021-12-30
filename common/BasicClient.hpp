@@ -106,7 +106,7 @@ void BasicClient<Transport, ReplicaMessage>::invoke(
     }
 
     request_number += 1;
-    pending = PendingRequest{request_number, op, {}, callback};
+    pending = PendingRequest{request_number, op, {}, std::move(callback)};
     sendRequest(false);
 }
 
@@ -173,7 +173,7 @@ void BasicClient<Transport, ReplicaMessage>::handleReply(
         }
     }
 
-    auto callback = pending->callback;
+    auto callback = std::move(pending->callback);
     pending.reset();
     callback(reply.result);
 }

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <span>
 
-// #include <boost/container/small_vector.hpp>
+#include <folly/Function.h>
 #include <folly/small_vector.h>
 
 namespace oskr
@@ -38,4 +38,7 @@ using TxSpan = std::span<std::uint8_t, BUFFER_SIZE>;
 using Data = folly::small_vector<std::uint8_t, 16>;
 
 using Hash = std::uint8_t[32]; // SHA256
+
+template<typename T> using Fn = std::function<T>;
+template<typename T> using FnOnce = folly::Function<T>;
 } // namespace oskr

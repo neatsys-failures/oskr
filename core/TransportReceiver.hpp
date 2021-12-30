@@ -14,7 +14,7 @@ result, protocol implementation is not required to inherit from
 `TransportReceiver`. This base class still exists to provide an adapted and
 simpler interface for some straightforward protocol implementation.
 
-* @note If subclass want to access protected `transport` member, it need to 
+* @note If subclass want to access protected `transport` member, it need to
 ```
 using TransportReceiver<Transport>::transport;
 ```
@@ -34,11 +34,9 @@ public:
         address(address)
     {
         transport.registerReceiver(address, [&](auto &remote, auto desc) {
-            transport.spawn(
-                [&, desc = std::make_shared<typename Transport::Desc>(
-                        std::move(desc))] {
-                    receiveMessage(remote, RxSpan(desc->data(), desc->size()));
-                });
+            transport.spawn([&, desc = std::move(desc)]() mutable {
+                receiveMessage(remote, RxSpan(desc.data(), desc.size()));
+            });
         });
     }
     virtual ~TransportReceiver() {}

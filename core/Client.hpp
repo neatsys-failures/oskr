@@ -20,7 +20,7 @@ public:
         client_id = std::uniform_int_distribution<ClientId>()(random_engine());
     }
 
-    using InvokeCallback = std::function<void(Data result)>;
+    using InvokeCallback = FnOnce<void(Data result)>;
     virtual void invoke(Data op, InvokeCallback callback) = 0;
 };
 
