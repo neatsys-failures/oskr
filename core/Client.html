@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Transport" href="Transport.html" /><link rel="prev" title="High Performance Distributed Protocols Collection" href="../index.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Foundamental Types" href="Type.html" /><link rel="prev" title="(Ordinary) Transport Receiver" href="TransportReceiver.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
-        <title>Core Abstractions - Oskr 0.1.0 documentation</title>
+        <title>Protocol Client - Oskr 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=7f0192ddeb2adecfbaa87ffbcf67d16358b30bc1" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
@@ -158,10 +158,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Core Abstractions</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Core Abstractions</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Client.html">Protocol Client</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Protocol Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Type.html">Foundamental Types</a></li>
 </ul>
 </li>
@@ -203,16 +203,40 @@
           </label>
         </div>
         <article role="main">
-          <section id="core-abstractions">
-<h1>Core Abstractions<a class="headerlink" href="#core-abstractions" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="Transport.html">Transport</a></li>
-<li class="toctree-l1"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Client.html">Protocol Client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Type.html">Foundamental Types</a></li>
-</ul>
+          <section id="protocol-client">
+<h1>Protocol Client<a class="headerlink" href="#protocol-client" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I_14TransportTraitEN4oskr6ClientE">
+<span id="_CPPv3I_14TransportTraitEN4oskr6ClientE"></span><span id="_CPPv2I_14TransportTraitEN4oskr6ClientE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Transport.html#_CPPv4I0EN4oskr14TransportTraitE" title="oskr::TransportTrait"><span class="n"><span class="pre">TransportTrait</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Transport</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="classoskr_1_1Client"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Client</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="TransportReceiver.html#_CPPv4I_14TransportTraitEN4oskr17TransportReceiverE" title="oskr::TransportReceiver"><span class="n"><span class="pre">TransportReceiver</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr6ClientE" title="oskr::Client::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I_14TransportTraitEN4oskr6ClientE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p><a class="reference internal" href="#classoskr_1_1Client"><span class="std std-ref">Client</span></a> model. <a class="reference internal" href="#classoskr_1_1Client"><span class="std std-ref">Client</span></a> is transport receiver which also provides method to initiate something from external of the system. </p>
+<p>Although not necessary, currently <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Client"><span class="std std-ref"><span class="pre">Client</span></span></a></code> is derived from <code class="docutils literal notranslate"><a class="reference internal" href="TransportReceiver.html#classoskr_1_1TransportReceiver"><span class="std std-ref"><span class="pre">TransportReceiver</span></span></a></code>, because normally client does not care much (because it is too simple), and a untyped client receiver is usually overkill. </p>
+<p>Subclassed by <a class="reference internal" href="../common/BasicClient.html#classoskr_1_1BasicClient"><span class="std std-ref">oskr::BasicClient&lt; Transport, Protocol &gt;</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr6Client14InvokeCallbackE">
+<span id="_CPPv3N4oskr6Client14InvokeCallbackE"></span><span id="_CPPv2N4oskr6Client14InvokeCallbackE"></span><span class="target" id="classoskr_1_1Client_1a159c1bde4da6566595b09d37461ace47"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InvokeCallback</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4I0EN4oskr6FnOnceE" title="oskr::FnOnce"><span class="n"><span class="pre">FnOnce</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="Type.html#_CPPv4N4oskr4DataE" title="oskr::Data"><span class="n"><span class="pre">Data</span></span></a><span class="w"> </span><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4oskr6Client14InvokeCallbackE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
 </div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr6Client6ClientER9Transport">
+<span id="_CPPv3N4oskr6Client6ClientER9Transport"></span><span id="_CPPv2N4oskr6Client6ClientER9Transport"></span><span id="oskr::Client::Client__TransportR"></span><span class="target" id="classoskr_1_1Client_1ab6d83148e6642ebc02e1b40ca4063e37"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Client</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr6ClientE" title="oskr::Client::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">transport</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr6Client6ClientER9Transport" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr6Client6invokeE4Data14InvokeCallback">
+<span id="_CPPv3N4oskr6Client6invokeE4Data14InvokeCallback"></span><span id="_CPPv2N4oskr6Client6invokeE4Data14InvokeCallback"></span><span id="oskr::Client::invoke__Data.InvokeCallback"></span><span class="target" id="classoskr_1_1Client_1a9ec3da51324f97763b7d2b05b4426b08"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">invoke</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="Type.html#_CPPv4N4oskr4DataE" title="oskr::Data"><span class="n"><span class="pre">Data</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span>, <a class="reference internal" href="#_CPPv4N4oskr6Client14InvokeCallbackE" title="oskr::Client::InvokeCallback"><span class="n"><span class="pre">InvokeCallback</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr6Client6invokeE4Data14InvokeCallback" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-protected-attributes">Protected Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr6Client9client_idE">
+<span id="_CPPv3N4oskr6Client9client_idE"></span><span id="_CPPv2N4oskr6Client9client_idE"></span><span id="oskr::Client::client_id__ClientId"></span><span class="target" id="classoskr_1_1Client_1a6bd1efdc8218917a5bb17b216d939f2b"></span><a class="reference internal" href="Type.html#_CPPv4N4oskr8ClientIdE" title="oskr::ClientId"><span class="n"><span class="pre">ClientId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">client_id</span></span></span><a class="headerlink" href="#_CPPv4N4oskr6Client9client_idE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+</dd></dl>
 </section>
 
         </article>
@@ -220,23 +244,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="Transport.html">
+          <a class="next-page" href="Type.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Transport</div>
+                <div class="title">Foundamental Types</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../index.html">
+          <a class="prev-page" href="TransportReceiver.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Home</div>
+                <div class="title">(Ordinary) Transport Receiver</div>
                 
               </div>
             </a>
@@ -246,7 +270,7 @@
               Copyright &#169; 2021, sgdxbc |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
-            | <a class="muted-link" href="../_sources/core/index.rst.txt"
+            | <a class="muted-link" href="../_sources/core/Client.rst.txt"
                rel="nofollow">
               Show Source
             </a>

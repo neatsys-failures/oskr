@@ -161,10 +161,12 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="core/Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core/Client.html">Protocol Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="common/ClientTable.html">At-most-once Client Table</a></li>
 </ul>
 </li>
@@ -245,28 +247,32 @@ causes the setup of DPDK a little bit hacky and maybe fragile.</p></li>
 <hr class="docutils"/>
 <p>Develop on Ubuntu 21.10, with Clang version 13. Required apt packages (can be
 installed with <code class="docutils literal notranslate"><span class="pre">--no-install-recommends</span></code>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">General</span> <span class="n">building</span><span class="p">:</span>
-    <span class="n">cmake</span> <span class="n">clang</span> <span class="n">clang</span><span class="o">-</span><span class="n">tidy</span>
-<span class="n">For</span> <span class="n">DPDK</span><span class="p">:</span>
-    <span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="n">meson</span> <span class="n">ninja</span><span class="o">-</span><span class="n">build</span> <span class="n">python3</span><span class="o">-</span><span class="n">pyelftools</span>
-<span class="n">For</span> <span class="n">Folly</span><span class="p">:</span>
-    <span class="n">libboost</span><span class="o">-</span><span class="n">context</span><span class="o">-</span><span class="n">dev</span> <span class="n">libboost</span><span class="o">-</span><span class="n">filesystem</span><span class="o">-</span><span class="n">dev</span> <span class="n">libboost</span><span class="o">-</span><span class="n">program</span><span class="o">-</span><span class="n">options</span><span class="o">-</span><span class="n">dev</span>
-    <span class="n">libboost</span><span class="o">-</span><span class="n">regex</span><span class="o">-</span><span class="n">dev</span> <span class="n">libboost</span><span class="o">-</span><span class="n">system</span><span class="o">-</span><span class="n">dev</span> <span class="n">libboost</span><span class="o">-</span><span class="n">thread</span><span class="o">-</span><span class="n">dev</span>
-    <span class="n">libdouble</span><span class="o">-</span><span class="n">conversion</span><span class="o">-</span><span class="n">dev</span> <span class="n">libevent</span><span class="o">-</span><span class="n">dev</span> <span class="n">libfmt</span><span class="o">-</span><span class="n">dev</span> <span class="n">libgoogle</span><span class="o">-</span><span class="n">glog</span><span class="o">-</span><span class="n">dev</span>
-    <span class="n">libssl</span><span class="o">-</span><span class="n">dev</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>General building:
+    cmake clang clang-tidy
+For DPDK:
+    pkg-config meson ninja-build python3-pyelftools
+For Folly:
+    libboost-context-dev libboost-filesystem-dev libboost-program-options-dev
+    libboost-regex-dev libboost-system-dev libboost-thread-dev
+    libdouble-conversion-dev libevent-dev libfmt-dev libgoogle-glog-dev
+    libssl-dev
 </pre></div>
 </div>
 <p>Step 1, clone the repo with <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>.</p>
 <p>Step 2, go to <code class="docutils literal notranslate"><span class="pre">dependency/folly</span></code> and run</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">apply</span> <span class="o">../</span><span class="n">folly</span><span class="o">-</span><span class="n">has_coroutine_check</span><span class="o">.</span><span class="n">patch</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git apply ../folly-has_coroutine_check.patch
 </pre></div>
 </div>
-<p>Step 2, build CMake project as usual. Initial configuration will build a DPDK,
+<p>Step 3, build CMake project as usual. Initial configuration will build a DPDK,
 which takes some time. Notable targets:</p>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Test*</span></code> unit tests (to get full list run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">run-Test</span></code>)</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">run-Test*</span></code> to run one test unit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run-test</span></code> to run all test units</p></li>
+</ul>
+</li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Client</span></code> benchmark client, executable at <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;/benchmark/Client</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Test*</span></code> unit tests (to get full list run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">Test</span></code>), executable
-at <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;/test/Test*</span></code></p></li>
 </ul>
 <p><em>Work in progress.</em></p>
 <hr class="docutils"/>

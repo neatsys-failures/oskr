@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Common Reusable Components" href="../common/index.html" /><link rel="prev" title="(Ordinary) Transport Receiver" href="TransportReceiver.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Common Reusable Components" href="../common/index.html" /><link rel="prev" title="Protocol Client" href="Client.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
         <title>Foundamental Types - Oskr 0.1.0 documentation</title>
@@ -161,10 +161,12 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Core Abstractions</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Client.html">Protocol Client</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Foundamental Types</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
 </ul>
 </li>
@@ -251,6 +253,14 @@
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr4HashE">
 <span id="_CPPv3N4oskr4HashE"></span><span id="_CPPv2N4oskr4HashE"></span><span class="target" id="Type_8hpp_1a769e77bec79e403259e46dc3602ccd18"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Hash</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">32</span></span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#_CPPv4N4oskr4HashE" title="Permalink to this definition">¶</a><br/></dt>
 <dd></dd></dl>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4oskr2FnE">
+<span id="_CPPv3I0EN4oskr2FnE"></span><span id="_CPPv2I0EN4oskr2FnE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="Type_8hpp_1a95173ebc5e2ae52d2b2046304651b2fb"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Fn</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4oskr2FnE" title="oskr::Fn::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4oskr2FnE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4oskr6FnOnceE">
+<span id="_CPPv3I0EN4oskr6FnOnceE"></span><span id="_CPPv2I0EN4oskr6FnOnceE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="Type_8hpp_1a0faca45fec5bd1b08b3670dde61760a0"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FnOnce</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">folly</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Function</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4oskr6FnOnceE" title="oskr::FnOnce::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4oskr6FnOnceE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
 </div>
 </dd></dl>
 </section>
@@ -269,14 +279,14 @@
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="TransportReceiver.html">
+          <a class="prev-page" href="Client.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">(Ordinary) Transport Receiver</div>
+                <div class="title">Protocol Client</div>
                 
               </div>
             </a>

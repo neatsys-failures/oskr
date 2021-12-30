@@ -159,10 +159,12 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="core/Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core/Client.html">Protocol Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="common/ClientTable.html">At-most-once Client Table</a></li>
 </ul>
 </li>
@@ -210,6 +212,28 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Type.html#_CPPv44oskr">oskr (C++ type)</a>
 </li>
+        <li><a href="common/BasicClient.html#_CPPv4I_14TransportTrait0EN4oskr11BasicClientE">oskr::BasicClient (C++ class)</a>
+</li>
+        <li><a href="common/BasicClient.html#_CPPv4N4oskr11BasicClient11BasicClientER9Transport">oskr::BasicClient::BasicClient (C++ function)</a>
+</li>
+        <li><a href="common/BasicClient.html#_CPPv4N4oskr11BasicClient23deserializeReplyMessageE6RxSpanR12ReplyMessage">oskr::BasicClient::deserializeReplyMessage (C++ function)</a>
+</li>
+        <li><a href="common/BasicClient.html#_CPPv4N4oskr11BasicClient6invokeE4DataN11BasicClient14InvokeCallbackE">oskr::BasicClient::invoke (C++ function)</a>
+</li>
+        <li><a href="common/BasicClient.html#_CPPv4N4oskr11BasicClient14receiveMessageERKN9Transport7AddressE6RxSpan">oskr::BasicClient::receiveMessage (C++ function)</a>
+</li>
+        <li><a href="common/BasicClient.html#_CPPv4N4oskr11BasicClient23serializeRequestMessageE6TxSpanIN9Transport11buffer_sizeEERKN13ClientSettingI8ProtocolE14ReplicaMessageE">oskr::BasicClient::serializeRequestMessage (C++ function)</a>
+</li>
+        <li><a href="core/Client.html#_CPPv4I_14TransportTraitEN4oskr6ClientE">oskr::Client (C++ class)</a>
+</li>
+        <li><a href="core/Client.html#_CPPv4N4oskr6Client6ClientER9Transport">oskr::Client::Client (C++ function)</a>
+</li>
+        <li><a href="core/Client.html#_CPPv4N4oskr6Client9client_idE">oskr::Client::client_id (C++ member)</a>
+</li>
+        <li><a href="core/Client.html#_CPPv4N4oskr6Client6invokeE4Data14InvokeCallback">oskr::Client::invoke (C++ function)</a>
+</li>
+        <li><a href="core/Client.html#_CPPv4N4oskr6Client14InvokeCallbackE">oskr::Client::InvokeCallback (C++ type)</a>
+</li>
         <li><a href="core/Type.html#_CPPv4N4oskr8ClientIdE">oskr::ClientId (C++ type)</a>
 </li>
         <li><a href="common/ClientTable.html#_CPPv4I00EN4oskr11ClientTableE">oskr::ClientTable (C++ class)</a>
@@ -222,10 +246,16 @@
 </li>
         <li><a href="core/Type.html#_CPPv4N4oskr4DataE">oskr::Data (C++ type)</a>
 </li>
+        <li><a href="core/Type.html#_CPPv4I0EN4oskr2FnE">oskr::Fn (C++ type)</a>
+</li>
+        <li><a href="core/Type.html#_CPPv4I0EN4oskr6FnOnceE">oskr::FnOnce (C++ type)</a>
+</li>
         <li><a href="core/Type.html#_CPPv4N4oskr4HashE">oskr::Hash (C++ type)</a>
 </li>
         <li><a href="core/Type.html#_CPPv4N4oskr8OpNumberE">oskr::OpNumber (C++ type)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Type.html#_CPPv4N4oskr9ReplicaIdE">oskr::ReplicaId (C++ type)</a>
 </li>
         <li><a href="core/Type.html#_CPPv4N4oskr13RequestNumberE">oskr::RequestNumber (C++ type)</a>
@@ -236,10 +266,8 @@
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase7AddressE">oskr::TransportBase::Address (C++ type)</a>
 </li>
-        <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase11BUFFER_SIZEE">oskr::TransportBase::BUFFER_SIZE (C++ member)</a>
+        <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase11buffer_sizeE">oskr::TransportBase::buffer_size (C++ member)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase8CallbackE">oskr::TransportBase::Callback (C++ type)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4N4oskr13TransportBase4DescE">oskr::TransportBase::Desc (C++ type)</a>
