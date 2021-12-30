@@ -33,7 +33,7 @@ release = '0.1.0'
 extensions = [
     'breathe', 'm2r2',
 ]
-breathe_projects = {'oskr': '/work/oscar/doc/_build/xml'}
+breathe_projects = {'oskr': '../build/doc/xml'}
 breathe_default_project = 'oskr'
 
 # Add any paths that contain templates here, relative to this directory.

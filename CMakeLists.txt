@@ -5,21 +5,26 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+
 # happy easy way to set up DPDK
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/dependency/dpdk/build.ninja")
+    execute_process(
+        COMMAND bash -c "meson setup ${CMAKE_BINARY_DIR}/dependency/dpdk"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/dependency/dpdk")
+endif()
 execute_process(
-    COMMAND bash -c "test -f build/build.ninja || meson setup build"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/dependency/dpdk")
-execute_process(
-    COMMAND ninja -C build
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/dependency/dpdk") 
+    COMMAND ninja
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/dependency/dpdk") 
 find_package(PkgConfig REQUIRED)
-set(ENV{PKG_CONFIG_PATH} "${CMAKE_SOURCE_DIR}/dependency/dpdk/build/meson-uninstalled")
+set(ENV{PKG_CONFIG_PATH} "${CMAKE_BINARY_DIR}/dependency/dpdk/meson-uninstalled")
 pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
 file(MAKE_DIRECTORY ${DPDK_INCLUDE_DIRS}) # https://stackoverflow.com/a/47358004
 
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/folly EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
+set(use_clang ON)
+add_subdirectory(dependency/doxygen EXCLUDE_FROM_ALL)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -29,10 +34,9 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 add_compile_options(-Wno-gnu-zero-variadic-macro-arguments) # for logging
 add_compile_options(-Wno-nullability-completeness) # for folly
 enable_testing()
-if (${OSKR_TIDY})
+if (${OSKR_TIDY})  # use a indirect command line option to prevent affect dependencies
     set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
 endif()
-
 # https://stackoverflow.com/a/34234515
 set(OSKR_DUMMY_SOURCE "${CMAKE_BINARY_DIR}/_dummy.cpp")
 file(WRITE "${OSKR_DUMMY_SOURCE}" "")
@@ -45,6 +49,15 @@ add_subdirectory(replication/vr)
 add_subdirectory(benchmark)
 add_subdirectory(test)
 
+# document setup
+add_custom_target(doc
+    COMMAND doxygen
+    COMMAND sphinx-build -M html doc build/doc
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+# generate a proper compile_commands.json for Doxygen's Clang assistant parsing
+# to play with
+# proper == only one item with all dependencies' flags
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(oskr_doxygen STATIC ${OSKR_DUMMY_SOURCE})
 # TODO link to local targets
