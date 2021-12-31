@@ -23,7 +23,8 @@ file(MAKE_DIRECTORY ${DPDK_INCLUDE_DIRS}) # https://stackoverflow.com/a/47358004
 add_subdirectory(dependency/bitsery EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/folly EXCLUDE_FROM_ALL)
 add_subdirectory(dependency/googletest EXCLUDE_FROM_ALL)
-set(use_clang ON)
+set(use_libclang ON)
+set(use_libc++ OFF)
 add_subdirectory(dependency/doxygen EXCLUDE_FROM_ALL)
 
 
@@ -58,6 +59,8 @@ add_custom_target(doc
 # generate a proper compile_commands.json for Doxygen's Clang assistant parsing
 # to play with
 # proper == only one item with all dependencies' flags
+# doc target not need to depend on this, since compile_commands.json will be 
+# generated anyway
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(oskr_doxygen STATIC ${OSKR_DUMMY_SOURCE})
 # TODO link to local targets

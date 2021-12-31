@@ -18,7 +18,7 @@ are required:
 
 .. code-block:: text
 
-    libllvm-13-dev libclang-13-dev flex bison
+    llvm-dev libclang-dev flex bison
     
 Source of Doxygen and Breathe are submodule of this project located in 
 ``dependency``.
