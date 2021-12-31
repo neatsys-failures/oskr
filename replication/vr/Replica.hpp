@@ -89,7 +89,7 @@ private:
     //     const StartViewMessage &start_view);
     template <typename M> void handle(const typename Transport::Address &, M &)
     {
-        rpanic("Unreachable");
+        rpanic("unreachable");
     }
 
     void
@@ -146,11 +146,11 @@ void Replica<Transport>::handle(
         return;
     }
     if (view_number < prepare.view_number) {
-        rpanic("Todo");
+        rpanic("todo");
     }
 
     if (isPrimary()) {
-        rpanic("Unreachable");
+        rpanic("unreachable");
     }
 
     if (prepare.op_number <= op_number) {
@@ -158,7 +158,7 @@ void Replica<Transport>::handle(
         return;
     }
     if (prepare.op_number != op_number + 1) {
-        rpanic("Todo");
+        rpanic("todo");
         return;
     }
 
@@ -190,10 +190,10 @@ void Replica<Transport>::handle(
         return;
     }
     if (prepare_ok.view_number > view_number) {
-        rpanic("Todo");
+        rpanic("todo");
     }
     if (!isPrimary()) {
-        rpanic("Unreachable");
+        rpanic("unreachable");
     }
 
     if (prepare_ok.op_number <= commit_number) {
@@ -232,7 +232,7 @@ void Replica<Transport>::handle(
         return;
     }
     if (commit.view_number > view_number) {
-        rpanic("Todo");
+        rpanic("todo");
     }
     if (commit.commit_number <= commit_number) {
         return;

@@ -101,6 +101,7 @@ classes' template parameter.
 template <typename T>
 concept TransportTrait =
     //! TransportMeta specialization.
+    //!
     requires
 {
     //! The address type used by transport implementation. The type should has
@@ -110,26 +111,39 @@ concept TransportTrait =
     typename std::integral_constant<std::size_t, TransportMeta<T>::buffer_size>;
 }
 //! Subclassing `TransportBase`
+//!
 &&std::derived_from<T, TransportBase<T>>
     //! Receiving interfaces
+    //!
     &&requires(
         T transport, const typename T::Address address,
         typename T::Receiver receiver)
 {
-    transport.registerReceiver(address, std::move(receiver));
+    //! Register a receiver closure. The closure will be called whenever message
+    //! arriving at `address`.
+    transport.registerReceiver(address, receiver);
     // TODO multicast
 }
 //! Scheduling interfaces
+//!
 &&requires(T transport, typename T::Callback callback)
 {
+    //! Spawn a sequential task. All sequential tasks will be executed without
+    //! temporal overlapping, so it is safe to update states without locking.
     transport.spawn(std::move(callback));
 }
 //! Sending interfaces
+//!
 &&requires(
     T transport, const SenderArchetype<T> &sender,
     const typename T::Address &dest, typename T::Write write)
 {
-    transport.sendMessage(sender, dest, std::move(write));
+    //! Allocate a TX message buffer with `buffer_size` space, call `write` with
+    //! it to serialize message into the buffer, then send message to `dest`.
+    //!
+    //! `sender` should probably be `*this`, but anything with a public
+    //! `address` should be good.
+    transport.sendMessage(sender, dest, write);
 };
 
 } // namespace oskr

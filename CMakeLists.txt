@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(oskr VERSION 0.1.0 LANGUAGES CXX)
 
+# global setting for both this project and dependencies
 set(CMAKE_BUILD_TYPE Debug)
 if (${OSKR_BENCHMARK})
     set(CMAKE_BUILD_TYPE Release)
     add_compile_definitions(OSKR_BENCHMARK)
 endif()
+add_compile_options(-march=native) # required by DPDK
 
 
 # happy easy way to set up DPDK

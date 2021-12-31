@@ -35,6 +35,7 @@ extensions = [
 ]
 breathe_projects = {'oskr': '../build/doc/xml'}
 breathe_default_project = 'oskr'
+breathe_show_define_initializer = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

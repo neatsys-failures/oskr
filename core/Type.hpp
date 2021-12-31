@@ -10,9 +10,15 @@
 
 namespace oskr
 {
+//! The ID type for consensus.
+//!
+//! @note Because batching is built into `Log` abstraction by now, normally one
+//! `OpNumber` corresponds to a block/batch instead of one op.
 using OpNumber = std::uint64_t;
 using RequestNumber = std::uint32_t;
-using ViewNumber = std::uint32_t;
+// We are doing researching here, there should not be more than hundreds of
+// primary fault for one run under any case :)
+using ViewNumber = std::uint8_t;
 
 using ReplicaId = std::int8_t;
 using ClientId = std::uint32_t;
