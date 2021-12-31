@@ -207,11 +207,11 @@
 </div>
 <section id="high-performance-distributed-protocols-collection">
 <h1>High Performance Distributed Protocols Collection<a class="headerlink" href="#high-performance-distributed-protocols-collection" title="Permalink to this headline">¶</a></h1>
-<a class="reference external image-reference" href="https://img.shields.io/github/repo-size/sgdxbc/oskr"><img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sgdxbc/oskr"/></a>
-<a class="reference external image-reference" href="https://img.shields.io/github/languages/code-size/sgdxbc/oskr"><img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/sgdxbc/oskr"/></a>
-<a class="reference external image-reference" href="https://img.shields.io/tokei/lines/github/sgdxbc/oskr"><img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/sgdxbc/oskr"/></a>
-<a class="reference external image-reference" href="https://img.shields.io/github/contributors/sgdxbc/oskr"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/sgdxbc/oskr"/></a>
-<a class="reference external image-reference" href="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr"/></a>
+<p><img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sgdxbc/oskr"/>
+<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/sgdxbc/oskr"/>
+<img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/sgdxbc/oskr"/>
+<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/sgdxbc/oskr"/>
+<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/sgdxbc/oskr"/></p>
 <p><strong>Motivation.</strong> This is an attempt to improve based on <a class="reference external" href="https://github.com/UWSysLab/specpaxos">specpaxos</a>. The detail
 of consideration is listed in <a class="reference external" href="https://sgdxbc.github.io/ideas/2021-12-15/p0">a piece of blog</a>.</p>
 <p><strong>Why named Oskr?</strong> The name is derived from the Oscars (Academy Awards),
@@ -278,15 +278,15 @@ which takes some time. Notable targets:</p>
 <hr class="docutils"/>
 <p>Project structure:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code><span class="raw-html-m2r"><sup>†</sup></span> behavioral definition of abstraction components. Pure interfaces
+<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code><sup>†</sup> behavioral definition of abstraction components. Pure interfaces
 without concrete logic.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">Foundation.hpp</span></code> an all-in-one header for protocol implementation.</p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code><span class="raw-html-m2r"><sup>†</sup></span> common behavior logic prepared for reusing.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">app</span></code><span class="raw-html-m2r"><sup>†</sup></span> builtin applications to be supported by protocols.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">transport</span></code><span class="raw-html-m2r"><sup>†</sup></span> runtime implementations that support protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code><sup>†</sup> common behavior logic prepared for reusing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">app</span></code><sup>†</sup> builtin applications to be supported by protocols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transport</span></code><sup>†</sup> runtime implementations that support protocols.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">replication</span></code> replication protocols.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">transactional</span></code> transactional protocols.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dependency</span></code> git submodule stubs.</p></li>
@@ -294,7 +294,7 @@ without concrete logic.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">benchmark</span></code> universal entry executable for running all protocols.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">doc</span></code> out-of-source documents and format configuration.</p></li>
 </ul>
-<p><span class="raw-html-m2r"><span>†</span></span> Document of these source is hosted on <a class="reference external" href="https://sgdxbc.github.io/oskr">project site</a>.</p>
+<p><span>†</span> Document of these source is hosted on <a class="reference external" href="https://sgdxbc.github.io/oskr">project site</a>.</p>
 </section>
 
         </article>

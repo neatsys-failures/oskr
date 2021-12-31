@@ -161,10 +161,12 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../core/index.html">Core Abstractions</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../core/Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../core/TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../core/Client.html">Protocol Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
 </ul>
 </li>
@@ -211,11 +213,11 @@ output, merge with out-of-source documents (like this one), and build final
 bundle.</p></li>
 </ul>
 <p>For Sphinx, install pypi packages <code class="docutils literal notranslate"><span class="pre">sphinx</span></code>, <code class="docutils literal notranslate"><span class="pre">furo</span></code> as Sphinx theme, and
-<code class="docutils literal notranslate"><span class="pre">m2r2</span></code> as markdown convertor.</p>
+<code class="docutils literal notranslate"><span class="pre">myst-parser</span></code> as markdown convertor.</p>
 <p>For Doxygen and Breathe, they have to be built from source, because they only
 support C++20 features in this project very recently. The following apt packages
 are required:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>libllvm-13-dev libclang-13-dev flex bison
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>llvm-dev libclang-dev flex bison
 </pre></div>
 </div>
 <p>Source of Doxygen and Breathe are submodule of this project located in
