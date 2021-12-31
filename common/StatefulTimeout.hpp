@@ -7,20 +7,20 @@
 
 namespace oskr
 {
-template <typename Transport> class StatefulTimeout
+template <TransportTrait Transport> class StatefulTimeout
 {
     std::optional<int> current_id;
     int timeout_id;
 
     Transport &transport;
-    std::function<void()> callback;
+    Fn<void()> callback;
     std::chrono::microseconds delay;
 
 public:
     // TODO design a reasonable default constructor if necessary later
     StatefulTimeout(
         Transport &transport, std::chrono::microseconds delay,
-        std::function<void()> callback) :
+        Fn<void()> callback) :
         transport(transport)
     {
         timeout_id = 0;
@@ -36,6 +36,7 @@ public:
             if (this->current_id != current_id) {
                 return;
             }
+            disable();
             callback();
         });
     }

@@ -23,10 +23,10 @@ using //
 
 // TODO explore a at-least-equally convinent but better way
 #ifndef OSKR_NO_RLOGGING
-#define rdebug(fmt, ...) debug("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
-#define rinfo(fmt, ...) info("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
-#define rwarn(fmt, ...) warn("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
-#define rpanic(fmt, ...) panic("[%d] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rdebug(fmt, ...) debug("[{}] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rinfo(fmt, ...) info("[{}] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rwarn(fmt, ...) warn("[{}] " fmt, this->replica_id, ##__VA_ARGS__)
+#define rpanic(fmt, ...) panic("[{}] " fmt, this->replica_id, ##__VA_ARGS__)
 #endif
 
 std::default_random_engine &random_engine()

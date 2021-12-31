@@ -108,7 +108,7 @@ void Simulated::sendMessage(
         }
     }
     if (delay != 0us) {
-        info("Message delayed: {}us", delay.count());
+        debug("Message delayed: {}us", delay.count());
     }
 
     Data message(buffer_size);

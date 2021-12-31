@@ -18,6 +18,9 @@ using OpNumber = std::uint64_t;
 using RequestNumber = std::uint32_t;
 // We are doing researching here, there should not be more than hundreds of
 // primary fault for one run under any case :)
+//! @note While `OpNumber` and `RequestNumber` normally start from 1, and leave
+//! 0 as invalid value, `ViewNumber` normally start from 0 so first primary id
+//! would be 0.
 using ViewNumber = std::uint8_t;
 
 using ReplicaId = std::int8_t;

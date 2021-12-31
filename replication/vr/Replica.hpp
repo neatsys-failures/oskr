@@ -1,6 +1,5 @@
 #pragma once
 #include "common/ClientTable.hpp"
-#include "common/ListLog.hpp"
 #include "common/Quorum.hpp"
 #include "common/StatefulTimeout.hpp"
 #include "core/Foundation.hpp"
@@ -16,8 +15,8 @@ class Replica : public TransportReceiver<Transport>
     int batch_size;
 
     enum Status {
-        NORMAL,
-        VIEW_CHANGE,
+        normal,
+        view_change,
     } status;
     ViewNumber view_number;
     OpNumber op_number, commit_number;
@@ -25,7 +24,12 @@ class Replica : public TransportReceiver<Transport>
     Log<>::List::Block batch;
     ClientTable<Transport, ReplyMessage> client_table;
     Log<>::List &log;
-    Quorum<OpNumber, PrepareOkMessage> prepare_set;
+    Quorum<OpNumber, PrepareOkMessage> prepare_ok_set;
+    Quorum<ViewNumber, StartViewChangeMessage> start_view_change_set;
+    Quorum<ViewNumber, DoViewChangeMessage> do_view_change_set;
+
+    StatefulTimeout<Transport> idle_commit_timeout;
+    StatefulTimeout<Transport> view_change_timeout;
 
 public:
     Replica(
@@ -33,7 +37,19 @@ public:
         int batch_size) :
         TransportReceiver<Transport>(
             transport, transport.config.replica_address_list[replica_id]),
-        log(log), prepare_set(transport.config.n_fault)
+        log(log), prepare_ok_set(transport.config.n_fault),
+        start_view_change_set(transport.config.n_fault),
+        do_view_change_set(transport.config.n_fault + 1),
+        idle_commit_timeout(
+            transport, 200ms,
+            [&] {
+                rinfo("idle commit timeout");
+                sendCommit();
+            }),
+        view_change_timeout(transport, 500ms, [&] {
+            rwarn("view change timeout");
+            startViewChange(view_number + 1);
+        })
     {
         if (batch_size > Log<>::block_size) {
             panic("Batch size too large");
@@ -41,10 +57,16 @@ public:
 
         this->replica_id = replica_id;
         this->batch_size = batch_size;
-        status = Status::NORMAL;
+        status = Status::normal;
         view_number = 0;
         op_number = commit_number = 0;
         batch.n_entry = 0;
+
+        if (isPrimary()) {
+            idle_commit_timeout.enable();
+        } else {
+            view_change_timeout.enable();
+        }
     }
 
     void receiveMessage(
@@ -78,38 +100,42 @@ private:
         const PrepareOkMessage &prepare_ok);
     void handle(
         const typename Transport::Address &remote, const CommitMessage &commit);
-    // void handle(
-    //     const typename Transport::Address &remote,
-    //     const StartViewChangeMessage &start_view_change);
-    // void handle(
-    //     const typename Transport::Address &remote,
-    //     const DoViewChangeMessage &do_view_change);
-    // void handle(
-    //     const typename Transport::Address &remote,
-    //     const StartViewMessage &start_view);
+    void handle(
+        const typename Transport::Address &remote,
+        const StartViewChangeMessage &start_view_change);
+    void handle(
+        const typename Transport::Address &remote,
+        const DoViewChangeMessage &do_view_change);
+    void handle(
+        const typename Transport::Address &remote,
+        const StartViewMessage &start_view);
     template <typename M> void handle(const typename Transport::Address &, M &)
     {
         rpanic("unreachable");
     }
 
-    void
-    send(const typename Transport::Address &remote, const ReplyMessage &reply);
+    void sendReply(
+        const typename Transport::Address &remote, const ReplyMessage &reply);
+    void sendCommit();
+    void sendDoViewChange();
 
     void closeBatch();
     void commitUpTo(OpNumber op_number);
+    void startViewChange(ViewNumber start_view);
+    void startView(const std::map<ReplicaId, DoViewChangeMessage> &quorum);
 };
 
 template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
-    if (status != Status::NORMAL) {
+    if (status != Status::normal) {
         return;
     }
 
     if (auto apply = client_table.check(
             remote, request.client_id, request.request_number)) {
-        apply(std::bind(&Replica::send, this, _1, _2));
+        apply(std::bind(&Replica::sendReply, this, _1, _2));
         return;
     }
 
@@ -125,6 +151,10 @@ void Replica<Transport>::handle(
 
 template <TransportTrait Transport> void Replica<Transport>::closeBatch()
 {
+    if (status != Status::normal || !isPrimary()) {
+        panic("unreachable");
+    }
+
     op_number += 1;
     log.prepare(op_number, batch);
     PrepareMessage prepare;
@@ -137,8 +167,9 @@ template <TransportTrait Transport> void Replica<Transport>::closeBatch()
 
     transport.sendMessageToAll(
         *this, std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare)));
+    idle_commit_timeout.reset();
 
-    if (prepare_set.checkForQuorum(op_number)) {
+    if (prepare_ok_set.checkForQuorum(op_number)) {
         commitUpTo(op_number);
     }
 }
@@ -147,9 +178,10 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareMessage &prepare)
 {
-    if (status != Status::NORMAL || view_number > prepare.view_number) {
+    if (status != Status::normal || view_number > prepare.view_number) {
         return;
     }
+
     if (view_number < prepare.view_number) {
         rpanic("todo");
     }
@@ -157,6 +189,8 @@ void Replica<Transport>::handle(
     if (isPrimary()) {
         rpanic("unreachable");
     }
+
+    view_change_timeout.reset();
 
     if (prepare.op_number <= op_number) {
         // TODO resend PrepareOk
@@ -191,7 +225,7 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareOkMessage &prepare_ok)
 {
-    if (status != Status::NORMAL || prepare_ok.view_number < view_number) {
+    if (status != Status::normal || prepare_ok.view_number < view_number) {
         return;
     }
     if (prepare_ok.view_number > view_number) {
@@ -205,7 +239,7 @@ void Replica<Transport>::handle(
         return;
     }
 
-    if (prepare_set.addAndCheckForQuorum(
+    if (prepare_ok_set.addAndCheckForQuorum(
             prepare_ok.op_number, prepare_ok.replica_id, prepare_ok)) {
         commitUpTo(prepare_ok.op_number);
     }
@@ -223,7 +257,7 @@ void Replica<Transport>::commitUpTo(OpNumber op_number)
                 reply.result = result;
                 reply.view_number = view_number;
                 client_table.update(client_id, request_number, reply)(
-                    std::bind(&Replica::send, this, _1, _2));
+                    std::bind(&Replica::sendReply, this, _1, _2));
             });
     }
     commit_number = op_number;
@@ -233,20 +267,150 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const CommitMessage &commit)
 {
-    if (status != Status::NORMAL || commit.view_number < view_number) {
+    if (status != Status::normal || commit.view_number < view_number) {
         return;
     }
+
     if (commit.view_number > view_number) {
         rpanic("todo");
     }
-    if (commit.commit_number <= commit_number) {
-        return;
+
+    view_change_timeout.reset();
+
+    if (commit.commit_number > commit_number) {
+        commitUpTo(commit.commit_number);
     }
-    commitUpTo(commit.commit_number);
 }
 
 template <TransportTrait Transport>
-void Replica<Transport>::send(
+void Replica<Transport>::startViewChange(ViewNumber start_view)
+{
+    if (isPrimary()) {
+        panic("unreachable");
+    }
+
+    status = Status::view_change;
+    view_number = start_view;
+    rinfo("start view change: view number = {}", view_number);
+
+    view_change_timeout.reset(); // start counting for next primary
+
+    StartViewChangeMessage start_view_change;
+    start_view_change.view_number = view_number;
+    start_view_change.replica_id = replica_id;
+    transport.sendMessageToAll(
+        *this, std::bind(bitserySerialize<>, _1, start_view_change));
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::handle(
+    const typename Transport::Address &,
+    const StartViewChangeMessage &start_view_change)
+{
+    if (start_view_change.view_number < view_number) {
+        return;
+    }
+    if (start_view_change.view_number > view_number) {
+        startViewChange(start_view_change.view_number);
+    }
+    // now view number == start view change message's view number
+
+    if (start_view_change_set.addAndCheckForQuorum(
+            view_number, start_view_change.replica_id, start_view_change)) {
+        // TODO prevent duplicate send
+        sendDoViewChange();
+    }
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::handle(
+    const typename Transport::Address &,
+    const DoViewChangeMessage &do_view_change)
+{
+    if (do_view_change.view_number < view_number) {
+        return;
+    }
+    if (do_view_change.view_number > view_number) {
+        startViewChange(do_view_change.view_number);
+    }
+    if (!isPrimary()) {
+        panic("unreachable");
+    }
+
+    if (status != Status::view_change) {
+        // TODO resend for late backup
+        return;
+    }
+
+    if (auto quorum = do_view_change_set.addAndCheckForQuorum(
+            view_number, do_view_change.replica_id, do_view_change)) {
+        startView(*quorum);
+    }
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::startView(
+    const std::map<ReplicaId, DoViewChangeMessage> &quorum)
+{
+    if (!isPrimary()) {
+        panic("unreachable");
+    }
+
+    OpNumber max_commit = commit_number;
+    for (auto pair : quorum) {
+        auto &do_view_change = pair.second;
+        if (do_view_change.op_number > op_number) {
+            return; // give up
+        }
+        if (do_view_change.commit_number > max_commit) {
+            max_commit = do_view_change.commit_number;
+        }
+    }
+
+    rinfo("start view: view number = {}", view_number);
+    status = Status::normal;
+    view_change_timeout.disable();
+    idle_commit_timeout.enable();
+    if (max_commit > commit_number) {
+        commitUpTo(max_commit);
+    }
+
+    StartViewMessage start_view;
+    start_view.view_number = view_number;
+    start_view.log = ZeroLog();
+    start_view.op_number = op_number;
+    start_view.commit_number = commit_number;
+    transport.sendMessageToAll(
+        *this, std::bind(bitserySerialize<>, _1, start_view));
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::handle(
+    const typename Transport::Address &, const StartViewMessage &start_view)
+{
+    if (start_view.view_number < view_number) {
+        return;
+    }
+    if (start_view.view_number == view_number &&
+        status != Status::view_change) {
+        return;
+    }
+
+    if (op_number < start_view.op_number) {
+        panic("todo"); // state transfer;
+    }
+
+    view_number = start_view.view_number;
+    rinfo("start view: view number = {}", view_number);
+    status = Status::normal;
+    view_change_timeout.reset();
+    if (start_view.commit_number > commit_number) {
+        commitUpTo(start_view.commit_number);
+    }
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::sendReply(
     const typename Transport::Address &remote, const ReplyMessage &reply)
 {
     if (!isPrimary()) {
@@ -254,6 +418,44 @@ void Replica<Transport>::send(
     }
     transport.sendMessage(
         *this, remote, std::bind(bitserySerialize<ReplyMessage>, _1, reply));
+}
+
+template <TransportTrait Transport> void Replica<Transport>::sendCommit()
+{
+    if (!isPrimary()) {
+        panic("unreachable");
+    }
+    CommitMessage commit;
+    commit.view_number = view_number;
+    commit.commit_number = commit_number;
+    transport.sendMessageToAll(
+        *this, std::bind(bitserySerialize<>, _1, commit));
+
+    idle_commit_timeout.reset();
+}
+
+template <TransportTrait Transport> void Replica<Transport>::sendDoViewChange()
+{
+    rinfo("do view change: view number = {}", view_number);
+    DoViewChangeMessage do_view_change;
+    do_view_change.view_number = view_number;
+    do_view_change.log = ZeroLog();
+    // do_view_change.latest_normal
+    do_view_change.op_number = op_number;
+    do_view_change.commit_number = commit_number;
+    do_view_change.replica_id = replica_id;
+
+    // is this good design?
+    if (!isPrimary()) {
+        transport.sendMessageToReplica(
+            *this, transport.config.primaryId(view_number),
+            std::bind(bitserySerialize<>, _1, do_view_change));
+    } else {
+        if (auto quorum = do_view_change_set.addAndCheckForQuorum(
+                view_number, replica_id, do_view_change)) {
+            startView(*quorum);
+        }
+    }
 }
 
 } // namespace oskr::vr

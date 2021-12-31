@@ -57,10 +57,12 @@ struct DoViewChangeMessage {
     ZeroLog log;
     ViewNumber latest_normal;
     OpNumber op_number, commit_number;
+    ReplicaId replica_id;
 
     template <typename S> void serialize(S &s)
     {
-        s(view_number, log, latest_normal, op_number, commit_number);
+        s(view_number, log, latest_normal, op_number, commit_number,
+          replica_id);
     }
 };
 

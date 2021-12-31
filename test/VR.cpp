@@ -88,7 +88,7 @@ protected:
     vector<unique_ptr<vr::Client<Simulated>>> client;
 
     VR() :
-        config{1, {"replica-0", "replica-1", "replica-2", "replica-3"}, {}},
+        config{1, {"replica-0", "replica-1", "replica-2"}, {}},
         transport(config)
     {
         for (int i = 0; i < config.n_replica(); i += 1) {
@@ -146,4 +146,35 @@ TEST_F(VR, TenRequest)
     transport.run();
     ASSERT_EQ(app[0]->op_list.size(), 10);
     VRLog::assertConsistent(log, config);
+}
+
+TEST_F(VR, EventuallyAllCommit)
+{
+    spawnClient(1);
+    transport.spawn(0ms, [&] { client[0]->invoke(Data(), [&](auto) {}); });
+    transport.spawn(210ms, [&] { transport.terminate(); });
+    transport.run();
+    for (size_t i = 0; i < app.size(); i += 1) {
+        ASSERT_EQ(app[i]->op_list.size(), 1);
+    }
+}
+
+TEST_F(VR, ViewChange)
+{
+    spawnClient(1);
+    transport.spawn(0ms, [&] {
+        transport.addFilter(1, [&](auto &source, auto &dest, auto &) {
+            return source != config.replica_address_list[0] &&
+                   dest != config.replica_address_list[0];
+        });
+    });
+    bool completed = false;
+    transport.spawn(100ms, [&] {
+        client[0]->invoke(Data(), [&](auto) {
+            completed = true;
+            transport.terminate();
+        });
+    });
+    transport.run();
+    ASSERT_TRUE(completed);
 }
