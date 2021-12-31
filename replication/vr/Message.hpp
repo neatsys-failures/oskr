@@ -49,7 +49,7 @@ struct StartViewChangeMessage {
 // if we don't want protocol to panic too much, new primary may give up its view
 // when missing packets, and new backups may do state transfer
 struct ZeroLog {
-    template <typename S> void serialize(S &s) {}
+    template <typename S> void serialize(S &) {}
 };
 
 struct DoViewChangeMessage {

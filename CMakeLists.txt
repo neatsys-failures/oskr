@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(oskr VERSION 0.1.0 LANGUAGES CXX)
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
-    set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
+if (${OSKR_BENCHMARK})
+    set(CMAKE_BUILD_TYPE Release)
+    add_compile_definitions(OSKR_BENCHMARK)
 endif()
 
 
@@ -71,5 +73,5 @@ target_link_libraries(oskr_doxygen PRIVATE
 )
 
 # prevent side effects
-unset(CMAKE_BUILD_TYPE CACHE)
+unset(OSKR_BENCHMARK CACHE)
 unset(OSKR_TIDY CACHE)

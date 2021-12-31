@@ -129,13 +129,14 @@ void Simulated::run(microseconds time_limit)
                 double(time_limit.count()) / 1000);
         }
 
-        auto timeout_iter = destiny_queue.begin();
-        if (timeout_iter == destiny_queue.end()) {
+        auto event_iter = destiny_queue.begin();
+        if (event_iter == destiny_queue.end()) {
             return;
         }
-        now_us = timeout_iter->first;
-        timeout_iter->second();
-        destiny_queue.erase(timeout_iter);
+        now_us = event_iter->first;
+        auto event = std::move(event_iter->second);
+        destiny_queue.erase(event_iter);
+        event();
     }
 }
 

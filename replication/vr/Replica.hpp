@@ -128,6 +128,7 @@ template <TransportTrait Transport> void Replica<Transport>::closeBatch()
     PrepareMessage prepare;
     prepare.view_number = view_number;
     prepare.op_number = op_number;
+    prepare.commit_number = commit_number;
     prepare.block = batch;
     transport.sendMessageToAll(
         *this, std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare)));
@@ -208,7 +209,7 @@ void Replica<Transport>::handle(
 template <TransportTrait Transport>
 void Replica<Transport>::commitUpTo(OpNumber op_number)
 {
-    for (OpNumber i = commit_number; i <= op_number; i += 1) {
+    for (OpNumber i = commit_number + 1; i <= op_number; i += 1) {
         log.commit(
             i,
             [&](ClientId client_id, RequestNumber request_number, Data result) {

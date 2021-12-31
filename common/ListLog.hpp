@@ -33,14 +33,16 @@ public:
     void prepare(OpNumber index, Block block) override
     {
         if (start_number == 0) {
-            info("Log init: start number = {}", index);
+            if (index != 1) {
+                info("log start from the middle: start number = {}", index);
+            }
             start_number = index;
             commit_number = start_number - 1;
         }
 
         if (blockOffset(index) != block_list.size()) {
             panic(
-                "Unexpected prepare: index = {}, expected = {}", index,
+                "unexpected prepare: index = {}, expected = {}", index,
                 start_number + block_list.size());
         }
 
@@ -52,11 +54,15 @@ public:
 
     void commit(OpNumber index, ReplyCallback callback) override
     {
-        block_list[blockOffset(index)].committed = true;
-        if (!enable_upcall) {
-            return;
+        if (blockOffset(index) >= block_list.size()) {
+            panic(
+                "commit nonexist log entry: index = {}, latest = {}", index,
+                start_number + block_list.size() - 1);
         }
-        makeUpcall(callback);
+        block_list[blockOffset(index)].committed = true;
+        if (enable_upcall) {
+            makeUpcall(callback);
+        }
     }
 
     void rollbackTo(OpNumber index) override
