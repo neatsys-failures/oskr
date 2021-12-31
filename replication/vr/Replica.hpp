@@ -132,6 +132,9 @@ template <TransportTrait Transport> void Replica<Transport>::closeBatch()
     prepare.op_number = op_number;
     prepare.commit_number = commit_number;
     prepare.block = batch;
+
+    batch.n_entry = 0;
+
     transport.sendMessageToAll(
         *this, std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare)));
 

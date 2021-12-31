@@ -68,6 +68,9 @@ public:
                 "commit nonexist log entry: index = {}, latest = {}", index,
                 start_number + block_list.size() - 1);
         }
+        if (block_list[blockOffset(index)].committed) {
+            panic("double commit: index = {}", index);
+        }
         block_list[blockOffset(index)].committed = true;
         if (enable_upcall) {
             makeUpcall(callback);

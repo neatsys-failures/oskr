@@ -119,21 +119,24 @@ auto ClientTable<Transport, ReplyMessage>::update(
 {
     auto iter = record_table.find(client_id);
     if (iter == record_table.end()) {
-        warn("No record: client id = {:x}", client_id);
+        warn("no record: client id = {:x}", client_id);
         record_table.insert({client_id, {std::nullopt, request_number, reply}});
         return [](auto) {};
     }
 
     if (iter->second.request_number > request_number) {
-        warn(
-            "Ignore late update: client id = {:x}, request number = {}, "
-            "recorded request = {}",
-            client_id, request_number, iter->second.request_number);
+        // it could be harmless in the case that primary committing is able to
+        // solely enable next request, so backup may prepare the next request
+        // before committing the previous one
+        // warn(
+        //     "ignore late update: client id = {:x}, request number = {}, "
+        //     "recorded request = {}",
+        //     client_id, request_number, iter->second.request_number);
         return [](auto) {};
     }
     if (iter->second.request_number < request_number) {
         warn(
-            "Outdated local record: client id = {:x}, request number = {}, "
+            "outdated local record: client id = {:x}, request number = {}, "
             "recorded request = {}",
             client_id, request_number, iter->second.request_number);
         iter->second.request_number = request_number;
@@ -141,7 +144,7 @@ auto ClientTable<Transport, ReplyMessage>::update(
 
     iter->second.reply_message = reply;
     if (!iter->second.remote) {
-        debug("Client address not recorded: id = {:x}", client_id);
+        debug("client address not recorded: id = {:x}", client_id);
         return [](auto) {};
     }
 

@@ -127,3 +127,23 @@ TEST_F(VR, OneRequest)
     debug("one request finished");
     VRLog::assertConsistent(log, config);
 }
+
+TEST_F(VR, TenRequest)
+{
+    spawnClient(1);
+    int i = 0;
+    Fn<void()> close_loop = [&] {
+        client[0]->invoke(Data(), [&](auto) {
+            i += 1;
+            if (i == 10) {
+                transport.terminate();
+                return;
+            }
+            close_loop();
+        });
+    };
+    transport.spawn(0ms, [&] { close_loop(); });
+    transport.run();
+    ASSERT_EQ(app[0]->op_list.size(), 10);
+    VRLog::assertConsistent(log, config);
+}
