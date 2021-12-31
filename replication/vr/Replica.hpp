@@ -93,7 +93,7 @@ private:
     }
 
     void
-    send(const ReplyMessage &reply, const typename Transport::Address &remote);
+    send(const typename Transport::Address &remote, const ReplyMessage &reply);
 
     void closeBatch();
     void commitUpTo(OpNumber op_number);
@@ -103,21 +103,23 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &remote, const RequestMessage &request)
 {
-    if (status != Status::NORMAL || !isPrimary()) {
+    if (status != Status::NORMAL) {
         return;
     }
 
     if (auto apply = client_table.check(
             remote, request.client_id, request.request_number)) {
-        apply(std::bind(&Replica::send, this, _2, _1));
+        apply(std::bind(&Replica::send, this, _1, _2));
         return;
     }
 
-    batch.entry_buffer[batch.n_entry] =
-        Log<>::Entry{request.client_id, request.request_number, request.op};
-    batch.n_entry += 1;
-    if (batch.n_entry >= batch_size) {
-        closeBatch();
+    if (isPrimary()) {
+        batch.entry_buffer[batch.n_entry] =
+            Log<>::Entry{request.client_id, request.request_number, request.op};
+        batch.n_entry += 1;
+        if (batch.n_entry >= batch_size) {
+            closeBatch();
+        }
     }
 }
 
@@ -218,7 +220,7 @@ void Replica<Transport>::commitUpTo(OpNumber op_number)
                 reply.result = result;
                 reply.view_number = view_number;
                 client_table.update(client_id, request_number, reply)(
-                    std::bind(&Replica::send, this, _2, _1));
+                    std::bind(&Replica::send, this, _1, _2));
             });
     }
     commit_number = op_number;
@@ -242,8 +244,11 @@ void Replica<Transport>::handle(
 
 template <TransportTrait Transport>
 void Replica<Transport>::send(
-    const ReplyMessage &reply, const typename Transport::Address &remote)
+    const typename Transport::Address &remote, const ReplyMessage &reply)
 {
+    if (!isPrimary()) {
+        return;
+    }
     transport.sendMessage(
         *this, remote, std::bind(bitserySerialize<ReplyMessage>, _1, reply));
 }

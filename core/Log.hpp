@@ -36,7 +36,7 @@ public:
 
     virtual void prepare(Index index, Block block) = 0;
 
-    using ReplyCallback = std::function<void(ClientId, RequestNumber, Data)>;
+    using ReplyCallback = Fn<void(ClientId, RequestNumber, Data)>;
     virtual void commit(Index index, ReplyCallback callback) = 0;
     // commitUpTo should be unusual for fast path
 

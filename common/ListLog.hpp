@@ -7,6 +7,7 @@ namespace oskr
 {
 class ListLog : public Log<>::List
 {
+protected:
     struct FlattenBlock {
         std::size_t offset;
         int n_entry;
@@ -15,6 +16,14 @@ class ListLog : public Log<>::List
     std::vector<FlattenBlock> block_list;
     std::vector<Log<>::Entry> entry_list;
     OpNumber start_number, commit_number;
+
+    std::size_t blockOffset(OpNumber op_number)
+    {
+        if (start_number == 0) {
+            panic("Cannot get block offset when start number not set");
+        }
+        return op_number - start_number;
+    }
 
 public:
     explicit ListLog(App &app) : Log<Log<>::ListPreset>(app)
@@ -88,14 +97,6 @@ public:
     }
 
 private:
-    std::size_t blockOffset(OpNumber op_number)
-    {
-        if (start_number == 0) {
-            panic("Cannot get block offset when start number not set");
-        }
-        return op_number - start_number;
-    }
-
     void makeUpcall(ReplyCallback callback)
     {
         while (blockOffset(commit_number + 1) < block_list.size() &&

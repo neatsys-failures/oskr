@@ -17,8 +17,8 @@ template <typename Transport, typename ReplyMessage> class ClientTable
     HashMap<ClientId, Record> record_table;
 
 public:
-    using Apply = std::function<void(
-        std::function<void(
+    using Apply = Fn<void(
+        FnOnce<void(
             const typename Transport::Address &remote, const ReplyMessage &)>)>;
 
     //! On handling direct request from client.
