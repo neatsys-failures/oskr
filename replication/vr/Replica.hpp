@@ -80,9 +80,18 @@ public:
 private:
     static constexpr auto _1 = std::placeholders::_1;
     static constexpr auto _2 = std::placeholders::_2;
-    template <typename Message = ReplicaMessage>
-    static constexpr auto bitserySerialize =
-        oskr::bitserySerialize<Message, Transport::buffer_size>;
+
+    // I prefer the way to explicit convert `message` into `ReplicaMessage`
+    // A simpler way maybe add a typename `OutMessage = ReplicaMessage` here and
+    // do conversion inside
+    template <typename Message>
+    static typename Transport::Write write(const Message &message)
+    {
+        return [&](auto tx_span) {
+            return bitserySerialize<Message, Transport::buffer_size>(
+                tx_span, message);
+        };
+    }
 
     bool isPrimary() const
     {
@@ -123,6 +132,7 @@ private:
     void commitUpTo(OpNumber op_number);
     void startViewChange(ViewNumber start_view);
     void startView(const std::map<ReplicaId, DoViewChangeMessage> &quorum);
+    void enterView(const StartViewMessage &start_view);
 };
 
 template <TransportTrait Transport>
@@ -165,8 +175,7 @@ template <TransportTrait Transport> void Replica<Transport>::closeBatch()
 
     batch.n_entry = 0;
 
-    transport.sendMessageToAll(
-        *this, std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare)));
+    transport.sendMessageToAll(*this, write(ReplicaMessage(prepare)));
     idle_commit_timeout.reset();
 
     if (prepare_ok_set.checkForQuorum(op_number)) {
@@ -214,7 +223,7 @@ void Replica<Transport>::handle(
     prepare_ok.replica_id = replica_id;
     transport.sendMessageToReplica(
         *this, transport.config.primaryId(view_number),
-        std::bind(bitserySerialize<>, _1, ReplicaMessage(prepare_ok)));
+        write(ReplicaMessage(prepare_ok)));
 
     if (prepare.commit_number > commit_number) {
         commitUpTo(prepare.commit_number);
@@ -298,8 +307,7 @@ void Replica<Transport>::startViewChange(ViewNumber start_view)
     StartViewChangeMessage start_view_change;
     start_view_change.view_number = view_number;
     start_view_change.replica_id = replica_id;
-    transport.sendMessageToAll(
-        *this, std::bind(bitserySerialize<>, _1, start_view_change));
+    transport.sendMessageToAll(*this, write(ReplicaMessage(start_view_change)));
 }
 
 template <TransportTrait Transport>
@@ -367,21 +375,39 @@ void Replica<Transport>::startView(
         }
     }
 
-    rinfo("start view: view number = {}", view_number);
-    status = Status::normal;
-    view_change_timeout.disable();
-    idle_commit_timeout.enable();
-    if (max_commit > commit_number) {
-        commitUpTo(max_commit);
-    }
-
     StartViewMessage start_view;
     start_view.view_number = view_number;
     start_view.log = ZeroLog();
     start_view.op_number = op_number;
     start_view.commit_number = commit_number;
-    transport.sendMessageToAll(
-        *this, std::bind(bitserySerialize<>, _1, start_view));
+    transport.sendMessageToAll(*this, write(ReplicaMessage(start_view)));
+
+    enterView(start_view);
+}
+
+template <TransportTrait Transport>
+void Replica<Transport>::enterView(const StartViewMessage &start_view)
+{
+    view_number = start_view.view_number;
+    rinfo("enter view: view number = {}", view_number);
+
+    status = Status::normal;
+    batch.n_entry = 0;
+    prepare_ok_set.clear(); // is it necessary?
+    if (!isPrimary()) {
+        view_change_timeout.reset();
+    } else {
+        view_change_timeout.disable();
+        idle_commit_timeout.enable();
+    }
+
+    if (op_number < start_view.op_number) {
+        panic("todo"); // state transfer;
+    }
+
+    if (start_view.commit_number > commit_number) {
+        commitUpTo(start_view.commit_number);
+    }
 }
 
 template <TransportTrait Transport>
@@ -396,17 +422,7 @@ void Replica<Transport>::handle(
         return;
     }
 
-    if (op_number < start_view.op_number) {
-        panic("todo"); // state transfer;
-    }
-
-    view_number = start_view.view_number;
-    rinfo("start view: view number = {}", view_number);
-    status = Status::normal;
-    view_change_timeout.reset();
-    if (start_view.commit_number > commit_number) {
-        commitUpTo(start_view.commit_number);
-    }
+    enterView(start_view);
 }
 
 template <TransportTrait Transport>
@@ -416,8 +432,7 @@ void Replica<Transport>::sendReply(
     if (!isPrimary()) {
         return;
     }
-    transport.sendMessage(
-        *this, remote, std::bind(bitserySerialize<ReplyMessage>, _1, reply));
+    transport.sendMessage(*this, remote, write(reply));
 }
 
 template <TransportTrait Transport> void Replica<Transport>::sendCommit()
@@ -428,8 +443,7 @@ template <TransportTrait Transport> void Replica<Transport>::sendCommit()
     CommitMessage commit;
     commit.view_number = view_number;
     commit.commit_number = commit_number;
-    transport.sendMessageToAll(
-        *this, std::bind(bitserySerialize<>, _1, commit));
+    transport.sendMessageToAll(*this, write(ReplicaMessage(commit)));
 
     idle_commit_timeout.reset();
 }
@@ -449,7 +463,7 @@ template <TransportTrait Transport> void Replica<Transport>::sendDoViewChange()
     if (!isPrimary()) {
         transport.sendMessageToReplica(
             *this, transport.config.primaryId(view_number),
-            std::bind(bitserySerialize<>, _1, do_view_change));
+            write(ReplicaMessage(do_view_change)));
     } else {
         if (auto quorum = do_view_change_set.addAndCheckForQuorum(
                 view_number, replica_id, do_view_change)) {

@@ -28,6 +28,8 @@ public:
         this->delay = delay;
     }
 
+    ~StatefulTimeout() { disable(); }
+
     void reset()
     {
         timeout_id += 1;

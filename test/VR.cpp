@@ -35,7 +35,7 @@ private:
         int sample_id = -1;
         for (size_t i = 0; i < log.size(); i += 1) {
             if (log[i]->blockOffset(index) < log[i]->block_list.size()) {
-                sample_id = i;
+                sample_id = static_cast<int>(i);
                 break;
             }
         }
@@ -61,7 +61,8 @@ private:
                 "block not match: op number = {}, sampled id = {}, compared id "
                 "= {}",
                 index, sample_id, i);
-            // TODO do not assume entry content matches (not useful without BFT)
+            // TODO(sgdxbc) do not assume entry content matches (not useful
+            // without BFT)
 
             n_prepared += 1;
             if (block.committed) {
@@ -169,12 +170,32 @@ TEST_F(VR, ViewChange)
         });
     });
     bool completed = false;
-    transport.spawn(100ms, [&] {
+    transport.spawn(10ms, [&] {
         client[0]->invoke(Data(), [&](auto) {
             completed = true;
             transport.terminate();
         });
     });
+    transport.run();
+    ASSERT_TRUE(completed);
+}
+
+TEST_F(VR, NoResendAfterViewChange)
+{
+    spawnClient(1);
+    transport.spawn(0ms, [&] {
+        transport.addFilter(1, [&](auto &source, auto &dest, auto &) {
+            return source != config.replica_address_list[0] &&
+                   dest != config.replica_address_list[0];
+        });
+    });
+    bool completed = false;
+    transport.spawn(10ms, [&] {
+        client[0]->invoke(Data(), [&](auto) {
+            client[0]->invoke(Data(), [&](auto) { completed = true; });
+        });
+    });
+    transport.spawn(1020ms, [&] { transport.terminate(); });
     transport.run();
     ASSERT_TRUE(completed);
 }

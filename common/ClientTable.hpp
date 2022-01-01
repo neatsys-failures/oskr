@@ -80,7 +80,7 @@ auto ClientTable<Transport, ReplyMessage>::check(
 
     if (request_number != record.request_number + 1) {
         panic(
-            "Not continuous request number: client id = {}, {} -> {}",
+            "Not continuous request number: client id = {:08x}, {} -> {}",
             client_id, record.request_number, request_number);
     }
 
@@ -102,8 +102,8 @@ void ClientTable<Transport, ReplyMessage>::update(
 
     if (iter->second.request_number >= request_number) {
         warn(
-            "Ignore late update (request): client id = {:x}, request "
-            "number = {}, recorded request = {}",
+            "ignore late update (request): client id = {:08x}, request "
+            "number {} <= {}",
             client_id, request_number, iter->second.request_number);
         return;
     }
@@ -129,22 +129,22 @@ auto ClientTable<Transport, ReplyMessage>::update(
         // solely enable next request, so backup may prepare the next request
         // before committing the previous one
         // warn(
-        //     "ignore late update: client id = {:x}, request number = {}, "
+        //     "ignore late update: client id = {:08x}, request number = {}, "
         //     "recorded request = {}",
         //     client_id, request_number, iter->second.request_number);
         return [](auto) {};
     }
     if (iter->second.request_number < request_number) {
         warn(
-            "outdated local record: client id = {:x}, request number = {}, "
-            "recorded request = {}",
+            "outdated local record: client id = {:08x}, request number {} > "
+            "{}",
             client_id, request_number, iter->second.request_number);
         iter->second.request_number = request_number;
     }
 
     iter->second.reply_message = reply;
     if (!iter->second.remote) {
-        debug("client address not recorded: id = {:x}", client_id);
+        debug("client address not recorded: id = {:08x}", client_id);
         return [](auto) {};
     }
 

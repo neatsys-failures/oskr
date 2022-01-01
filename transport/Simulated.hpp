@@ -103,7 +103,9 @@ void Simulated::sendMessage(
     microseconds delay = 0us;
     for (auto pair : filter_table) {
         if (!pair.second(sender.address, dest, delay)) {
-            info("Message dropped: filter id = {}", pair.first);
+            info(
+                "Message dropped: {} -> {}, filter id = {}", sender.address,
+                dest, pair.first);
             return;
         }
     }
