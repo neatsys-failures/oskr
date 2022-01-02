@@ -227,3 +227,54 @@ TEST_F(VR, DoubleViewChange)
     transport.run();
     ASSERT_TRUE(completed);
 }
+
+TEST_F(VR, OneSecond)
+{
+    spawnReplica(5);
+    spawnClient(10);
+
+    Fn<void()> close_loop[10];
+    bool time_up = false;
+    int n_completed = 0;
+    int n_client_done = 0;
+    for (int i = 0; i < 10; i += 1) {
+        close_loop[i] = [&, i] {
+            if (time_up) {
+                n_client_done += 1;
+                if (n_client_done == 10) {
+                    transport.terminate();
+                }
+                return;
+            }
+            client[i]->invoke(Data(), [&, i](auto) {
+                n_completed += 1;
+                close_loop[i]();
+            });
+        };
+    }
+
+    transport.spawn(0ms, [&] {
+        transport.addFilter(
+            1, [&](const auto &source, const auto &, auto &delay) {
+                delay = 20ms; // keep primary message ordered
+                if (source != config.replica_address_list[0]) {
+                    // 20 ~ 26.65ms delay
+                    // about 1000x slower than real benchmark machine
+                    delay = 20ms +
+                            std::chrono::microseconds(
+                                std::uniform_int_distribution<std::uint16_t>()(
+                                    random_engine()) /
+                                10);
+                }
+                return true;
+            });
+        for (int i = 0; i < 10; i += 1) {
+            transport.spawn(0ms, [&, i] { close_loop[i](); });
+        }
+    });
+    transport.spawn(1000ms, [&] { time_up = true; });
+
+    transport.run();
+    VRLog::assertConsistent(log, config);
+    ASSERT_GT(n_completed, 10 * (1000 / (27 * 4)));
+}

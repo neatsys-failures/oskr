@@ -104,7 +104,7 @@ void Simulated::sendMessage(
     for (auto pair : filter_table) {
         if (!pair.second(sender.address, dest, delay)) {
             info(
-                "Message dropped: {} -> {}, filter id = {}", sender.address,
+                "message dropped: {} -> {}, filter id = {}", sender.address,
                 dest, pair.first);
             return;
         }

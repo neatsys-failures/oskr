@@ -187,12 +187,12 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareMessage &prepare)
 {
-    if (status != Status::normal || view_number > prepare.view_number) {
-        return;
+    if (view_number < prepare.view_number) {
+        rpanic("todo"); // state transfer
     }
 
-    if (view_number < prepare.view_number) {
-        rpanic("todo");
+    if (status != Status::normal || view_number > prepare.view_number) {
+        return;
     }
 
     if (isPrimary()) {
@@ -234,12 +234,14 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const PrepareOkMessage &prepare_ok)
 {
+    if (prepare_ok.view_number > view_number) {
+        rpanic("todo"); // state transfer
+    }
+
     if (status != Status::normal || prepare_ok.view_number < view_number) {
         return;
     }
-    if (prepare_ok.view_number > view_number) {
-        rpanic("todo");
-    }
+
     if (!isPrimary()) {
         rpanic("unreachable");
     }
@@ -276,12 +278,12 @@ template <TransportTrait Transport>
 void Replica<Transport>::handle(
     const typename Transport::Address &, const CommitMessage &commit)
 {
-    if (status != Status::normal || commit.view_number < view_number) {
-        return;
+    if (commit.view_number > view_number) {
+        rpanic("todo"); // state transfer
     }
 
-    if (commit.view_number > view_number) {
-        rpanic("todo");
+    if (status != Status::normal || commit.view_number < view_number) {
+        return;
     }
 
     view_change_timeout.reset();
@@ -320,6 +322,9 @@ void Replica<Transport>::handle(
     if (start_view_change.view_number < view_number) {
         return;
     }
+
+    // TODO check status valid
+
     if (start_view_change.view_number > view_number) {
         startViewChange(start_view_change.view_number);
     }
@@ -340,16 +345,18 @@ void Replica<Transport>::handle(
     if (do_view_change.view_number < view_number) {
         return;
     }
+
     if (do_view_change.view_number > view_number) {
         startViewChange(do_view_change.view_number);
     }
+
     if (!isPrimary()) {
         panic("unreachable");
     }
 
     if (status != Status::view_change) {
-        // TODO resend for late backup
-        return;
+        return; // late backup will start state transfer on receiving normal
+                // messages later
     }
 
     if (auto quorum = do_view_change_set.addAndCheckForQuorum(
@@ -410,6 +417,8 @@ void Replica<Transport>::enterView(const StartViewMessage &start_view)
     if (start_view.commit_number > commit_number) {
         commitUpTo(start_view.commit_number);
     }
+
+    // TODO send PrepareOk properly
 }
 
 template <TransportTrait Transport>
