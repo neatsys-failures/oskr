@@ -167,6 +167,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="common/ClientTable.html">At-most-once Client Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/StatefulTimeout.html">Stateful Timeout</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -269,8 +270,6 @@
 </li>
         <li><a href="core/Log.html#_CPPv4N4oskr3Log12enableUpcallEv">oskr::Log::enableUpcall (C++ function)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="core/Log.html#_CPPv4N4oskr3Log5IndexE">oskr::Log::Index (C++ type)</a>
 </li>
         <li><a href="core/Log.html#_CPPv4N4oskr3Log3LogER3App">oskr::Log::Log (C++ function)</a>
@@ -283,6 +282,48 @@
 </li>
         <li><a href="core/Log.html#_CPPv4N4oskr3LogD0Ev">oskr::Log::~Log (C++ function)</a>
 </li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvEE">oskr::Log&lt;void&gt; (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE10block_sizeE">oskr::Log&lt;void&gt;::block_size (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE5ChainE">oskr::Log&lt;void&gt;::Chain (C++ type)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvE11ChainPresetE">oskr::Log&lt;void&gt;::ChainPreset (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvE11ChainPreset5BlockE">oskr::Log&lt;void&gt;::ChainPreset::Block (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE11ChainPreset5Block12entry_bufferE">oskr::Log&lt;void&gt;::ChainPreset::Block::entry_buffer (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE11ChainPreset5Block7n_entryE">oskr::Log&lt;void&gt;::ChainPreset::Block::n_entry (C++ member)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE11ChainPreset5Block8previousE">oskr::Log&lt;void&gt;::ChainPreset::Block::previous (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE11ChainPreset5IndexE">oskr::Log&lt;void&gt;::ChainPreset::Index (C++ type)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvE5EntryE">oskr::Log&lt;void&gt;::Entry (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE5Entry9client_idE">oskr::Log&lt;void&gt;::Entry::client_id (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE5Entry2opE">oskr::Log&lt;void&gt;::Entry::op (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE5Entry14request_numberE">oskr::Log&lt;void&gt;::Entry::request_number (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE4ListE">oskr::Log&lt;void&gt;::List (C++ type)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvE10ListPresetE">oskr::Log&lt;void&gt;::ListPreset (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4IEN4oskr3LogIvE10ListPreset5BlockE">oskr::Log&lt;void&gt;::ListPreset::Block (C++ struct)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE10ListPreset5Block12entry_bufferE">oskr::Log&lt;void&gt;::ListPreset::Block::entry_buffer (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE10ListPreset5Block7n_entryE">oskr::Log&lt;void&gt;::ListPreset::Block::n_entry (C++ member)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE10ListPreset5IndexE">oskr::Log&lt;void&gt;::ListPreset::Index (C++ type)</a>
+</li>
+        <li><a href="core/Log.html#_CPPv4N4oskr3LogIvE16n_reserved_entryE">oskr::Log&lt;void&gt;::n_reserved_entry (C++ member)</a>
+</li>
         <li><a href="core/Type.html#_CPPv4N4oskr8OpNumberE">oskr::OpNumber (C++ type)</a>
 </li>
         <li><a href="core/Type.html#_CPPv4N4oskr9ReplicaIdE">oskr::ReplicaId (C++ type)</a>
@@ -290,6 +331,18 @@
         <li><a href="core/Type.html#_CPPv4N4oskr13RequestNumberE">oskr::RequestNumber (C++ type)</a>
 </li>
         <li><a href="core/Type.html#_CPPv4N4oskr6RxSpanE">oskr::RxSpan (C++ type)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4I_14TransportTraitEN4oskr15StatefulTimeoutE">oskr::StatefulTimeout (C++ class)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4N4oskr15StatefulTimeout7disableEv">oskr::StatefulTimeout::disable (C++ function)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4N4oskr15StatefulTimeout6enableEv">oskr::StatefulTimeout::enable (C++ function)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4N4oskr15StatefulTimeout5resetEv">oskr::StatefulTimeout::reset (C++ function)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4N4oskr15StatefulTimeout15StatefulTimeoutER9TransportNSt6chrono12microsecondsE2FnIFvvEE">oskr::StatefulTimeout::StatefulTimeout (C++ function)</a>
+</li>
+        <li><a href="common/StatefulTimeout.html#_CPPv4N4oskr15StatefulTimeoutD0Ev">oskr::StatefulTimeout::~StatefulTimeout (C++ function)</a>
 </li>
         <li><a href="core/Transport.html#_CPPv4I0EN4oskr13TransportBaseE">oskr::TransportBase (C++ struct)</a>
 </li>

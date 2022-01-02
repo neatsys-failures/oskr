@@ -169,6 +169,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../common/BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../common/StatefulTimeout.html">Stateful Timeout</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -212,6 +213,7 @@
 <dd><p><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref">Log</span></a> is the representation of state machine (replication or other). </p>
 <p>Nothing to do with logging stuff.</p>
 <p>The templated class <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> try to extract similar thing from different kinds of log: <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::List</span></code>, <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::Chain</span></code>, maybe more in the future. These kinds of logs are still abstract interfaces, there are corresponding conventional implementation for them in <code class="docutils literal notranslate"><span class="pre">common</span></code>, named <code class="docutils literal notranslate"><span class="pre">ListLog</span></code> and <code class="docutils literal notranslate"><span class="pre">ChainLog</span></code>.</p>
+<p>(That said the structure is not very different than directly define abstract <code class="docutils literal notranslate"><span class="pre">LogList</span></code> and <code class="docutils literal notranslate"><span class="pre">LogChain</span></code> interfaces. I just hate to repeat similar code :)</p>
 <p>One of the major differences between Oskr and specpaxos is the choice on log abstraction/component. While specpaxos exclude log from protocol abstraction (instead providing a reusable log component) and require protocol to manipulate application directly, Oskr hide application behind log abstraction. The design decision is made because:<ul class="simple">
 <li><p>A state machine application should always equivalent to its initial state + an log, i.e., all the transitions applied to the state machine. The two things should always be kept in synchronized so it is not necessary to expose both to protocols.</p></li>
 <li><p>Require protocols to <em>reference</em> to log instead of to <em>own</em> the log giving external access to the log. This may enable some useful cases:<ul>
@@ -305,10 +307,114 @@
 <dd></dd></dl>
 </div>
 </dd></dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenstruct: Cannot find class “oskr::Log&lt;void&gt;” in doxygen xml output for project “oskr” from directory: ../build/doc/xml</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvEE">
+<span id="_CPPv3IEN4oskr3LogIvEE"></span><span id="_CPPv2IEN4oskr3LogIvEE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Log</span></span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvEE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Common related things for all kinds of logs.</p>
+<p>Define in a specialization to prevent cyclic initialization. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE4ListE">
+<span id="_CPPv3N4oskr3LogIvE4ListE"></span><span id="_CPPv2N4oskr3LogIvE4ListE"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1a94db163e629df784135268d9681b4634"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">List</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">Log</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4IEN4oskr3LogIvE10ListPresetE" title="oskr::Log&lt;void&gt;::ListPreset"><span class="n"><span class="pre">ListPreset</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE4ListE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>The abstraction of a list-like log structure. </p>
+<p>Every block is indexed with a <code class="docutils literal notranslate"><span class="pre">OpNumber</span></code>, normally should start from 1. (<code class="docutils literal notranslate"><span class="pre">ListLog</span></code> supports starting from the middle in the case of recovery.) New prepared block is appended to the end.</p>
+<p>The linear abstraction means there will always be only one candidate for every in-order block, which is the case of non-BFT setup. </p>
+</dd></dl>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE5ChainE">
+<span id="_CPPv3N4oskr3LogIvE5ChainE"></span><span id="_CPPv2N4oskr3LogIvE5ChainE"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1a14fd133cba838646b08096716af170f8"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Chain</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">Log</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4IEN4oskr3LogIvE11ChainPresetE" title="oskr::Log&lt;void&gt;::ChainPreset"><span class="n"><span class="pre">ChainPreset</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE5ChainE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>The abstraction of a tree-like log structure, i.e., blockchain. </p>
+<p>There can be multiple blocks with the same “depth”, i.e., has the same <code class="docutils literal notranslate"><span class="pre">previous</span></code> content. Only at most one of these blocks can be committed (i.e., all the others are treated as malicious). This is designed for a BFT environment, where multiple branches may exist, but only one of them can reach consensus eventually. </p>
+</dd></dl>
 </div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-attributes">Public Static Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE10block_sizeE">
+<span id="_CPPv3N4oskr3LogIvE10block_sizeE"></span><span id="_CPPv2N4oskr3LogIvE10block_sizeE"></span><span id="oskr::Log:void:::block_size__i"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1a72867d900c70642eeff1f76b3dbe3da6"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">block_size</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">50</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE10block_sizeE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE16n_reserved_entryE">
+<span id="_CPPv3N4oskr3LogIvE16n_reserved_entryE"></span><span id="_CPPv2N4oskr3LogIvE16n_reserved_entryE"></span><span id="oskr::Log:void:::n_reserved_entry__std::s"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1a0d3e853f6b1db64c7d1f79aefcc80f9f"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_reserved_entry</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">80</span></span><span class="w"> </span><span class="o"><span class="pre">*</span></span><span class="w"> </span><span class="m"><span class="pre">1000</span></span><span class="w"> </span><span class="o"><span class="pre">*</span></span><span class="w"> </span><span class="m"><span class="pre">1000</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE16n_reserved_entryE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvE11ChainPresetE">
+<span id="_CPPv3IEN4oskr3LogIvE11ChainPresetE"></span><span id="_CPPv2IEN4oskr3LogIvE11ChainPresetE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ChainPreset</span></span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvE11ChainPresetE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE11ChainPreset5IndexE">
+<span id="_CPPv3N4oskr3LogIvE11ChainPreset5IndexE"></span><span id="_CPPv2N4oskr3LogIvE11ChainPreset5IndexE"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1a2fb0199a19bde0e25007b1703768a1a0"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4N4oskr4HashE" title="oskr::Hash"><span class="n"><span class="pre">Hash</span></span></a><a class="headerlink" href="#_CPPv4N4oskr3LogIvE11ChainPreset5IndexE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvE11ChainPreset5BlockE">
+<span id="_CPPv3IEN4oskr3LogIvE11ChainPreset5BlockE"></span><span id="_CPPv2IEN4oskr3LogIvE11ChainPreset5BlockE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1_1Block"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Block</span></span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvE11ChainPreset5BlockE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE11ChainPreset5Block12entry_bufferE">
+<span id="_CPPv3N4oskr3LogIvE11ChainPreset5Block12entry_bufferE"></span><span id="_CPPv2N4oskr3LogIvE11ChainPreset5Block12entry_bufferE"></span><span id="oskr::Log:void:::ChainPreset::Block::entry_buffer__EntryA"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1_1Block_1abf63b25f64372c53aa9f0a129cd436f2"></span><a class="reference internal" href="#_CPPv4IEN4oskr3LogIvE5EntryE" title="oskr::Log&lt;void&gt;::Entry"><span class="n"><span class="pre">Entry</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">entry_buffer</span></span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#_CPPv4N4oskr3LogIvE10block_sizeE" title="oskr::Log&lt;void&gt;::block_size"><span class="n"><span class="pre">block_size</span></span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE11ChainPreset5Block12entry_bufferE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE11ChainPreset5Block7n_entryE">
+<span id="_CPPv3N4oskr3LogIvE11ChainPreset5Block7n_entryE"></span><span id="_CPPv2N4oskr3LogIvE11ChainPreset5Block7n_entryE"></span><span id="oskr::Log:void:::ChainPreset::Block::n_entry__i"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1_1Block_1ae25260dcce4029af957326ab5f5aac33"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_entry</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE11ChainPreset5Block7n_entryE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE11ChainPreset5Block8previousE">
+<span id="_CPPv3N4oskr3LogIvE11ChainPreset5Block8previousE"></span><span id="_CPPv2N4oskr3LogIvE11ChainPreset5Block8previousE"></span><span id="oskr::Log:void:::ChainPreset::Block::previous__Hash"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ChainPreset_1_1Block_1a3ffac4c7a7028179196cdf629904b255"></span><a class="reference internal" href="Type.html#_CPPv4N4oskr4HashE" title="oskr::Hash"><span class="n"><span class="pre">Hash</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">previous</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE11ChainPreset5Block8previousE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+</dd></dl>
+</dd></dl>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvE5EntryE">
+<span id="_CPPv3IEN4oskr3LogIvE5EntryE"></span><span id="_CPPv2IEN4oskr3LogIvE5EntryE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1Entry"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Entry</span></span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvE5EntryE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE5Entry9client_idE">
+<span id="_CPPv3N4oskr3LogIvE5Entry9client_idE"></span><span id="_CPPv2N4oskr3LogIvE5Entry9client_idE"></span><span id="oskr::Log:void:::Entry::client_id__ClientId"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1Entry_1a8ae80e77c9a2e30e3f3584e91586ae9c"></span><a class="reference internal" href="Type.html#_CPPv4N4oskr8ClientIdE" title="oskr::ClientId"><span class="n"><span class="pre">ClientId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">client_id</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE5Entry9client_idE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE5Entry14request_numberE">
+<span id="_CPPv3N4oskr3LogIvE5Entry14request_numberE"></span><span id="_CPPv2N4oskr3LogIvE5Entry14request_numberE"></span><span id="oskr::Log:void:::Entry::request_number__RequestNumber"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1Entry_1a58204067bbf3b205266bae40360558e8"></span><a class="reference internal" href="Type.html#_CPPv4N4oskr13RequestNumberE" title="oskr::RequestNumber"><span class="n"><span class="pre">RequestNumber</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">request_number</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE5Entry14request_numberE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE5Entry2opE">
+<span id="_CPPv3N4oskr3LogIvE5Entry2opE"></span><span id="_CPPv2N4oskr3LogIvE5Entry2opE"></span><span id="oskr::Log:void:::Entry::op__Data"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1Entry_1ace8679f414212f662be8a24683e6c13e"></span><a class="reference internal" href="Type.html#_CPPv4N4oskr4DataE" title="oskr::Data"><span class="n"><span class="pre">Data</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">op</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE5Entry2opE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+</dd></dl>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvE10ListPresetE">
+<span id="_CPPv3IEN4oskr3LogIvE10ListPresetE"></span><span id="_CPPv2IEN4oskr3LogIvE10ListPresetE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ListPreset"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ListPreset</span></span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvE10ListPresetE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE10ListPreset5IndexE">
+<span id="_CPPv3N4oskr3LogIvE10ListPreset5IndexE"></span><span id="_CPPv2N4oskr3LogIvE10ListPreset5IndexE"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1ab68cfbf9f241609c71ec28cc63c35e11"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4N4oskr8OpNumberE" title="oskr::OpNumber"><span class="n"><span class="pre">OpNumber</span></span></a><a class="headerlink" href="#_CPPv4N4oskr3LogIvE10ListPreset5IndexE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN4oskr3LogIvE10ListPreset5BlockE">
+<span id="_CPPv3IEN4oskr3LogIvE10ListPreset5BlockE"></span><span id="_CPPv2IEN4oskr3LogIvE10ListPreset5BlockE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1_1Block"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Block</span></span></span><a class="headerlink" href="#_CPPv4IEN4oskr3LogIvE10ListPreset5BlockE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE10ListPreset5Block12entry_bufferE">
+<span id="_CPPv3N4oskr3LogIvE10ListPreset5Block12entry_bufferE"></span><span id="_CPPv2N4oskr3LogIvE10ListPreset5Block12entry_bufferE"></span><span id="oskr::Log:void:::ListPreset::Block::entry_buffer__EntryA"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1_1Block_1ad003d4154f8b41476dcd27e7fb7601c8"></span><a class="reference internal" href="#_CPPv4IEN4oskr3LogIvE5EntryE" title="oskr::Log&lt;void&gt;::Entry"><span class="n"><span class="pre">Entry</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">entry_buffer</span></span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#_CPPv4N4oskr3LogIvE10block_sizeE" title="oskr::Log&lt;void&gt;::block_size"><span class="n"><span class="pre">block_size</span></span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE10ListPreset5Block12entry_bufferE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogIvE10ListPreset5Block7n_entryE">
+<span id="_CPPv3N4oskr3LogIvE10ListPreset5Block7n_entryE"></span><span id="_CPPv2N4oskr3LogIvE10ListPreset5Block7n_entryE"></span><span id="oskr::Log:void:::ListPreset::Block::n_entry__i"></span><span class="target" id="structoskr_1_1Log_3_01void_01_4_1_1ListPreset_1_1Block_1a1d4d51211f20995b4b532b1c4780b762"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_entry</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3LogIvE10ListPreset5Block7n_entryE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+</dd></dl>
+</dd></dl>
+</dd></dl>
 </section>
 
         </article>

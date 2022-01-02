@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Reusable Basic Client" href="BasicClient.html" /><link rel="prev" title="Foundamental Types" href="../core/Type.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Articles" href="../article/index.html" /><link rel="prev" title="At-most-once Client Table" href="ClientTable.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
-        <title>Common Reusable Components - Oskr 0.1.0 documentation</title>
+        <title>Stateful Timeout - Oskr 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=7f0192ddeb2adecfbaa87ffbcf67d16358b30bc1" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
@@ -166,10 +166,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../core/Type.html">Foundamental Types</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Common Reusable Components</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Common Reusable Components</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="BasicClient.html">Reusable Basic Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ClientTable.html">At-most-once Client Table</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StatefulTimeout.html">Stateful Timeout</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Stateful Timeout</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -205,15 +205,56 @@
           </label>
         </div>
         <article role="main">
-          <section id="common-reusable-components">
-<h1>Common Reusable Components<a class="headerlink" href="#common-reusable-components" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="BasicClient.html">Reusable Basic Client</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ClientTable.html">At-most-once Client Table</a></li>
-<li class="toctree-l1"><a class="reference internal" href="StatefulTimeout.html">Stateful Timeout</a></li>
+          <section id="stateful-timeout">
+<h1>Stateful Timeout<a class="headerlink" href="#stateful-timeout" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I_14TransportTraitEN4oskr15StatefulTimeoutE">
+<span id="_CPPv3I_14TransportTraitEN4oskr15StatefulTimeoutE"></span><span id="_CPPv2I_14TransportTraitEN4oskr15StatefulTimeoutE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../core/Transport.html#_CPPv4I0EN4oskr14TransportTraitE" title="oskr::TransportTrait"><span class="n"><span class="pre">TransportTrait</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Transport</span></span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="classoskr_1_1StatefulTimeout"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="../core/Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">StatefulTimeout</span></span></span><a class="headerlink" href="#_CPPv4I_14TransportTraitEN4oskr15StatefulTimeoutE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>A handy wrapper around transport’s <code class="docutils literal notranslate"><span class="pre">spawn</span></code> (timeout) method.</p>
+<p>You can use <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1StatefulTimeout"><span class="std std-ref"><span class="pre">StatefulTimeout</span></span></a></code> to model those “meaningful” timeouts, e.g., the timeout for sending/checking heartbeat message. You cannot use this when:<ul>
+<li><p>The delay is variable.</p></li>
+<li><p>You need a one-time timeout whose callback is not reentrant, i.e., takes non-copyable capture list.</p>
+<p></p>
+</li>
 </ul>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although it is <em>stateful</em>, it is still a <em>one-time</em> timeout. If you want to spawn periodical callback, e.g., resending until succeed, you need to call <code class="docutils literal notranslate"><span class="pre">reset</span></code> manually inside the callback. </p>
 </div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr15StatefulTimeout15StatefulTimeoutER9TransportNSt6chrono12microsecondsE2FnIFvvEE">
+<span id="_CPPv3N4oskr15StatefulTimeout15StatefulTimeoutER9TransportNSt6chrono12microsecondsE2FnIFvvEE"></span><span id="_CPPv2N4oskr15StatefulTimeout15StatefulTimeoutER9TransportNSt6chrono12microsecondsE2FnIFvvEE"></span><span class="target" id="classoskr_1_1StatefulTimeout_1a1833f8809af553ccf2a66892b9cee645"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StatefulTimeout</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_14TransportTraitEN4oskr15StatefulTimeoutE" title="oskr::StatefulTimeout::Transport"><span class="n"><span class="pre">Transport</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">transport</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">chrono</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">microseconds</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">delay</span></span>, <a class="reference internal" href="../core/Type.html#_CPPv4I0EN4oskr2FnE" title="oskr::Fn"><span class="n"><span class="pre">Fn</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr15StatefulTimeout15StatefulTimeoutER9TransportNSt6chrono12microsecondsE2FnIFvvEE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Construct a timeout. After <code class="docutils literal notranslate"><span class="pre">enable</span></code> for <code class="docutils literal notranslate"><span class="pre">delay</span></code>, the <code class="docutils literal notranslate"><span class="pre">callback</span></code> will be invoked.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">callback</span></code> will be re-invoked every time the condition meets, so it is a <code class="docutils literal notranslate"><span class="pre">Fn</span></code>, not a <code class="docutils literal notranslate"><span class="pre">FnOnce</span></code> as <code class="docutils literal notranslate"><span class="pre">spawn</span></code>’s argument. </p>
+</div>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr15StatefulTimeoutD0Ev">
+<span id="_CPPv3N4oskr15StatefulTimeoutD0Ev"></span><span id="_CPPv2N4oskr15StatefulTimeoutD0Ev"></span><span id="oskr::StatefulTimeout::~StatefulTimeout"></span><span class="target" id="classoskr_1_1StatefulTimeout_1a06e5a8529874811b3d537d3da9a2af4b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~StatefulTimeout</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr15StatefulTimeoutD0Ev" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Timeout will be disabled automatically on deconstruct. </p>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr15StatefulTimeout5resetEv">
+<span id="_CPPv3N4oskr15StatefulTimeout5resetEv"></span><span id="_CPPv2N4oskr15StatefulTimeout5resetEv"></span><span id="oskr::StatefulTimeout::reset"></span><span class="target" id="classoskr_1_1StatefulTimeout_1a9a2d741eb836a23e08497f04d4e5edbc"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr15StatefulTimeout5resetEv" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Clear previous state. Timeout will be triggered after <code class="docutils literal notranslate"><span class="pre">delay</span></code> since calling whatever case. </p>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr15StatefulTimeout6enableEv">
+<span id="_CPPv3N4oskr15StatefulTimeout6enableEv"></span><span id="_CPPv2N4oskr15StatefulTimeout6enableEv"></span><span id="oskr::StatefulTimeout::enable"></span><span class="target" id="classoskr_1_1StatefulTimeout_1a8121bba894a29fdaf22f5cad8d440808"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr15StatefulTimeout6enableEv" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">reset</span></code>, only nothing will happen except the first calling, i.e. <code class="docutils literal notranslate"><span class="pre">delay</span></code> is not reset on the following callings. </p>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr15StatefulTimeout7disableEv">
+<span id="_CPPv3N4oskr15StatefulTimeout7disableEv"></span><span id="_CPPv2N4oskr15StatefulTimeout7disableEv"></span><span id="oskr::StatefulTimeout::disable"></span><span class="target" id="classoskr_1_1StatefulTimeout_1aa9f0cc028bedf28795ec28f32bc5587b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr15StatefulTimeout7disableEv" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Make sure nothing will happen in the future whatever previous state. </p>
+</dd></dl>
+</div>
+</dd></dl>
 </section>
 
         </article>
@@ -221,23 +262,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="BasicClient.html">
+          <a class="next-page" href="../article/index.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Reusable Basic Client</div>
+                <div class="title">Articles</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../core/Type.html">
+          <a class="prev-page" href="ClientTable.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Foundamental Types</div>
+                <div class="title">At-most-once Client Table</div>
                 
               </div>
             </a>
@@ -247,7 +288,7 @@
               Copyright &#169; 2021, sgdxbc |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
-            | <a class="muted-link" href="../_sources/common/index.rst.txt"
+            | <a class="muted-link" href="../_sources/common/StatefulTimeout.rst.txt"
                rel="nofollow">
               Show Source
             </a>
