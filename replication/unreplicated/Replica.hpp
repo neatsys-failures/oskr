@@ -26,8 +26,6 @@ public:
     void receiveMessage(
         const typename Transport::Address &remote, RxSpan span) override
     {
-        using std::placeholders::_1;
-
         ReplicaMessage message;
         bitseryDeserialize(span, message);
         std::visit([&](const auto &m) { handle(remote, m); }, message);

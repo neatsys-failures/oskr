@@ -15,7 +15,7 @@ protected:
     };
     std::vector<FlattenBlock> block_list;
     std::vector<Log<>::Entry> entry_list;
-    OpNumber start_number, commit_number;
+    OpNumber start_number, execute_number;
 
     std::size_t blockOffset(OpNumber op_number)
     {
@@ -29,7 +29,7 @@ public:
     explicit ListLog(App &app) : Log<Log<>::ListPreset>(app)
     {
         start_number = 0;
-        commit_number = 0;
+        execute_number = 0;
 
 #ifdef OSKR_BENCHMARK
         // guess what batch size will be used?
@@ -46,7 +46,7 @@ public:
                 info("log start from the middle: start number = {}", index);
             }
             start_number = index;
-            commit_number = start_number - 1;
+            execute_number = start_number - 1;
         }
 
         if (blockOffset(index) != block_list.size()) {
@@ -82,6 +82,15 @@ public:
         if (start_number == 0) {
             return;
         }
+
+        while (execute_number >= index) {
+            auto &block = block_list[blockOffset(execute_number)];
+            for (int i = block.n_entry - 1; i >= 0; i -= 1) {
+                app.rollback(entry_list[block.offset + i].op);
+            }
+            execute_number -= 1;
+        }
+
         if (index < start_number) {
             block_list.clear();
             entry_list.clear();
@@ -102,10 +111,10 @@ public:
 private:
     void makeUpcall(ReplyCallback callback)
     {
-        while (blockOffset(commit_number + 1) < block_list.size() &&
-               block_list[blockOffset(commit_number + 1)].committed) {
-            commit_number += 1;
-            auto &block = block_list[blockOffset(commit_number)];
+        while (blockOffset(execute_number + 1) < block_list.size() &&
+               block_list[blockOffset(execute_number + 1)].committed) {
+            execute_number += 1;
+            auto &block = block_list[blockOffset(execute_number)];
             for (int i = 0; i < block.n_entry; i += 1) {
                 auto &entry = entry_list[block.offset + i];
                 auto reply = app.commit(entry.op);

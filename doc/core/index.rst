@@ -6,4 +6,5 @@ Core Abstractions
     Transport
     TransportReceiver
     Client
+    Log
     Type
