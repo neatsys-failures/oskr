@@ -162,6 +162,7 @@
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Client.html">Protocol Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Log.html">State Machine Application</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Type.html">Foundamental Types</a></li>
 </ul>
 </li>
@@ -279,6 +280,161 @@ Generally, <code class="docutils literal notranslate"><span class="pre">Transpor
 <dd></dd></dl>
 </div>
 </dd></dl>
+<p>Currently Doxygen and Breathe only provide weak support on documenting concepts.
+The source code of <cite>Transport.hpp</cite> is included here for reference before they
+get improved.</p>
+<p>p.s. Wish clang-format get improved soon as well.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="linenos">  1</span><span class="cp">#pragma once</span>
+<span class="linenos">  2</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;chrono&gt;</span><span class="cp"></span>
+<span class="linenos">  3</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;functional&gt;</span><span class="cp"></span>
+<span class="linenos">  4</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span><span class="cp"></span>
+<span class="linenos">  5</span>
+<span class="linenos">  6</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">"core/Config.hpp"</span><span class="cp"></span>
+<span class="linenos">  7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">"core/Type.hpp"</span><span class="cp"></span>
+<span class="linenos">  8</span>
+<span class="linenos">  9</span><span class="k">namespace</span><span class="w"> </span><span class="nn">oskr</span><span class="w"></span>
+<span class="linenos"> 10</span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 11</span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Self</span><span class="o">&gt;</span><span class="w"> </span><span class="k">struct</span> <span class="nc">TransportMeta</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 12</span><span class="p">};</span><span class="w"></span>
+<span class="linenos"> 13</span>
+<span class="linenos"> 14</span><span class="cm">/*! @brief Common complement of `TransportTrait` concept. Including re-export</span>
+<span class="linenos"> 15</span><span class="cm">and derivation of types and serveral default implementations. All methods are</span>
+<span class="linenos"> 16</span><span class="cm">not virtual be design, because the whole `Transport` is a compile-time</span>
+<span class="linenos"> 17</span><span class="cm">polymorphism.</span>
+<span class="linenos"> 18</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 19</span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Self</span><span class="o">&gt;</span><span class="w"> </span><span class="k">struct</span> <span class="nc">TransportBase</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 20</span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">Address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typename</span> <span class="nc">TransportMeta</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;::</span><span class="n">Address</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 21</span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">Desc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typename</span> <span class="nc">TransportMeta</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;::</span><span class="n">Desc</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 22</span><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">constexpr</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">buffer_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TransportMeta</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;::</span><span class="n">buffer_size</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 23</span>
+<span class="linenos"> 24</span><span class="w">    </span><span class="c1">//! Receiver closure. Related states should be captured by needed.</span>
+<span class="linenos"> 25</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos"> 26</span><span class="w">    </span><span class="c1">//! The closure will be called on every packet-receiving. The `remote`</span>
+<span class="linenos"> 27</span><span class="w">    </span><span class="c1">//! reference is alive as long as transport object is alive. The provided</span>
+<span class="linenos"> 28</span><span class="w">    </span><span class="c1">//! `descriptor` keeps the underlying message in scope. Although receiver is</span>
+<span class="linenos"> 29</span><span class="w">    </span><span class="c1">//! allowed to keep `descriptor` after returning from this callback,</span>
+<span class="linenos"> 30</span><span class="w">    </span><span class="c1">//! receiver should release `descriptor` as soon as possible, make sure to</span>
+<span class="linenos"> 31</span><span class="w">    </span><span class="c1">//! maintain a upper bound of number of kept `description` to prevent</span>
+<span class="linenos"> 32</span><span class="w">    </span><span class="c1">//! transport's descriptor get exhausted.</span>
+<span class="linenos"> 33</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos"> 34</span><span class="w">    </span><span class="c1">//! @warning Receiver must put as lightest as possible processing logic in</span>
+<span class="linenos"> 35</span><span class="w">    </span><span class="c1">//! this callback, do only the most basic works like `spawn` or even nothing</span>
+<span class="linenos"> 36</span><span class="w">    </span><span class="c1">//! (e.g., drop the packet), and return quickly.</span>
+<span class="linenos"> 37</span><span class="w">    </span><span class="c1">//! @warning This is required because receiver is called from RX thread,</span>
+<span class="linenos"> 38</span><span class="w">    </span><span class="c1">//! which is unacceptable to be blocked by protocol logic. For certain</span>
+<span class="linenos"> 39</span><span class="w">    </span><span class="c1">//! transport (e.g., DPDK-based), if RX interval is too large, incoming</span>
+<span class="linenos"> 40</span><span class="w">    </span><span class="c1">//! packets will be dropped in network interface, and such situation will be</span>
+<span class="linenos"> 41</span><span class="w">    </span><span class="c1">//! considered as **fatal error**. Understand what you are doing in</span>
+<span class="linenos"> 42</span><span class="w">    </span><span class="c1">//! receiver.</span>
+<span class="linenos"> 43</span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">Receiver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Fn</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Address</span><span class="w"> </span><span class="o">&amp;</span><span class="n">remote</span><span class="p">,</span><span class="w"> </span><span class="n">Desc</span><span class="w"> </span><span class="n">descriptor</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 44</span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">Callback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FnOnce</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 45</span>
+<span class="linenos"> 46</span><span class="w">    </span><span class="c1">//! The common argument of `sendMessage*` methods, write message content</span>
+<span class="linenos"> 47</span><span class="w">    </span><span class="c1">//! into `buffer`, return written length, which should not be greater than</span>
+<span class="linenos"> 48</span><span class="w">    </span><span class="c1">//! `buffer_size`.</span>
+<span class="linenos"> 49</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos"> 50</span><span class="w">    </span><span class="c1">//! Transport promises that this callback will not be accessed any more</span>
+<span class="linenos"> 51</span><span class="w">    </span><span class="c1">//! after returning from `sendMessage*`. It is safe to capture local objects</span>
+<span class="linenos"> 52</span><span class="w">    </span><span class="c1">//! by reference.</span>
+<span class="linenos"> 53</span><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">Write</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Fn</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">(</span><span class="n">TxSpan</span><span class="o">&lt;</span><span class="n">buffer_size</span><span class="o">&gt;</span><span class="w"> </span><span class="n">buffer</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 54</span>
+<span class="linenos"> 55</span><span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Sender</span><span class="o">&gt;</span><span class="w"></span>
+<span class="linenos"> 56</span><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">sendMessageToReplica</span><span class="p">(</span><span class="w"></span>
+<span class="linenos"> 57</span><span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">Sender</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">ReplicaId</span><span class="w"> </span><span class="n">replica_id</span><span class="p">,</span><span class="w"> </span><span class="n">Write</span><span class="w"> </span><span class="n">write</span><span class="p">)</span><span class="w"></span>
+<span class="linenos"> 58</span><span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 59</span><span class="w">        </span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 60</span><span class="w">        </span><span class="n">transport</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="w"></span>
+<span class="linenos"> 61</span><span class="w">            </span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">transport</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">replica_address_list</span><span class="p">[</span><span class="n">replica_id</span><span class="p">],</span><span class="w"> </span><span class="n">write</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 62</span><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="linenos"> 63</span>
+<span class="linenos"> 64</span><span class="w">    </span><span class="c1">//! Practical transport implementation should override this with a more</span>
+<span class="linenos"> 65</span><span class="w">    </span><span class="c1">//! efficient version that only call `write` once.</span>
+<span class="linenos"> 66</span><span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Sender</span><span class="o">&gt;</span><span class="w"></span>
+<span class="linenos"> 67</span><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">sendMessageToAll</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Sender</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">Write</span><span class="w"> </span><span class="n">write</span><span class="p">)</span><span class="w"></span>
+<span class="linenos"> 68</span><span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 69</span><span class="w">        </span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 70</span><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="nl">dest</span> <span class="p">:</span><span class="w"> </span><span class="n">transport</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">replica_address_list</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 71</span><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dest</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">sender</span><span class="p">.</span><span class="n">address</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 72</span><span class="w">                </span><span class="n">transport</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">,</span><span class="w"> </span><span class="n">write</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 73</span><span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="linenos"> 74</span><span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="linenos"> 75</span><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="linenos"> 76</span>
+<span class="linenos"> 77</span><span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Sender</span><span class="o">&gt;</span><span class="w"></span>
+<span class="linenos"> 78</span><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">sendMessageToMulticast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Sender</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">Write</span><span class="w"> </span><span class="n">write</span><span class="p">)</span><span class="w"></span>
+<span class="linenos"> 79</span><span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 80</span><span class="w">        </span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">Self</span><span class="w"> </span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 81</span><span class="w">        </span><span class="n">transport</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="w"></span>
+<span class="linenos"> 82</span><span class="w">            </span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">transport</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">multicast_address</span><span class="p">,</span><span class="w"> </span><span class="n">write</span><span class="p">);</span><span class="w"></span>
+<span class="linenos"> 83</span><span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="linenos"> 84</span><span class="p">};</span><span class="w"></span>
+<span class="linenos"> 85</span>
+<span class="linenos"> 86</span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Transport</span><span class="o">&gt;</span><span class="w"> </span><span class="k">struct</span> <span class="nc">SenderArchetype</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="linenos"> 87</span><span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">typename</span> <span class="nc">Transport</span><span class="o">::</span><span class="n">Address</span><span class="w"> </span><span class="n">address</span><span class="p">;</span><span class="w"></span>
+<span class="linenos"> 88</span><span class="p">};</span><span class="w"></span>
+<span class="linenos"> 89</span>
+<span class="linenos"> 90</span><span class="cm">/*! @brief Transport concept. The representation of the actor model used by this</span>
+<span class="linenos"> 91</span><span class="cm">project.</span>
+<span class="linenos"> 92</span>
+<span class="linenos"> 93</span><span class="cm">* @note Despite the name, `TransportReceiver` is not a necessary part of the</span>
+<span class="linenos"> 94</span><span class="cm">abstraction, and transport does not depend on it.</span>
+<span class="linenos"> 95</span>
+<span class="linenos"> 96</span><span class="cm">Generally, `TransportTrait` can be considered as an extended version of original</span>
+<span class="linenos"> 97</span><span class="cm">spexpaxos's `Transport` interface. Because it is a concept rather than a</span>
+<span class="linenos"> 98</span><span class="cm">superclass, the name `Transport` is intended to be preserved as protocol</span>
+<span class="linenos"> 99</span><span class="cm">classes' template parameter.</span>
+<span class="linenos">100</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">101</span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="o">&gt;</span><span class="w"></span>
+<span class="linenos">102</span><span class="k">concept</span> <span class="nc">TransportTrait</span><span class="w"> </span><span class="o">=</span><span class="w"></span>
+<span class="linenos">103</span><span class="w">    </span><span class="c1">//! TransportMeta specialization.</span>
+<span class="linenos">104</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos">105</span><span class="w">    </span><span class="k">requires</span><span class="w"></span>
+<span class="linenos">106</span><span class="p">{</span><span class="w"></span>
+<span class="linenos">107</span><span class="w">    </span><span class="c1">//! The address type used by transport implementation. The type should has</span>
+<span class="linenos">108</span><span class="w">    </span><span class="c1">//! value semantic, and avoid heap allocation.</span>
+<span class="linenos">109</span><span class="w">    </span><span class="k">typename</span> <span class="nc">TransportMeta</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">Address</span><span class="p">;</span><span class="w"></span>
+<span class="linenos">110</span><span class="w">    </span><span class="k">typename</span> <span class="nc">TransportMeta</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">Desc</span><span class="p">;</span><span class="w"></span>
+<span class="linenos">111</span><span class="w">    </span><span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">integral_constant</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">,</span><span class="w"> </span><span class="n">TransportMeta</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">buffer_size</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="linenos">112</span><span class="p">}</span><span class="w"></span>
+<span class="linenos">113</span><span class="c1">//! Subclassing `TransportBase`</span>
+<span class="linenos">114</span><span class="c1">//!</span>
+<span class="linenos">115</span><span class="o">&amp;&amp;</span><span class="n">std</span><span class="o">::</span><span class="n">derived_from</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">TransportBase</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"></span>
+<span class="linenos">116</span><span class="w">    </span><span class="c1">//! Receiving interfaces</span>
+<span class="linenos">117</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos">118</span><span class="w">    </span><span class="o">&amp;&amp;</span><span class="k">requires</span><span class="p">(</span><span class="w"></span>
+<span class="linenos">119</span><span class="w">        </span><span class="n">T</span><span class="w"> </span><span class="n">transport</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">typename</span> <span class="nc">T</span><span class="o">::</span><span class="n">Address</span><span class="w"> </span><span class="n">address</span><span class="p">,</span><span class="w"></span>
+<span class="linenos">120</span><span class="w">        </span><span class="k">typename</span> <span class="nc">T</span><span class="o">::</span><span class="n">Receiver</span><span class="w"> </span><span class="n">receiver</span><span class="p">)</span><span class="w"></span>
+<span class="linenos">121</span><span class="p">{</span><span class="w"></span>
+<span class="linenos">122</span><span class="w">    </span><span class="c1">//! Register a receiver closure. The closure will be called whenever message</span>
+<span class="linenos">123</span><span class="w">    </span><span class="c1">//! arriving at `address`.</span>
+<span class="linenos">124</span><span class="w">    </span><span class="n">transport</span><span class="p">.</span><span class="n">registerReceiver</span><span class="p">(</span><span class="n">address</span><span class="p">,</span><span class="w"> </span><span class="n">receiver</span><span class="p">);</span><span class="w"></span>
+<span class="linenos">125</span><span class="w">    </span><span class="c1">// TODO multicast</span>
+<span class="linenos">126</span><span class="p">}</span><span class="w"></span>
+<span class="linenos">127</span><span class="c1">//! Scheduling interfaces</span>
+<span class="linenos">128</span><span class="c1">//!</span>
+<span class="linenos">129</span><span class="o">&amp;&amp;</span><span class="k">requires</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">transport</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span> <span class="nc">T</span><span class="o">::</span><span class="n">Callback</span><span class="w"> </span><span class="n">callback</span><span class="p">)</span><span class="w"></span>
+<span class="linenos">130</span><span class="p">{</span><span class="w"></span>
+<span class="linenos">131</span><span class="w">    </span><span class="c1">//! Spawn a sequential task. All sequential tasks will be executed without</span>
+<span class="linenos">132</span><span class="w">    </span><span class="c1">//! temporal overlapping, so it is safe to update states without locking.</span>
+<span class="linenos">133</span><span class="w">    </span><span class="n">transport</span><span class="p">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">callback</span><span class="p">));</span><span class="w"></span>
+<span class="linenos">134</span><span class="p">}</span><span class="w"></span>
+<span class="linenos">135</span><span class="c1">//! Sending interfaces</span>
+<span class="linenos">136</span><span class="c1">//!</span>
+<span class="linenos">137</span><span class="o">&amp;&amp;</span><span class="k">requires</span><span class="p">(</span><span class="w"></span>
+<span class="linenos">138</span><span class="w">    </span><span class="n">T</span><span class="w"> </span><span class="n">transport</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">SenderArchetype</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sender</span><span class="p">,</span><span class="w"></span>
+<span class="linenos">139</span><span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="k">typename</span> <span class="nc">T</span><span class="o">::</span><span class="n">Address</span><span class="w"> </span><span class="o">&amp;</span><span class="n">dest</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span> <span class="nc">T</span><span class="o">::</span><span class="n">Write</span><span class="w"> </span><span class="n">write</span><span class="p">)</span><span class="w"></span>
+<span class="linenos">140</span><span class="p">{</span><span class="w"></span>
+<span class="linenos">141</span><span class="w">    </span><span class="c1">//! Allocate a TX message buffer with `buffer_size` space, call `write` with</span>
+<span class="linenos">142</span><span class="w">    </span><span class="c1">//! it to serialize message into the buffer, then send message to `dest`.</span>
+<span class="linenos">143</span><span class="w">    </span><span class="c1">//!</span>
+<span class="linenos">144</span><span class="w">    </span><span class="c1">//! `sender` should probably be `*this`, but anything with a public</span>
+<span class="linenos">145</span><span class="w">    </span><span class="c1">//! `address` should be good.</span>
+<span class="linenos">146</span><span class="w">    </span><span class="n">transport</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">,</span><span class="w"> </span><span class="n">write</span><span class="p">);</span><span class="w"></span>
+<span class="linenos">147</span><span class="p">};</span><span class="w"></span>
+<span class="linenos">148</span>
+<span class="linenos">149</span><span class="p">}</span><span class="w"> </span><span class="c1">// namespace oskr</span>
+</pre></div>
+</div>
 </section>
 
         </article>

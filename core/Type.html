@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Common Reusable Components" href="../common/index.html" /><link rel="prev" title="Protocol Client" href="Client.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Common Reusable Components" href="../common/index.html" /><link rel="prev" title="State Machine Application" href="Log.html" />
 
     <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
         <title>Foundamental Types - Oskr 0.1.0 documentation</title>
@@ -162,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Transport.html">Transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Client.html">Protocol Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Log.html">State Machine Application</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Foundamental Types</a></li>
 </ul>
 </li>
@@ -213,15 +214,24 @@
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr8OpNumberE">
 <span id="_CPPv3N4oskr8OpNumberE"></span><span id="_CPPv2N4oskr8OpNumberE"></span><span class="target" id="Type_8hpp_1a229225968f791961a683105e27c7b95e"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OpNumber</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><a class="headerlink" href="#_CPPv4N4oskr8OpNumberE" title="Permalink to this definition">¶</a><br/></dt>
-<dd></dd></dl>
+<dd><p>The ID type for consensus.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because batching is built into <code class="docutils literal notranslate"><a class="reference internal" href="Log.html#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> abstraction by now, normally one <code class="docutils literal notranslate"><span class="pre">OpNumber</span></code> corresponds to a block/batch instead of one op. </p>
+</div>
+</dd></dl>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr13RequestNumberE">
 <span id="_CPPv3N4oskr13RequestNumberE"></span><span id="_CPPv2N4oskr13RequestNumberE"></span><span class="target" id="Type_8hpp_1a787451a8a1db32f4b9f1d2e7d705fd91"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RequestNumber</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4N4oskr13RequestNumberE" title="Permalink to this definition">¶</a><br/></dt>
 <dd></dd></dl>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr10ViewNumberE">
-<span id="_CPPv3N4oskr10ViewNumberE"></span><span id="_CPPv2N4oskr10ViewNumberE"></span><span class="target" id="Type_8hpp_1a45f56675eea0bd18eb18230485377a28"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ViewNumber</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4N4oskr10ViewNumberE" title="Permalink to this definition">¶</a><br/></dt>
-<dd></dd></dl>
+<span id="_CPPv3N4oskr10ViewNumberE"></span><span id="_CPPv2N4oskr10ViewNumberE"></span><span class="target" id="Type_8hpp_1a66f07434c09b9bfceacddf7f524d9f03"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ViewNumber</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><a class="headerlink" href="#_CPPv4N4oskr10ViewNumberE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While <code class="docutils literal notranslate"><span class="pre">OpNumber</span></code> and <code class="docutils literal notranslate"><span class="pre">RequestNumber</span></code> normally start from 1, and leave 0 as invalid value, <code class="docutils literal notranslate"><span class="pre">ViewNumber</span></code> normally start from 0 so first primary id would be 0. </p>
+</div>
+</dd></dl>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N4oskr9ReplicaIdE">
 <span id="_CPPv3N4oskr9ReplicaIdE"></span><span id="_CPPv2N4oskr9ReplicaIdE"></span><span class="target" id="Type_8hpp_1ae8ce2db69f20d0b2e1d85a85224688be"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ReplicaId</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int8_t</span></span><a class="headerlink" href="#_CPPv4N4oskr9ReplicaIdE" title="Permalink to this definition">¶</a><br/></dt>
@@ -283,14 +293,14 @@
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="Client.html">
+          <a class="prev-page" href="Log.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Protocol Client</div>
+                <div class="title">State Machine Application</div>
                 
               </div>
             </a>

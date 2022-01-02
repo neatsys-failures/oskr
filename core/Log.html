@@ -1,0 +1,365 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Foundamental Types" href="Type.html" /><link rel="prev" title="Protocol Client" href="Client.html" />
+
+    <meta name="generator" content="sphinx-4.3.2, furo 2021.11.23"/>
+        <title>State Machine Application - Oskr 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=7f0192ddeb2adecfbaa87ffbcf67d16358b30bc1" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
+    <link rel="stylesheet" type="text/css" href="../_static/overwrite.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --font-stack: Fira Sans, sans-serif;
+  --font-stack--monospace: Fira Mono, monospace;
+  
+  }
+  body[data-theme="dark"] {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+</style></head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" />
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Oskr 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">Oskr 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Core Abstractions</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Transport.html">Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransportReceiver.html">(Ordinary) Transport Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Client.html">Protocol Client</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">State Machine Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Type.html">Foundamental Types</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../common/index.html">Common Reusable Components</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../common/BasicClient.html">Reusable Basic Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../common/ClientTable.html">At-most-once Client Table</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../article/index.html">Articles</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../article/00-generate-document.html">Meta-instruction on generating this document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/01-write-protocol.html">Write distributed protocol on Oscar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/02-setup-benchmark.html">Set up for benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../article/03-optimize-for-dropping.html">Optimize protocol performance under dropping network</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="state-machine-application">
+<h1>State Machine Application<a class="headerlink" href="#state-machine-application" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4oskr3LogE">
+<span id="_CPPv3I0EN4oskr3LogE"></span><span id="_CPPv2I0EN4oskr3LogE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Preset</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">&gt;</span></span><br/><span class="target" id="classoskr_1_1Log"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="Type.html#_CPPv44oskr" title="oskr"><span class="n"><span class="pre">oskr</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Log</span></span></span><a class="headerlink" href="#_CPPv4I0EN4oskr3LogE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref">Log</span></a> is the representation of state machine (replication or other). </p>
+<p>Nothing to do with logging stuff.</p>
+<p>The templated class <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> try to extract similar thing from different kinds of log: <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::List</span></code>, <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::Chain</span></code>, maybe more in the future. These kinds of logs are still abstract interfaces, there are corresponding conventional implementation for them in <code class="docutils literal notranslate"><span class="pre">common</span></code>, named <code class="docutils literal notranslate"><span class="pre">ListLog</span></code> and <code class="docutils literal notranslate"><span class="pre">ChainLog</span></code>.</p>
+<p>One of the major differences between Oskr and specpaxos is the choice on log abstraction/component. While specpaxos exclude log from protocol abstraction (instead providing a reusable log component) and require protocol to manipulate application directly, Oskr hide application behind log abstraction. The design decision is made because:<ul class="simple">
+<li><p>A state machine application should always equivalent to its initial state + an log, i.e., all the transitions applied to the state machine. The two things should always be kept in synchronized so it is not necessary to expose both to protocols.</p></li>
+<li><p>Require protocols to <em>reference</em> to log instead of to <em>own</em> the log giving external access to the log. This may enable some useful cases:<ul>
+<li><p>(Imaginary) log persistent, which probably reasonablly be transparent to protocol implementation (in the sense of technical details, protocol still should take charge of controlling the stable committed point).</p></li>
+<li><p>Fine-grained test cases. In specpaxos user can only exam protocol’s progress after op got committed. With an accessible log she is able to test more.</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p>The abstraction-style log results in a reduced concept. The <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> abstraction does not contain any concrete date structure, only pure interfaces. The abstraction also eliminate all protocol-specific log states except a prepare-commit pair, which is a too common pattern.</p>
+<p>Last but not least, this <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> (or more precisely, <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::List</span></code> and <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a><span class="pre">&lt;&gt;::Chain</span></code>) has a batching concept built in. The manipulating unit is a group of op instead of a single one (terminology <em>block</em> is chosen because of blockchain, but some protocols may prefer using <em>batch</em> to refer to it), and all op in the same block share an log index. This feature should simplify certain protocol’s implementation. If necessary, a custom non-batching <code class="docutils literal notranslate"><span class="pre">Preset</span></code> can be used as type argument to create a non-batching log abstraction. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log5IndexE">
+<span id="_CPPv3N4oskr3Log5IndexE"></span><span id="_CPPv2N4oskr3Log5IndexE"></span><span class="target" id="classoskr_1_1Log_1a51d027178a39765753437b3120829b89"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN4oskr3LogE" title="oskr::Log::Preset"><span class="n"><span class="pre">Preset</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Index</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log5IndexE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log5BlockE">
+<span id="_CPPv3N4oskr3Log5BlockE"></span><span id="_CPPv2N4oskr3Log5BlockE"></span><span class="target" id="classoskr_1_1Log_1a2e6809b21b365077ae012846532f1c25"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Block</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN4oskr3LogE" title="oskr::Log::Preset"><span class="n"><span class="pre">Preset</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Block</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log5BlockE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log13ReplyCallbackE">
+<span id="_CPPv3N4oskr3Log13ReplyCallbackE"></span><span id="_CPPv2N4oskr3Log13ReplyCallbackE"></span><span class="target" id="classoskr_1_1Log_1a021f5afce638b5f86e3904b11960ac8c"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ReplyCallback</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4I0EN4oskr2FnE" title="oskr::Fn"><span class="n"><span class="pre">Fn</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="Type.html#_CPPv4N4oskr8ClientIdE" title="oskr::ClientId"><span class="n"><span class="pre">ClientId</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4N4oskr13RequestNumberE" title="oskr::RequestNumber"><span class="n"><span class="pre">RequestNumber</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Type.html#_CPPv4N4oskr4DataE" title="oskr::Data"><span class="n"><span class="pre">Data</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log13ReplyCallbackE" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>A callback that consume information of the execution of a op per invoking. Mainly used to reply to client. </p>
+</dd></dl>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3LogD0Ev">
+<span id="_CPPv3N4oskr3LogD0Ev"></span><span id="_CPPv2N4oskr3LogD0Ev"></span><span id="oskr::Log::~Log"></span><span class="target" id="classoskr_1_1Log_1aa6fdfed9437a4414eb0bb79b56066fd3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~Log</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr3LogD0Ev" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log7prepareE5Index5Block">
+<span id="_CPPv3N4oskr3Log7prepareE5Index5Block"></span><span id="_CPPv2N4oskr3Log7prepareE5Index5Block"></span><span id="oskr::Log::prepare__Index.Block"></span><span class="target" id="classoskr_1_1Log_1a6026d297ee6ba8caeafcc05b5afe6fed"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">prepare</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4oskr3Log5IndexE" title="oskr::Log::Index"><span class="n"><span class="pre">Index</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span>, <a class="reference internal" href="#_CPPv4N4oskr3Log5BlockE" title="oskr::Log::Block"><span class="n"><span class="pre">Block</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">block</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log7prepareE5Index5Block" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Preparing a block means to insert <code class="docutils literal notranslate"><span class="pre">block</span></code> content into local memory. Probably the <code class="docutils literal notranslate"><span class="pre">block</span></code> will be committed, but it is fine to replace the block with another later <code class="docutils literal notranslate"><span class="pre">prepare</span></code> call on the same <code class="docutils literal notranslate"><span class="pre">index</span></code>. (Although log implementation will probably want to warn.) However, calling <code class="docutils literal notranslate"><span class="pre">prepare</span></code> after <code class="docutils literal notranslate"><span class="pre">commit</span></code> on the <code class="docutils literal notranslate"><span class="pre">index</span></code> voilates the invariant and is always a fatal error.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">index</span></code> that is valid to <code class="docutils literal notranslate"><span class="pre">prepare</span></code> is usually limited. Basically log does not allow “gap” between prepared blocks, so protocol should construct reordering buffer by itself if necessary.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The timing for calling <code class="docutils literal notranslate"><span class="pre">prepare</span></code> is not necessary to match the <em>prepare</em> stage of certain protocols. For example for PBFT <code class="docutils literal notranslate"><span class="pre">prepare</span></code> should be called in the pre-prepare stage. The method names <code class="docutils literal notranslate"><span class="pre">prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">commit</span></code> are simply adapted from popular viewstamped replication and two-phase commit protocols. <code class="docutils literal notranslate"><span class="pre">prepare</span></code> just correspond to “data is ready” and <code class="docutils literal notranslate"><span class="pre">commit</span></code> just correspond to “data is stable”, but not to any protocol-specific details. For tracing any extra state related to certain block (e.g., whether pre-prepared or prepared in PBFT), protocol should construct parallel data structure separately. This is also the reason of intentionally-lacked getter interface of <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code>. </p>
+</div>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log6commitE5Index13ReplyCallback">
+<span id="_CPPv3N4oskr3Log6commitE5Index13ReplyCallback"></span><span id="_CPPv2N4oskr3Log6commitE5Index13ReplyCallback"></span><span id="oskr::Log::commit__Index.ReplyCallback"></span><span class="target" id="classoskr_1_1Log_1af74f23fc2e4c47bb4da0a7b67ae66dbe"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">commit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4oskr3Log5IndexE" title="oskr::Log::Index"><span class="n"><span class="pre">Index</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span>, <a class="reference internal" href="#_CPPv4N4oskr3Log13ReplyCallbackE" title="oskr::Log::ReplyCallback"><span class="n"><span class="pre">ReplyCallback</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log6commitE5Index13ReplyCallback" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Commit the block at <code class="docutils literal notranslate"><span class="pre">index</span></code>, it is a fatal error if the <code class="docutils literal notranslate"><span class="pre">index</span></code> has not been <code class="docutils literal notranslate"><span class="pre">prepared</span></code> before.</p>
+<p>The benefit of including prepare-commit concept into abstraction is to enable out-of-order committing. A log implementation promise to execute a block with application as soon as the block along with all blocks prior to it have committed. During the executing <code class="docutils literal notranslate"><span class="pre">callback</span></code> will be invoked once per every executed op. The callback may be invoked multiple times in one <code class="docutils literal notranslate"><span class="pre">commit</span></code> call because there are multiple op in the committed block, and/or because multiple blocks are executed by this committing.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although <code class="docutils literal notranslate"><span class="pre">commit</span></code> should correspond to <em>finalize</em>, in this log model, a call to <code class="docutils literal notranslate"><span class="pre">commit</span></code> actually can be reverted by a <code class="docutils literal notranslate"><span class="pre">rollbackTo</span></code> calling. This means currently there is no way to assert a block will be permanent forever. So the precise definition of <code class="docutils literal notranslate"><span class="pre">commit</span></code> method is to speculative execute blocks. Specpaxos provide another method to do the actually “commit” on speculated blocks, maybe there will be one here as well. </p>
+</div>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log10rollbackToE5Index">
+<span id="_CPPv3N4oskr3Log10rollbackToE5Index"></span><span id="_CPPv2N4oskr3Log10rollbackToE5Index"></span><span id="oskr::Log::rollbackTo__Index"></span><span class="target" id="classoskr_1_1Log_1a1cf1b49be1677859529246e76373cb75"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollbackTo</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4oskr3Log5IndexE" title="oskr::Log::Index"><span class="n"><span class="pre">Index</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log10rollbackToE5Index" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Rollback everything after <code class="docutils literal notranslate"><span class="pre">index</span></code> including itself. If there is a executed part included in the rollback blocks, the block in that part will be rollbacked on application in reversed order. To rollback a block, every op in the block will be passed to application’s <code class="docutils literal notranslate"><span class="pre">rollback</span></code> call in reversed order. </p>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log12enableUpcallEv">
+<span id="_CPPv3N4oskr3Log12enableUpcallEv"></span><span id="_CPPv2N4oskr3Log12enableUpcallEv"></span><span id="oskr::Log::enableUpcall"></span><span class="target" id="classoskr_1_1Log_1a0d5d38a22538266b6c0f0c0b162d2645"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enableUpcall</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4oskr3Log12enableUpcallEv" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>This will not only set <code class="docutils literal notranslate"><span class="pre">enable_upcall</span></code> flag, but also execute all blocks that are valid to be executed at this point.</p>
+<p>The execution is silenced because a reply to client at this point is meaningless. </p>
+</dd></dl>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log13disableUpcallEv">
+<span id="_CPPv3N4oskr3Log13disableUpcallEv"></span><span id="_CPPv2N4oskr3Log13disableUpcallEv"></span><span id="oskr::Log::disableUpcall"></span><span class="target" id="classoskr_1_1Log_1ac461f6fa8a8d28dadaf88d490e2d005d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disableUpcall</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr3Log13disableUpcallEv" title="Permalink to this definition">¶</a><br/></dt>
+<dd><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Disable upcall is not the same as “quiet backup”. For example in viewstamped replication, all backups should execute op (i.e., enable upcall), just not reply to client. In this case the correct way is to provide a no-op <code class="docutils literal notranslate"><span class="pre">callback</span></code> to <code class="docutils literal notranslate"><span class="pre">commit</span></code>. </p>
+</div>
+</dd></dl>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-protected-functions">Protected Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log3LogER3App">
+<span id="_CPPv3N4oskr3Log3LogER3App"></span><span id="_CPPv2N4oskr3Log3LogER3App"></span><span id="oskr::Log::Log__AppR"></span><span class="target" id="classoskr_1_1Log_1a236478bdbd30dd5d1d3ba3733a4346ee"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Log</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">App</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">app</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4oskr3Log3LogER3App" title="Permalink to this definition">¶</a><br/></dt>
+<dd><p>Each log instance should keep a reference to an <code class="docutils literal notranslate"><span class="pre">App</span></code>. The reference semantic is chosen instead of value semantic because most applications do not care what kind of <code class="docutils literal notranslate"><a class="reference internal" href="#classoskr_1_1Log"><span class="std std-ref"><span class="pre">Log</span></span></a></code> is controlling them. Exposing app to make it observable to outer world may also benefit in some situation. </p>
+</dd></dl>
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-protected-attributes">Protected Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log3appE">
+<span id="_CPPv3N4oskr3Log3appE"></span><span id="_CPPv2N4oskr3Log3appE"></span><span id="oskr::Log::app__AppR"></span><span class="target" id="classoskr_1_1Log_1ac04462ea94aee100073014c426ddf5aa"></span><span class="n"><span class="pre">App</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">app</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3Log3appE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4oskr3Log13enable_upcallE">
+<span id="_CPPv3N4oskr3Log13enable_upcallE"></span><span id="_CPPv2N4oskr3Log13enable_upcallE"></span><span id="oskr::Log::enable_upcall__b"></span><span class="target" id="classoskr_1_1Log_1a74c98a9bace86aad2c22a364cbff0347"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enable_upcall</span></span></span><a class="headerlink" href="#_CPPv4N4oskr3Log13enable_upcallE" title="Permalink to this definition">¶</a><br/></dt>
+<dd></dd></dl>
+</div>
+</dd></dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenstruct: Cannot find class “oskr::Log&lt;void&gt;” in doxygen xml output for project “oskr” from directory: ../build/doc/xml</p>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Type.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Foundamental Types</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Client.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Protocol Client</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2021, sgdxbc |
+          Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            | <a class="muted-link" href="../_sources/core/Log.rst.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    </body>
+</html>
