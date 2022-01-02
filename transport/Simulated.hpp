@@ -57,17 +57,25 @@ public:
     template <typename Sender>
     void sendMessage(const Sender &sender, const Address &dest, Write write);
 
-    void spawn(microseconds delay, Callback callback)
+    void spawn(Callback callback) { spawn(0us, std::move(callback)); }
+
+    Fn<void()> spawn(microseconds delay, Callback callback)
     {
+        // TODO cancel timeout in a more elegant fashion, e.g., remove from
+        // queue
+        auto canceled = new bool(false);
         destiny_queue.insert(
             {now_us + delay.count(),
-             [&, callback = std::move(callback)]() mutable {
-                 channel_id = -1;
-                 callback();
+             [&, canceled, callback = std::move(callback)]() mutable {
+                 bool saved_canceled = *canceled;
+                 delete canceled;
+                 if (!saved_canceled) {
+                     channel_id = -1;
+                     callback();
+                 }
              }});
+        return [canceled] { *canceled = true; };
     }
-
-    void spawn(Callback callback) { spawn(0us, std::move(callback)); }
 
     void spawnConcurrent(Callback callback)
     {
