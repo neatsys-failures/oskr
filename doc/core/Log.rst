@@ -7,4 +7,7 @@ State Machine Application
     :undoc-members:
     :protected-members:
 
-.. doxygenstruct:: oskr::Log<void>
+.. doxygenstruct:: oskr::Log< void >
+    :members:
+    :undoc-members:
+    :protected-members:

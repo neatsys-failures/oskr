@@ -302,7 +302,9 @@ void Replica<Transport>::startViewChange(ViewNumber start_view)
     view_number = start_view;
     rinfo("start view change: view number = {}", view_number);
 
-    view_change_timeout.reset(); // start counting for next primary
+    if (!isPrimary()) {
+        view_change_timeout.reset(); // start counting for next primary
+    }
 
     StartViewChangeMessage start_view_change;
     start_view_change.view_number = view_number;

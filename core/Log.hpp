@@ -23,6 +23,9 @@ log: `Log<>::List`, `Log<>::Chain`, maybe more in the future. These kinds of
 logs are still abstract interfaces, there are corresponding conventional
 implementation for them in `common`, named `ListLog` and `ChainLog`.
 
+(That said the structure is not very different than directly define abstract
+`LogList` and `LogChain` interfaces. I just hate to repeat similar code :)
+
 One of the major differences between Oskr and specpaxos is the choice on log
 abstraction/component. While specpaxos exclude log from protocol abstraction
 (instead providing a reusable log component) and require protocol to manipulate
@@ -161,6 +164,14 @@ template <> struct Log<void> {
             int n_entry;
         };
     };
+    //! @brief The abstraction of a list-like log structure.
+    //!
+    //! Every block is indexed with a `OpNumber`, normally should start from 1.
+    //! (`ListLog` supports starting from the middle in the case of recovery.)
+    //! New prepared block is appended to the end.
+    //!
+    //! The linear abstraction means there will always be only one candidate for
+    //! every in-order block, which is the case of non-BFT setup.
     using List = Log<ListPreset>;
 
     struct ChainPreset {
@@ -171,6 +182,13 @@ template <> struct Log<void> {
             Hash previous;
         };
     };
+    //! @brief The abstraction of a tree-like log structure, i.e., blockchain.
+    //!
+    //! There can be multiple blocks with the same "depth", i.e., has the same
+    //! `previous` content. Only at most one of these blocks can be committed
+    //! (i.e., all the others are treated as malicious). This is designed for a
+    //! BFT environment, where multiple branches may exist, but only one of them
+    //! can reach consensus eventually.
     using Chain = Log<ChainPreset>;
 };
 

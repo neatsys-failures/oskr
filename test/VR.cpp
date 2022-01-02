@@ -35,7 +35,7 @@ private:
         int sample_id = -1;
         for (size_t i = 0; i < log.size(); i += 1) {
             if (log[i]->blockOffset(index) < log[i]->block_list.size()) {
-                sample_id = static_cast<int>(i);
+                sample_id = int(i);
                 break;
             }
         }
@@ -88,21 +88,24 @@ protected:
     vector<unique_ptr<Replica<Simulated>>> replica;
     vector<unique_ptr<vr::Client<Simulated>>> client;
 
-    VR() :
-        config{1, {"replica-0", "replica-1", "replica-2"}, {}},
-        transport(config)
+    VR() : config{0, {}}, transport(config) { spawnReplica(3); }
+
+    void spawnReplica(int n_replica)
     {
-        for (int i = 0; i < config.n_replica(); i += 1) {
+        while (int(replica.size()) < n_replica) {
+            config.replica_address_list.push_back(
+                fmt::format("replica-{}", replica.size()));
+            config.n_fault = (config.n_replica() - 1) / 2;
             app.push_back(make_unique<MockApp>());
             log.push_back(make_unique<VRLog>(*app.back()));
-            replica.push_back(
-                make_unique<Replica<Simulated>>(transport, *log.back(), i, 1));
+            replica.push_back(make_unique<Replica<Simulated>>(
+                transport, *log.back(), replica.size(), 1));
         }
     }
 
     void spawnClient(int n_client)
     {
-        for (int i = 0; i < n_client; i += 1) {
+        while (int(client.size()) < n_client) {
             client.push_back(make_unique<vr::Client<Simulated>>(transport));
         }
     }
@@ -196,6 +199,31 @@ TEST_F(VR, NoResendAfterViewChange)
         });
     });
     transport.spawn(1020ms, [&] { transport.terminate(); });
+    transport.run();
+    ASSERT_TRUE(completed);
+}
+
+TEST_F(VR, DoubleViewChange)
+{
+    spawnReplica(5);
+    spawnClient(1);
+    transport.spawn(0ms, [&] {
+        transport.addFilter(1, [&](auto &source, auto &dest, auto &) {
+            return source != config.replica_address_list[0] &&
+                   dest != config.replica_address_list[0];
+        });
+        transport.addFilter(2, [&](auto &source, auto &dest, auto &) {
+            return source != config.replica_address_list[1] &&
+                   dest != config.replica_address_list[1];
+        });
+    });
+    bool completed = false;
+    transport.spawn(10ms, [&] {
+        client[0]->invoke(Data(), [&](auto) {
+            completed = true;
+            transport.terminate();
+        });
+    });
     transport.run();
     ASSERT_TRUE(completed);
 }
