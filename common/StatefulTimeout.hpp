@@ -25,7 +25,7 @@ template <TransportTrait Transport> class StatefulTimeout
     Fn<void()> callback;
     std::chrono::microseconds delay;
 
-    Fn<void()> cancel;
+    FnOnce<void()> cancel;
 
 public:
     //! Construct a timeout. After `enable` for `delay`, the `callback` will be
@@ -52,10 +52,10 @@ public:
     void reset()
     {
         disable();
-        cancel = transport.spawn(delay, [&] {
+        cancel = std::move(transport.spawn(delay, [&] {
             cancel = nullptr;
             callback();
-        });
+        }));
     }
 
     //! Similar to `reset`, only nothing will happen except the first calling,

@@ -1,6 +1,6 @@
+#include "replication/unreplicated/Client.hpp"
 #include "app/Null.hpp"
 #include "common/ListLog.hpp"
-#include "replication/unreplicated/Replica.hpp"
 #include "transport/DPDKClient.hpp"
 
 using namespace oskr; // NOLINT
@@ -18,6 +18,6 @@ int main(int, char *argv[])
     NullApp app;
     ListLog log(app);
 
-    unreplicated::Replica replica(transport, log);
+    unreplicated::Client<DPDKClient> client(transport);
     return 0;
 }

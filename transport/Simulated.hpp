@@ -59,7 +59,7 @@ public:
 
     void spawn(Callback callback) { spawn(0us, std::move(callback)); }
 
-    Fn<void()> spawn(microseconds delay, Callback callback)
+    FnOnce<void()> spawn(microseconds delay, Callback callback)
     {
         // TODO cancel timeout in a more elegant fashion, e.g., remove from
         // queue
