@@ -123,7 +123,7 @@ TEST_F(VR, OneRequest)
                 ASSERT_EQ(
                     string(result.begin(), result.end()), "Re: One request");
                 checked = true;
-                transport.terminate();
+                transport.stop();
             });
     });
     transport.run();
@@ -140,7 +140,7 @@ TEST_F(VR, TenRequest)
         client[0]->invoke(Data(), [&](auto) {
             i += 1;
             if (i == 10) {
-                transport.terminate();
+                transport.stop();
                 return;
             }
             close_loop();
@@ -156,7 +156,7 @@ TEST_F(VR, EventuallyAllCommit)
 {
     spawnClient(1);
     transport.spawn(0ms, [&] { client[0]->invoke(Data(), [&](auto) {}); });
-    transport.spawn(210ms, [&] { transport.terminate(); });
+    transport.spawn(210ms, [&] { transport.stop(); });
     transport.run();
     for (size_t i = 0; i < app.size(); i += 1) {
         ASSERT_EQ(app[i]->op_list.size(), 1);
@@ -176,7 +176,7 @@ TEST_F(VR, ViewChange)
     transport.spawn(10ms, [&] {
         client[0]->invoke(Data(), [&](auto) {
             completed = true;
-            transport.terminate();
+            transport.stop();
         });
     });
     transport.run();
@@ -198,7 +198,7 @@ TEST_F(VR, NoResendAfterViewChange)
             client[0]->invoke(Data(), [&](auto) { completed = true; });
         });
     });
-    transport.spawn(1020ms, [&] { transport.terminate(); });
+    transport.spawn(1020ms, [&] { transport.stop(); });
     transport.run();
     ASSERT_TRUE(completed);
 }
@@ -221,7 +221,7 @@ TEST_F(VR, DoubleViewChange)
     transport.spawn(10ms, [&] {
         client[0]->invoke(Data(), [&](auto) {
             completed = true;
-            transport.terminate();
+            transport.stop();
         });
     });
     transport.run();
@@ -242,7 +242,7 @@ TEST_F(VR, OneSecond)
             if (time_up) {
                 n_client_done += 1;
                 if (n_client_done == 10) {
-                    transport.terminate();
+                    transport.stop();
                 }
                 return;
             }

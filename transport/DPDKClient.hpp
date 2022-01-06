@@ -6,6 +6,7 @@
 #include <rte_eal.h>
 #include <rte_ethdev.h>
 #include <rte_ether.h>
+#include <rte_launch.h>
 #include <rte_mbuf.h>
 #include <rte_timer.h>
 
@@ -32,7 +33,7 @@ static inline int port_init(
     uint16_t port, struct rte_mempool *mbuf_pool, struct rte_ether_addr &addr)
 {
     struct rte_eth_conf port_conf;
-    const uint16_t rx_rings = 1, tx_rings = 1;
+    const uint16_t rx_rings = rte_lcore_count(), tx_rings = rte_lcore_count();
     uint16_t nb_rxd = RX_RING_SIZE;
     uint16_t nb_txd = TX_RING_SIZE;
     int retval;
@@ -65,7 +66,7 @@ static inline int port_init(
     if (retval != 0)
         return retval;
 
-    /* Allocate and set up 1 RX queue per Ethernet port. */
+    /* Allocate and set up 1 RX queue per lcore. */
     for (q = 0; q < rx_rings; q++) {
         retval = rte_eth_rx_queue_setup(
             port, q, nb_rxd, rte_eth_dev_socket_id(port), NULL, mbuf_pool);
@@ -75,7 +76,7 @@ static inline int port_init(
 
     txconf = dev_info.default_txconf;
     txconf.offloads = port_conf.txmode.offloads;
-    /* Allocate and set up 1 TX queue per Ethernet port. */
+    /* Allocate and set up 1 TX queue per lcore. */
     for (q = 0; q < tx_rings; q++) {
         retval = rte_eth_tx_queue_setup(
             port, q, nb_txd, rte_eth_dev_socket_id(port), &txconf);
@@ -108,11 +109,12 @@ static inline int port_init(
     return 0;
 }
 /* >8 End of main functional part of port initialization. */
-//----
+// ----
 
 namespace oskr
 {
 class DPDKClient;
+
 struct MBufDesc {
     DPDKClient &transport;
     struct rte_mbuf *mbuf;
@@ -132,12 +134,11 @@ struct MBufDesc {
 
     std::uint8_t *data() const
     {
-        return rte_pktmbuf_mtod(mbuf, std::uint8_t *);
+        return rte_pktmbuf_mtod_offset(mbuf, std::uint8_t *, 18);
     }
-    std::size_t size() const { return rte_pktmbuf_data_len(mbuf); }
+    std::size_t size() const { return rte_pktmbuf_data_len(mbuf) - 18; }
 };
 
-class DPDKClient;
 template <> struct TransportMeta<DPDKClient> {
     using Address = std::pair<struct rte_ether_addr, std::uint16_t>;
     static constexpr std::size_t buffer_size = RTE_MBUF_DEFAULT_DATAROOM - 18;
@@ -152,11 +153,42 @@ bool operator==(
            lhs.second == rhs.second;
 }
 
+/*! Transport implementation based on DPDK and designed for clients.
+
+Notable features/assumptions:
+- No task-level parallization, i.e., every receiver is (almost) pinned to one
+lcore worker.
+- Timeout resolution is 1 millisecond.
+- Non-locking receiver state accessing (i.e., closure calling). All packets
+arriving the same receiver will be rx by the same lcore, and the lcore worker
+finish all `spawn`ed tasks before processing the next packet, so there is no
+cross-packet state race by nature.
+- No multicast receiver support.
+- No dynamical rx buffering. Even if receiver closure is lightweight, if spawned
+task stucks, rx packet will still be dropped. Actually, spawned task is expected
+to be lightweight as well.
+
+The transport implementation promises that receiver closure will always be
+called from the same lcore worker, except one case: the external `spawn` call
+before calling `run` from main thread, which normally used for "igniting" the
+close loop client. That callback of `spawn`, including the `invoke` calling
+which is probably inside, will be executed by the main thread.
+
+Because the implementation of `spawnConcurrent` is actually sequential, it is
+meaningless in the sense of improving throughput performance. See `BasicClient`
+as an example of receiver suitable for used with `DPDKClient`.
+*/
 class DPDKClient : public TransportBase<DPDKClient>
 {
     struct rte_mempool *pool;
     struct rte_ether_addr mac_address;
     std::vector<Receiver> receiver_list;
+    volatile bool force_quit;
+
+    struct TimerBox {
+        struct rte_timer timer;
+        Callback callback;
+    };
 
 public:
     const Config<DPDKClient> &config;
@@ -173,15 +205,15 @@ public:
         receiver_list.push_back(receiver);
     }
 
+    void registerMulticastReceiver(Receiver)
+    {
+        panic("unsupported: register multicast receiver");
+    }
+
     void spawn(Callback) { panic("Todo"); }
 
     void spawnConcurrent(Callback callback) { spawn(std::move(callback)); }
 
-private:
-    struct rte_mbuf *
-    buildTXMBuf(const Address &source, const Address &dest, Write write);
-
-public:
     Address allocateAddress() { return {mac_address, receiver_list.size()}; }
 
     template <typename Sender>
@@ -222,28 +254,36 @@ public:
         }
     }
 
-private:
-    struct TimerBox {
-        struct rte_timer timer;
-        Callback callback;
-    };
-
-public:
     FnOnce<void()> spawn(std::chrono::microseconds delay, Callback callback)
     {
         TimerBox *box = new TimerBox;
         rte_timer_init(&box->timer);
         box->callback = std::move(callback);
         rte_timer_reset(
-            &box->timer, 0, SINGLE, rte_lcore_id(), rteTimerCallback, box);
+            &box->timer, 0, SINGLE, rte_lcore_id(), timerCallback, box);
         return [box] {
             rte_timer_stop(&box->timer);
             delete box;
         };
     }
 
+    // maybe better to use friend?
+    void releaseDescriptor(MBufDesc &desc) { rte_pktmbuf_free(desc.mbuf); }
+
+    void run()
+    {
+        force_quit = false;
+        rte_eal_mp_remote_launch(lcoreMainLoop, this, CALL_MAIN);
+        rte_eal_mp_wait_lcore();
+    }
+
+    void stop() { force_quit = true; }
+
 private:
-    static void rteTimerCallback(struct rte_timer *, void *arg)
+    struct rte_mbuf *
+    buildTXMBuf(const Address &source, const Address &dest, Write write);
+
+    static void timerCallback(struct rte_timer *, void *arg)
     {
         TimerBox *box = (TimerBox *)arg;
         Callback callback = std::move(box->callback);
@@ -252,8 +292,13 @@ private:
         callback();
     }
 
-public:
-    void releaseDescriptor(MBufDesc &desc) { rte_pktmbuf_free(desc.mbuf); }
+    static int lcoreMainLoop(void *arg)
+    {
+        ((DPDKClient *)arg)->mainLoop();
+        return 0;
+    }
+
+    void mainLoop();
 };
 
 MBufDesc::~MBufDesc() { transport.releaseDescriptor(*this); }
@@ -280,14 +325,11 @@ DPDKClient::DPDKClient(Config<DPDKClient> &config, char *prog_name) :
         panic("cannot create mbuf pool");
     }
 
-    std::uint16_t port_id;
-    RTE_ETH_FOREACH_DEV(port_id)
-    {
-        if (port_init(port_id, pool, mac_address) != 0) {
-            panic("cannot init port {}", port_id);
-        }
-        break;
+    std::uint16_t port_id = rte_eth_find_next(0);
+    if (port_init(port_id, pool, mac_address) != 0) {
+        panic("cannot init port {}", port_id);
     }
+    // TODO setup flow policy
 
     // non-dpdk setup
     // insert a placeholder receiver, so client address starts from 1
@@ -314,6 +356,37 @@ DPDKClient::buildTXMBuf(const Address &source, const Address &dest, Write write)
         18 + write(TxSpan<buffer_size>(
                  rte_pktmbuf_mtod_offset(mbuf, uint8_t *, 18), buffer_size));
     return mbuf;
+}
+
+void DPDKClient::mainLoop()
+{
+    const std::uint16_t port_id = rte_eth_find_next(0);
+    // TODO get queue id
+    const std::uint16_t queue_id = 0;
+    while (!force_quit) {
+        // TODO timer
+
+        struct rte_mbuf *pkts[BURST_SIZE];
+        const std::uint16_t n_rx =
+            rte_eth_rx_burst(port_id, queue_id, pkts, BURST_SIZE);
+        for (std::uint16_t i = 0; i < n_rx; i += 1) {
+            struct rte_mbuf *pkt = pkts[i];
+            Address remote;
+            rte_ether_addr_copy(
+                &rte_pktmbuf_mtod(pkt, struct rte_ether_hdr *)->src_addr,
+                &remote.first);
+            remote.second = rte_be_to_cpu_16(
+                *rte_pktmbuf_mtod_offset(pkt, rte_be16_t *, 16));
+
+            if (remote.second >= receiver_list.size()) {
+                warn("unregistered: local id = {}", remote.second);
+                rte_pktmbuf_free(pkt);
+                continue;
+            }
+            receiver_list.at(remote.second)(remote, MBufDesc(pkt, *this));
+            // TODO finish all spawned tasks
+        }
+    }
 }
 
 } // namespace oskr

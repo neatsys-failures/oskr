@@ -88,7 +88,7 @@ public:
 
     int channel() const { return channel_id; }
 
-    void terminate() { destiny_queue.clear(); }
+    void stop() { destiny_queue.clear(); }
 
     void run(microseconds time_limit = 10 * 1000ms);
 
