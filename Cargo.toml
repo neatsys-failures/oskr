@@ -13,3 +13,7 @@ serde = "1.0.135"
 serde_derive = "1.0.135"
 smallvec = "1.8.0"
 tokio = { version = "1.15.0", features = ["full"] }
+
+[build-dependencies]
+cc = "1.0.72"
+pkg-config = "0.3.24"

@@ -27,10 +27,8 @@ struct rte_mbuf {
 }
 
 extern "C" {
-    fn rte_pktmbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
-    fn rte_pktmbuf_free(m: NonNull<rte_mbuf>);
-
-    // this two corresponding to `rte_eth_*` which is static inline
+    fn mbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
+    fn mbuf_free(m: NonNull<rte_mbuf>);
     fn rx_burst(port_id: u16, queue_id: u16, rx_pkts: *mut *mut rte_mbuf, nb_pkts: u16) -> u16;
     fn tx_burst(
         port_id: u16,
@@ -90,7 +88,7 @@ impl Transport {
     }
 
     unsafe fn drop_rx_buffer_data(&self, data: RxBufferData) {
-        rte_pktmbuf_free(buffer_data_to_mbuf(data.0));
+        mbuf_free(buffer_data_to_mbuf(data.0));
     }
 }
 
@@ -102,7 +100,7 @@ impl TransportTrait for Transport {
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         unsafe {
-            let mut mbuf = NonNull::new(rte_pktmbuf_alloc(self.pktmpool)).unwrap();
+            let mut mbuf = NonNull::new(mbuf_alloc(self.pktmpool)).unwrap();
             Self::set_source_address(
                 NonNull::new(mbuf_to_buffer_data(mbuf).as_ptr().offset(-16)).unwrap(),
                 source.get_address(),
@@ -139,7 +137,7 @@ impl TransportTrait for Transport {
                 if dest == source.get_address() {
                     continue;
                 }
-                let mut mbuf = NonNull::new(rte_pktmbuf_alloc(self.pktmpool)).unwrap();
+                let mut mbuf = NonNull::new(mbuf_alloc(self.pktmpool)).unwrap();
                 copy_nonoverlapping(
                     &template as *const u8,
                     mbuf_to_buffer_data(mbuf).as_ptr(),
