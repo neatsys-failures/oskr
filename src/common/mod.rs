@@ -11,7 +11,7 @@ impl Transport for NullTransport {
         &self,
         _: &dyn TransportReceiver,
         _: &TransportAddress,
-        _: &mut dyn FnMut(&mut [u8]) -> u64,
+        _: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         unimplemented!()
     }
@@ -19,11 +19,11 @@ impl Transport for NullTransport {
         &self,
         _: &dyn TransportReceiver,
         _: ReplicaId,
-        _: &mut dyn FnMut(&mut [u8]) -> u64,
+        _: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         unimplemented!()
     }
-    fn send_message_to_all(&self, _: &dyn TransportReceiver, _: &mut dyn FnMut(&mut [u8]) -> u64) {
+    fn send_message_to_all(&self, _: &dyn TransportReceiver, _: &mut dyn FnMut(&mut [u8]) -> u16) {
         unimplemented!()
     }
 }
@@ -38,10 +38,10 @@ pub fn generate_id() -> ClientId {
     ]
 }
 
-pub(crate) fn bincode<M: Serialize>(message: M) -> impl Fn(&mut [u8]) -> u64 {
+pub(crate) fn bincode<M: Serialize>(message: M) -> impl Fn(&mut [u8]) -> u16 {
     move |buffer| {
         let mut cursor = Cursor::new(buffer);
         serialize_into(&mut cursor, &message).unwrap();
-        cursor.position()
+        cursor.position() as _
     }
 }

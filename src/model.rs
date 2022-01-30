@@ -2,6 +2,7 @@ use smallvec::SmallVec;
 use std::future::Future;
 use std::ops::Deref;
 use std::pin::Pin;
+use std::ptr::NonNull;
 use std::slice::from_raw_parts;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -16,48 +17,48 @@ pub struct TransportAddress(pub SmallVec<[u8; 16]>);
 
 pub trait Transport
 where
-    Self: Sync,
+    Self: Send + Sync,
 {
     fn send_message(
         &self,
         source: &dyn TransportReceiver,
         dest: &TransportAddress,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
     fn send_message_to_replica(
         &self,
         source: &dyn TransportReceiver,
         id: ReplicaId,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
     fn send_message_to_all(
         &self,
         source: &dyn TransportReceiver,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
 }
 
 pub trait TransportReceiver {
     fn get_address(&self) -> &TransportAddress;
-    fn get_inbox(&self) -> Box<dyn Fn(&TransportAddress, RxBuffer)>;
+    fn get_inbox(&self) -> Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)>;
 }
 
 #[derive(Debug, Clone)]
-pub struct RxBufferData(pub *const u8);
+pub struct RxBufferData(pub NonNull<u8>);
 
 unsafe impl Send for RxBufferData {}
 
 #[derive(Debug)]
 pub struct RxBuffer {
     pub data: RxBufferData,
-    pub length: usize,
+    pub length: u16,
     pub drop_tx: UnboundedSender<RxBufferData>,
 }
 
 impl Deref for RxBuffer {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.data.0, self.length) }
+        unsafe { from_raw_parts(self.data.0.as_ptr(), self.length as usize) }
     }
 }
 

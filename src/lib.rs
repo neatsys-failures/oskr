@@ -3,6 +3,7 @@ pub mod model;
 
 #[cfg(test)]
 pub(crate) mod simulated;
+pub mod dpdk;
 
 pub mod replication {
     pub mod unreplicated;

@@ -58,7 +58,7 @@ impl TransportReceiver for Replica {
     fn get_address(&self) -> &TransportAddress {
         &self.config.address_list[0]
     }
-    fn get_inbox(&self) -> Box<dyn Fn(&TransportAddress, RxBuffer)> {
+    fn get_inbox(&self) -> Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)> {
         let tx = self.tx.clone();
         Box::new(move |remote, buffer| tx.send((remote.clone(), buffer)).unwrap())
     }
@@ -85,12 +85,13 @@ impl Replica {
                 return;
             }
         }
+
         self.op_number += 1;
         let result = self.app.execute(&request.op);
-        let mut reply = ReplyMessage::default();
-        reply.sequence = request.sequence;
-        reply.result = result;
-
+        let reply = ReplyMessage {
+            sequence: request.sequence,
+            result,
+        };
         self.client_table.insert(request.id, reply.clone());
         self.transport
             .send_message(self, remote, &mut bincode(reply));
@@ -142,7 +143,7 @@ impl TransportReceiver for Client {
     fn get_address(&self) -> &TransportAddress {
         &self.address
     }
-    fn get_inbox(&self) -> Box<dyn Fn(&TransportAddress, RxBuffer)> {
+    fn get_inbox(&self) -> Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)> {
         let tx = self.tx.clone();
         Box::new(move |remote, buffer| tx.send(Activity::Rx(remote.clone(), buffer)).unwrap())
     }
@@ -200,10 +201,11 @@ impl Client {
     }
 
     fn send_request(&mut self) {
-        let mut request = RequestMessage::default();
-        request.id = self.id;
-        request.sequence = self.sequence;
-        request.op = self.pending.as_ref().unwrap().op.clone();
+        let request = RequestMessage {
+            id: self.id,
+            sequence: self.sequence,
+            op: self.pending.as_ref().unwrap().op.clone(),
+        };
         self.transport
             .send_message_to_replica(self, 0, &mut bincode(request));
     }

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::panic::*;
 use std::pin::Pin;
+use std::ptr::NonNull;
 use std::sync::Arc;
 use std::thread::Result as CatchResult;
 use std::time::Duration;
@@ -15,12 +16,10 @@ use tokio::time::sleep;
 
 pub struct Transport {
     config: Arc<Config>,
-    inbox_table: HashMap<TransportAddress, Box<dyn Fn(&TransportAddress, RxBuffer)>>,
+    inbox_table: HashMap<TransportAddress, Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)>>,
     drop_tx: UnboundedSender<RxBufferData>,
     shutdown_tx: Sender<CatchResult<()>>,
 }
-
-unsafe impl Sync for Transport {}
 
 impl Transport {
     pub fn register(&mut self, receiver: &dyn TransportReceiver) {
@@ -34,12 +33,12 @@ impl TransportTrait for Transport {
         &self,
         source: &dyn TransportReceiver,
         dest: &TransportAddress,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         let mut buffer = Box::new([0; 9000]);
-        let length = message(&mut *buffer) as usize;
+        let length = message(&mut *buffer);
         let buffer = RxBuffer {
-            data: RxBufferData(Box::leak(buffer) as *const u8),
+            data: RxBufferData(NonNull::new(Box::leak(buffer) as *mut _).unwrap()),
             length,
             drop_tx: self.drop_tx.clone(),
         };
@@ -50,7 +49,7 @@ impl TransportTrait for Transport {
         &self,
         source: &dyn TransportReceiver,
         id: ReplicaId,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         self.send_message(source, &self.config.address_list[id as usize], message);
     }
@@ -58,15 +57,15 @@ impl TransportTrait for Transport {
     fn send_message_to_all(
         &self,
         source: &dyn TransportReceiver,
-        message: &mut dyn FnMut(&mut [u8]) -> u64,
+        message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         let mut buffer = [0; 9000];
-        let length = message(&mut buffer) as usize;
+        let length = message(&mut buffer);
         for dest in &self.config.address_list {
             if dest != source.get_address() {
                 let buffer = Box::new(buffer);
                 let buffer = RxBuffer {
-                    data: RxBufferData(Box::leak(buffer) as *const u8),
+                    data: RxBufferData(NonNull::new(Box::leak(buffer) as *mut _).unwrap()),
                     length,
                     drop_tx: self.drop_tx.clone(),
                 };
@@ -110,7 +109,7 @@ impl Transport {
         let (drop_tx, mut drop_rx): (_, UnboundedReceiver<RxBufferData>) = unbounded_channel();
         let drop_thread = spawn(async move {
             while let Some(data) = drop_rx.recv().await {
-                drop(unsafe { Box::from_raw(data.0 as *mut [u8; 9000]) });
+                drop(unsafe { Box::from_raw(data.0.as_ptr() as *mut [u8; 9000]) });
             }
         });
 
