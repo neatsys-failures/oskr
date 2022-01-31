@@ -17,18 +17,18 @@ void mbuf_set_packet_length(struct rte_mbuf *mbuf, uint16_t length) {
     mbuf->pkt_len = length;
 }
 
-uint16_t rx_burst(uint16_t port_id, uint16_t queue_id, struct rte_mbuf **rx_pkts, uint16_t nb_pkts) {
+uint16_t oskr_eth_rx_burst(uint16_t port_id, uint16_t queue_id, struct rte_mbuf **rx_pkts, uint16_t nb_pkts) {
     return rte_eth_rx_burst(port_id, queue_id, rx_pkts, nb_pkts);
 }
 
-uint16_t tx_burst(uint16_t port_id, uint16_t queue_id, struct rte_mbuf **tx_pkts, uint16_t nb_pkts) {
+uint16_t oskr_eth_tx_burst(uint16_t port_id, uint16_t queue_id, struct rte_mbuf **tx_pkts, uint16_t nb_pkts) {
     return rte_eth_tx_burst(port_id, queue_id, tx_pkts, nb_pkts);
 }
 
-struct rte_mbuf *mbuf_alloc(struct rte_mempool *mp) {
+struct rte_mbuf *oskr_pktmbuf_alloc(struct rte_mempool *mp) {
     return rte_pktmbuf_alloc(mp);
 }
 
-void mbuf_free(struct rte_mbuf *m) {
+void oskr_pktmbuf_free(struct rte_mbuf *m) {
     rte_pktmbuf_free(m);
 }

@@ -81,6 +81,7 @@ impl Replica {
             if reply.sequence == request.sequence {
                 let reply = reply.clone();
                 self.transport
+                    .clone()
                     .send_message(self, remote, &mut bincode(reply));
                 return;
             }
@@ -94,6 +95,7 @@ impl Replica {
         };
         self.client_table.insert(request.id, reply.clone());
         self.transport
+            .clone()
             .send_message(self, remote, &mut bincode(reply));
     }
 }
@@ -207,6 +209,7 @@ impl Client {
             op: self.pending.as_ref().unwrap().op.clone(),
         };
         self.transport
+            .clone()
             .send_message_to_replica(self, 0, &mut bincode(request));
     }
 }

@@ -1,10 +1,11 @@
 use smallvec::SmallVec;
+use std::any::Any;
+use std::fmt::*;
 use std::future::Future;
 use std::ops::Deref;
 use std::pin::Pin;
 use std::ptr::NonNull;
-use std::slice::from_raw_parts;
-use tokio::sync::mpsc::UnboundedSender;
+use std::sync::Arc;
 
 pub(crate) type OpNumber = u64;
 pub(crate) type ViewNumber = u16;
@@ -19,20 +20,23 @@ pub trait Transport
 where
     Self: Send + Sync,
 {
+    fn deref_rx_buffer(&self, data: RxBufferData) -> &[u8];
+    fn drop_rx_buffer(&self, data: RxBufferData);
+
     fn send_message(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         dest: &TransportAddress,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
     fn send_message_to_replica(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         id: ReplicaId,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
     fn send_message_to_all(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     );
@@ -44,27 +48,33 @@ pub trait TransportReceiver {
 }
 
 #[derive(Debug, Clone)]
-pub struct RxBufferData(pub NonNull<u8>);
+pub struct RxBufferData(pub NonNull<dyn Any>);
 
 unsafe impl Send for RxBufferData {}
 
-#[derive(Debug)]
 pub struct RxBuffer {
     pub data: RxBufferData,
-    pub length: u16,
-    pub drop_tx: UnboundedSender<RxBufferData>,
+    pub transport: Arc<dyn Transport>,
+}
+
+impl Debug for RxBuffer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        f.debug_struct("RxBuffer")
+            .field("data", &self.data)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Deref for RxBuffer {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.data.0.as_ptr(), self.length as usize) }
+        self.transport.deref_rx_buffer(self.data.clone())
     }
 }
 
 impl Drop for RxBuffer {
     fn drop(&mut self) {
-        self.drop_tx.send(self.data.clone()).unwrap();
+        self.transport.drop_rx_buffer(self.data.clone());
     }
 }
 

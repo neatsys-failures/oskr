@@ -4,11 +4,19 @@ use rand::distributions::Alphanumeric;
 use rand::*;
 use serde::Serialize;
 use std::io::Cursor;
+use std::sync::Arc;
 
 pub(crate) struct NullTransport;
 impl Transport for NullTransport {
+    fn deref_rx_buffer(&self, _: RxBufferData) -> &[u8] {
+        unimplemented!()
+    }
+    fn drop_rx_buffer(&self, _: RxBufferData) {
+        unimplemented!()
+    }
+
     fn send_message(
-        &self,
+        self: Arc<Self>,
         _: &dyn TransportReceiver,
         _: &TransportAddress,
         _: &mut dyn FnMut(&mut [u8]) -> u16,
@@ -16,14 +24,18 @@ impl Transport for NullTransport {
         unimplemented!()
     }
     fn send_message_to_replica(
-        &self,
+        self: Arc<Self>,
         _: &dyn TransportReceiver,
         _: ReplicaId,
         _: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         unimplemented!()
     }
-    fn send_message_to_all(&self, _: &dyn TransportReceiver, _: &mut dyn FnMut(&mut [u8]) -> u16) {
+    fn send_message_to_all(
+        self: Arc<Self>,
+        _: &dyn TransportReceiver,
+        _: &mut dyn FnMut(&mut [u8]) -> u16,
+    ) {
         unimplemented!()
     }
 }

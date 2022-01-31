@@ -2,17 +2,10 @@ use crate::model::{Transport as TransportTrait, *};
 use smallvec::SmallVec;
 use std::marker::*;
 use std::mem::*;
+use std::os::raw::*;
 use std::ptr::*;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 use std::sync::Arc;
-use tokio::sync::mpsc::*;
-use tokio::task::*;
-
-#[repr(C)]
-struct rte_ethdev {
-    _data: [u8; 0],
-    _marker: PhantomData<(*mut u8, PhantomPinned)>,
-}
 
 #[repr(C)]
 struct rte_mempool {
@@ -27,18 +20,41 @@ struct rte_mbuf {
 }
 
 extern "C" {
-    fn mbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
-    fn mbuf_free(m: NonNull<rte_mbuf>);
-    fn rx_burst(port_id: u16, queue_id: u16, rx_pkts: *mut *mut rte_mbuf, nb_pkts: u16) -> u16;
-    fn tx_burst(
+    // interfaces that exist in rte_* libraries
+    fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
+    fn rte_pktmbuf_pool_create(
+        name: NonNull<c_char>,
+        n: c_uint,
+        cache_size: c_uint,
+        priv_size: u16,
+        data_root_size: u16,
+        socket_id: c_int,
+    ) -> *mut rte_mempool;
+    fn rte_eth_dev_socket_id(port_id: u16) -> c_int;
+
+    // interfaces that provided in `static inline` fashion, and "instantiated"
+    // by DPDK shim
+    // the "rte_*" prefix is replaced to "oskr_*" to indicate symbol's owner
+    fn oskr_pktmbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
+    fn oskr_pktmbuf_free(m: NonNull<rte_mbuf>);
+    fn oskr_eth_rx_burst(
+        port_id: u16,
+        queue_id: u16,
+        rx_pkts: *mut *mut rte_mbuf,
+        nb_pkts: u16,
+    ) -> u16;
+    fn oskr_eth_tx_burst(
         port_id: u16,
         queue_id: u16,
         tx_pkts: NonNull<NonNull<rte_mbuf>>,
         nb_pkts: u16,
     ) -> u16;
 
+    // addiational custom interfaces on rte_mbuf, not correspond to anything of
+    // DPDK
+    // it seems tricky to replicate rte_mbuf's struct layout from Rust side, so
+    // necessary operations directly performed on struct fields are wrapped
     fn mbuf_to_buffer_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8>;
-    fn buffer_data_to_mbuf(data: NonNull<u8>) -> NonNull<rte_mbuf>;
     fn mbuf_get_packet_length(mbuf: NonNull<rte_mbuf>) -> u16;
     fn mbuf_set_packet_length(mbuf: NonNull<rte_mbuf>, length: u16);
 }
@@ -86,21 +102,42 @@ impl Transport {
             address
         })
     }
-
-    unsafe fn drop_rx_buffer_data(&self, data: RxBufferData) {
-        mbuf_free(buffer_data_to_mbuf(data.0));
-    }
 }
 
 impl TransportTrait for Transport {
+    fn deref_rx_buffer(&self, mut data: RxBufferData) -> &[u8] {
+        let mbuf = unsafe { data.0.as_mut() }
+            .downcast_mut::<rte_mbuf>()
+            .unwrap();
+        let mbuf = NonNull::new(mbuf).unwrap();
+        unsafe {
+            from_raw_parts(
+                mbuf_to_buffer_data(mbuf).as_ptr(),
+                mbuf_get_packet_length(mbuf) as usize,
+            )
+        }
+    }
+
+    fn drop_rx_buffer(&self, data: RxBufferData) {
+        unsafe {
+            oskr_pktmbuf_free(
+                data.0
+                    .as_ref()
+                    .downcast_ref::<NonNull<rte_mbuf>>()
+                    .unwrap()
+                    .clone(),
+            );
+        }
+    }
+
     fn send_message(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         dest: &TransportAddress,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         unsafe {
-            let mut mbuf = NonNull::new(mbuf_alloc(self.pktmpool)).unwrap();
+            let mut mbuf = NonNull::new(oskr_pktmbuf_alloc(self.pktmpool)).unwrap();
             Self::set_source_address(
                 NonNull::new(mbuf_to_buffer_data(mbuf).as_ptr().offset(-16)).unwrap(),
                 source.get_address(),
@@ -108,21 +145,22 @@ impl TransportTrait for Transport {
             Self::set_dest_address(mbuf, dest);
             let length = message(from_raw_parts_mut(mbuf_to_buffer_data(mbuf).as_ptr(), 1480)) + 16;
             mbuf_set_packet_length(mbuf, length);
-            tx_burst(self.port, 0, NonNull::new(&mut mbuf).unwrap(), 1);
+            oskr_eth_tx_burst(self.port, 0, NonNull::new(&mut mbuf).unwrap(), 1);
         }
     }
 
     fn send_message_to_replica(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         id: ReplicaId,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
-        self.send_message(source, &self.config.address_list[id as usize], message);
+        self.clone()
+            .send_message(source, &self.config.address_list[id as usize], message);
     }
 
     fn send_message_to_all(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
@@ -133,11 +171,13 @@ impl TransportTrait for Transport {
                 source.get_address(),
             );
             let length = message(&mut template[16..]) + 16;
+
+            let mut burst = Vec::new(); // should optimize?
             for dest in &self.config.address_list {
                 if dest == source.get_address() {
                     continue;
                 }
-                let mut mbuf = NonNull::new(mbuf_alloc(self.pktmpool)).unwrap();
+                let mbuf = NonNull::new(oskr_pktmbuf_alloc(self.pktmpool)).unwrap();
                 copy_nonoverlapping(
                     &template as *const u8,
                     mbuf_to_buffer_data(mbuf).as_ptr(),
@@ -145,7 +185,15 @@ impl TransportTrait for Transport {
                 );
                 Self::set_dest_address(mbuf, dest);
                 mbuf_set_packet_length(mbuf, length);
-                tx_burst(self.port, 0, NonNull::new(&mut mbuf).unwrap(), 1);
+                burst.push(mbuf);
+            }
+            if burst.len() > 0 {
+                oskr_eth_tx_burst(
+                    self.port,
+                    0,
+                    NonNull::new(burst.as_mut_ptr()).unwrap(),
+                    burst.len() as u16,
+                );
             }
         }
     }
@@ -169,34 +217,23 @@ impl Transport {
         });
         init(receiver, transport.clone());
 
-        move || {
-            let (drop_tx, mut drop_rx) = unbounded_channel();
-            let drop_transport = transport.clone();
-            spawn(async move {
-                while let Some(data) = drop_rx.recv().await {
-                    unsafe { drop_transport.drop_rx_buffer_data(data) };
-                }
-            });
-
-            loop {
-                let burst = unsafe {
-                    let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
-                    let burst_size = rx_burst(0, 0, burst.as_mut_ptr() as *mut _, 32);
-                    &(burst.assume_init()[..burst_size as usize])
-                };
-                for mbuf in burst {
-                    let mbuf = NonNull::new(*mbuf).unwrap();
-                    unsafe {
-                        if Self::get_dest_address(mbuf) != address {
-                            continue;
-                        }
-                        let rx_buffer = RxBuffer {
-                            data: RxBufferData(mbuf_to_buffer_data(mbuf)),
-                            length: mbuf_get_packet_length(mbuf),
-                            drop_tx: drop_tx.clone(),
-                        };
-                        inbox(&Self::get_source_address(mbuf), rx_buffer);
+        move || loop {
+            let burst = unsafe {
+                let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
+                let burst_size = oskr_eth_rx_burst(0, 0, burst.as_mut_ptr() as *mut _, 32);
+                &(burst.assume_init()[..burst_size as usize])
+            };
+            for mbuf in burst {
+                let mbuf = NonNull::new(*mbuf).unwrap();
+                unsafe {
+                    if Self::get_dest_address(mbuf) != address {
+                        continue;
                     }
+                    let rx_buffer = RxBuffer {
+                        data: RxBufferData(mbuf),
+                        transport: transport.clone(),
+                    };
+                    inbox(&Self::get_source_address(mbuf), rx_buffer);
                 }
             }
         }

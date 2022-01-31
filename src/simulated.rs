@@ -17,7 +17,6 @@ use tokio::time::sleep;
 pub struct Transport {
     config: Arc<Config>,
     inbox_table: HashMap<TransportAddress, Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)>>,
-    drop_tx: UnboundedSender<RxBufferData>,
     shutdown_tx: Sender<CatchResult<()>>,
 }
 
@@ -29,45 +28,53 @@ impl Transport {
 }
 
 impl TransportTrait for Transport {
+    fn deref_rx_buffer(&self, data: RxBufferData) -> &[u8] {
+        unsafe { data.0.as_ref() }.downcast_ref::<Vec<_>>().unwrap()
+    }
+
+    fn drop_rx_buffer(&self, mut data: RxBufferData) {
+        drop(unsafe { Box::from_raw(data.0.as_mut().downcast_mut::<Vec<u8>>().unwrap()) });
+    }
+
     fn send_message(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         dest: &TransportAddress,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
-        let mut buffer = Box::new([0; 9000]);
-        let length = message(&mut *buffer);
+        let mut buffer = [0; 9000];
+        let length = message(&mut buffer) as usize;
+        let buffer: Box<Vec<_>> = Box::new((&buffer[..length]).into());
         let buffer = RxBuffer {
-            data: RxBufferData(NonNull::new(Box::leak(buffer) as *mut _).unwrap()),
-            length,
-            drop_tx: self.drop_tx.clone(),
+            data: RxBufferData(NonNull::new(Box::leak(buffer)).unwrap()),
+            transport: self.clone(),
         };
         self.inbox_table.get(dest).unwrap()(source.get_address(), buffer);
     }
 
     fn send_message_to_replica(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         id: ReplicaId,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
-        self.send_message(source, &self.config.address_list[id as usize], message);
+        let dest = &self.config.address_list[id as usize];
+        self.clone().send_message(source, dest, message);
     }
 
     fn send_message_to_all(
-        &self,
+        self: Arc<Self>,
         source: &dyn TransportReceiver,
         message: &mut dyn FnMut(&mut [u8]) -> u16,
     ) {
         let mut buffer = [0; 9000];
-        let length = message(&mut buffer);
+        let length = message(&mut buffer) as usize;
         for dest in &self.config.address_list {
             if dest != source.get_address() {
-                let buffer = Box::new(buffer);
+                let buffer: Box<Vec<_>> = Box::new((&buffer[..length]).into());
                 let buffer = RxBuffer {
-                    data: RxBufferData(NonNull::new(Box::leak(buffer) as *mut _).unwrap()),
-                    length,
-                    drop_tx: self.drop_tx.clone(),
+                    data: RxBufferData(NonNull::new(Box::leak(buffer)).unwrap()),
+                    transport: self.clone(),
                 };
                 self.inbox_table.get(dest).unwrap()(source.get_address(), buffer);
             }
@@ -106,19 +113,11 @@ impl Transport {
             + Send
             + for<'s> FnOnce(&'s mut S, Arc<Transport>) -> Pin<Box<dyn 's + Future<Output = ()>>>,
     {
-        let (drop_tx, mut drop_rx): (_, UnboundedReceiver<RxBufferData>) = unbounded_channel();
-        let drop_thread = spawn(async move {
-            while let Some(data) = drop_rx.recv().await {
-                drop(unsafe { Box::from_raw(data.0.as_ptr() as *mut [u8; 9000]) });
-            }
-        });
-
         let result = spawn_blocking(|| {
             let (shutdown_tx, mut shutdown_rx) = channel(1);
             let mut transport = Transport {
                 config,
                 inbox_table: HashMap::new(),
-                drop_tx,
                 shutdown_tx,
             };
 
@@ -143,7 +142,6 @@ impl Transport {
         .await
         .unwrap();
 
-        drop_thread.await.unwrap();
         if let Err(error) = result {
             resume_unwind(error);
         }
