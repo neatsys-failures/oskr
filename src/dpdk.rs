@@ -74,7 +74,7 @@ impl Transport {
         copy_nonoverlapping(source.0.as_ptr().offset(6), zero.as_ptr().offset(14), 1);
         copy_nonoverlapping(
             // https://stackoverflow.com/a/52682687
-            &(0x88d5 as u16).to_be_bytes() as *const _,
+            &0x88d5_u16.to_be_bytes() as *const _,
             zero.as_ptr().offset(12),
             2,
         );
@@ -106,9 +106,7 @@ impl Transport {
 
 impl TransportTrait for Transport {
     fn deref_rx_buffer(&self, mut data: RxBufferData) -> &[u8] {
-        let mbuf = unsafe { data.0.as_mut() }
-            .downcast_mut::<rte_mbuf>()
-            .unwrap();
+        let mbuf = unsafe { data.0.as_mut() }.downcast_mut().unwrap();
         let mbuf = NonNull::new(mbuf).unwrap();
         unsafe {
             from_raw_parts(
@@ -118,15 +116,9 @@ impl TransportTrait for Transport {
         }
     }
 
-    fn drop_rx_buffer(&self, data: RxBufferData) {
+    fn drop_rx_buffer(&self, mut data: RxBufferData) {
         unsafe {
-            oskr_pktmbuf_free(
-                data.0
-                    .as_ref()
-                    .downcast_ref::<NonNull<rte_mbuf>>()
-                    .unwrap()
-                    .clone(),
-            );
+            oskr_pktmbuf_free(NonNull::new(data.0.as_mut().downcast_mut().unwrap()).unwrap());
         }
     }
 
@@ -187,7 +179,7 @@ impl TransportTrait for Transport {
                 mbuf_set_packet_length(mbuf, length);
                 burst.push(mbuf);
             }
-            if burst.len() > 0 {
+            if !burst.is_empty() {
                 oskr_eth_tx_burst(
                     self.port,
                     0,
