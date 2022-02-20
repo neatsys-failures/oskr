@@ -1,216 +1,222 @@
-use crate::common::*;
-use crate::model::{Config, *};
+use crate::common::{generate_id, serialize, ClientId, Opaque, ReplicaId, RequestNumber};
+use crate::transport::{Receiver, Transport, TxAgent};
+use crate::App;
 use bincode::deserialize;
-use serde_derive::*;
+use derivative::Derivative;
+use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::mpsc::*;
-use tokio::task::*;
-use tokio::time::*;
+use tokio::select;
+use tokio::sync::{mpsc, oneshot};
+use tokio::task::spawn;
+use tokio::time::interval;
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct RequestMessage {
-    id: ClientId,
-    sequence: u32,
-    op: Data,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RequestMessage {
+    client_id: ClientId,
+    request_number: RequestNumber,
+    op: Opaque,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct ReplyMessage {
-    sequence: u32,
-    result: Data,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ReplyMessage {
+    request_number: RequestNumber,
+    result: Opaque,
 }
 
-pub struct Replica {
-    op_number: OpNumber,
-    app: Box<dyn App>,
-    client_table: HashMap<ClientId, ReplyMessage>,
+pub struct Client<T: Transport> {
+    tx: mpsc::UnboundedSender<Event<T>>,
+    rx: mpsc::UnboundedReceiver<Event<T>>,
+    transport: T::TxAgent,
 
-    transport: Arc<dyn Transport>,
-    tx: UnboundedSender<(TransportAddress, RxBuffer)>,
-    rx: UnboundedReceiver<(TransportAddress, RxBuffer)>,
-    config: Arc<Config>,
+    address: T::Address,
+    client_id: ClientId,
+    request_number: RequestNumber,
+    invoke: Option<Invoke>,
 }
 
-impl Replica {
-    pub fn new(config: Arc<Config>, app: Box<dyn App>) -> Self {
-        let (tx, rx) = unbounded_channel();
-        Self {
-            op_number: 0,
-            app,
-            client_table: HashMap::new(),
-            transport: Arc::new(NullTransport),
-            tx,
-            rx,
-            config,
-        }
-    }
-
-    pub fn init(&mut self, transport: Arc<dyn Transport>) {
-        self.transport = transport;
-    }
+struct Invoke {
+    request_number: u32,
+    op: Opaque,
+    tx: oneshot::Sender<Opaque>,
 }
 
-impl TransportReceiver for Replica {
-    fn get_address(&self) -> &TransportAddress {
-        &self.config.address_list[0]
-    }
-    fn get_inbox(&self) -> Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)> {
-        let tx = self.tx.clone();
-        Box::new(move |remote, buffer| tx.send((remote.clone(), buffer)).unwrap())
-    }
+#[derive(Derivative)]
+#[derivative(Debug(bound = "T::Address: Debug, T::RxBuffer: Debug"))]
+enum Event<T: Transport> {
+    Receive(T::Address, T::RxBuffer),
+    SendTimer,
 }
 
-impl Replica {
-    pub async fn run(&mut self) {
-        loop {
-            let (remote, buffer) = self.rx.recv().await.unwrap();
-            let request = deserialize(&*buffer).unwrap();
-            self.handle_request(&remote, &request);
-        }
-    }
-
-    fn handle_request(&mut self, remote: &TransportAddress, request: &RequestMessage) {
-        if let Some(reply) = self.client_table.get(&request.id) {
-            if reply.sequence > request.sequence {
-                return;
-            }
-            if reply.sequence == request.sequence {
-                let reply = reply.clone();
-                self.transport
-                    .clone()
-                    .send_message(self, remote, &mut bincode(reply));
-                return;
-            }
-        }
-
-        self.op_number += 1;
-        let result = self.app.execute(&request.op);
-        let reply = ReplyMessage {
-            sequence: request.sequence,
-            result,
-        };
-        self.client_table.insert(request.id, reply.clone());
-        self.transport
-            .clone()
-            .send_message(self, remote, &mut bincode(reply));
-    }
-}
-
-pub struct Client {
-    pending: Option<Pending>,
-    sequence: u32,
-
-    transport: Arc<dyn Transport>,
-    address: TransportAddress,
-    tx: UnboundedSender<Activity>,
-    rx: UnboundedReceiver<Activity>,
-    id: ClientId,
-}
-
-struct Pending {
-    op: Data,
-    timer: JoinHandle<()>,
-}
-
-#[derive(Debug)]
-enum Activity {
-    Rx(TransportAddress, RxBuffer),
-    Resend,
-    Resolve(Data),
-}
-
-impl Client {
-    pub fn new(_config: Arc<Config>, address: TransportAddress) -> Self {
-        let (tx, rx) = unbounded_channel();
-        Self {
-            pending: None,
-            sequence: 0,
-            transport: Arc::new(NullTransport),
-            address,
-            tx,
-            rx,
-            id: generate_id(),
-        }
-    }
-    pub fn init(&mut self, transport: Arc<dyn Transport>) {
-        self.transport = transport;
-    }
-}
-
-impl TransportReceiver for Client {
-    fn get_address(&self) -> &TransportAddress {
+impl<T: Transport> Receiver<T> for Client<T> {
+    fn get_address(&self) -> &T::Address {
         &self.address
     }
-    fn get_inbox(&self) -> Box<dyn Send + Sync + Fn(&TransportAddress, RxBuffer)> {
+}
+
+impl<T: Transport> Client<T> {
+    pub fn new(transport: &T) -> Self {
+        let (tx, rx) = mpsc::unbounded_channel();
+        Self {
+            tx,
+            rx,
+            transport: transport.tx_agent(),
+            address: transport.allocate_address(),
+            client_id: generate_id(),
+            request_number: 0,
+            invoke: None,
+        }
+    }
+
+    pub fn register(&self, transport: &mut T) {
         let tx = self.tx.clone();
-        Box::new(move |remote, buffer| tx.send(Activity::Rx(remote.clone(), buffer)).unwrap())
+        transport.register(self, move |remote, buffer| {
+            tx.send(Event::Receive(remote.clone(), buffer)).unwrap();
+        });
     }
 }
 
-impl Invoke for Client {
-    fn invoke<'a>(&'a mut self, op: Data) -> Pin<Box<dyn 'a + Future<Output = Data>>> {
-        if self.pending.is_some() {
-            panic!("duplicated invoke");
-        }
+impl<'a, T: Transport> crate::Invoke for &'a mut Client<T> {
+    type Future = Pin<Box<dyn 'a + Future<Output = Opaque> + Send>>;
 
-        let tx = self.tx.clone();
-        let timer = spawn(async move {
-            let mut interval = interval(Duration::from_millis(1000));
-            interval.tick().await;
+    fn invoke(self, op: Opaque) -> Self::Future {
+        assert!(self.invoke.is_none());
+        self.request_number += 1;
+        let (tx, mut result_rx) = oneshot::channel();
+        self.invoke = Some(Invoke {
+            request_number: self.request_number,
+            op,
+            tx,
+        });
+
+        let send_timer_tx = self.tx.clone();
+        let send_timer = spawn(async move {
+            let mut send = interval(Duration::from_millis(1000));
             loop {
-                interval.tick().await;
-                tx.send(Activity::Resend).unwrap();
+                send.tick().await;
+                send_timer_tx.send(Event::SendTimer).unwrap();
             }
         });
 
-        self.sequence += 1;
-        self.pending = Some(Pending { op, timer });
-        self.send_request();
-
-        Box::pin(async { self.run().await })
+        Box::pin(async move {
+            loop {
+                select! {
+                    Ok(result) = &mut result_rx => {
+                        send_timer.abort();
+                        return result;
+                    },
+                    Some(event) = self.rx.recv() => {
+                        match event {
+                            Event::Receive(remote, buffer) => {
+                                let message: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
+                                self.handle_reply(remote, message);
+                            }
+                            Event::SendTimer => self.send_request(),
+                        }
+                    }
+                    else => unreachable!(),
+                }
+            }
+        })
     }
 }
 
-impl Client {
-    async fn run(&mut self) -> Data {
-        while self.rx.try_recv().is_ok() {} // clear rx, only handle new activities
-        loop {
-            match self.rx.recv().await.unwrap() {
-                Activity::Rx(remote, buffer) => {
-                    let reply = deserialize(&*buffer).unwrap();
-                    self.handle_reply(&remote, &reply);
-                }
-                Activity::Resend => self.send_request(),
-                Activity::Resolve(data) => return data,
-            }
-        }
-    }
-
-    fn handle_reply(&mut self, _remote: &TransportAddress, reply: &ReplyMessage) {
-        assert!(reply.sequence <= self.sequence);
-        if reply.sequence != self.sequence {
-            return;
-        }
-        let pending = self.pending.take().unwrap();
-        pending.timer.abort();
-        self.tx
-            .send(Activity::Resolve(reply.result.clone()))
-            .unwrap();
-    }
-
-    fn send_request(&mut self) {
+impl<T: Transport> Client<T> {
+    fn send_request(&self) {
+        let invoke = self.invoke.as_ref().unwrap();
         let request = RequestMessage {
-            id: self.id,
-            sequence: self.sequence,
-            op: self.pending.as_ref().unwrap().op.clone(),
+            client_id: self.client_id,
+            request_number: invoke.request_number,
+            op: invoke.op.clone(),
         };
         self.transport
-            .clone()
-            .send_message_to_replica(self, 0, &mut bincode(request));
+            .send_message_to_replica(self, 0, serialize(request));
+    }
+
+    fn handle_reply(&mut self, _remote: T::Address, message: ReplyMessage) {
+        if self
+            .invoke
+            .as_ref()
+            .map(|invoke| invoke.request_number != message.request_number)
+            .unwrap_or(true)
+        {
+            return;
+        }
+        let invoke = self.invoke.take().unwrap();
+        invoke.tx.send(message.result).unwrap();
+    }
+}
+
+pub struct Replica<T: Transport, A> {
+    address: T::Address,
+    tx: mpsc::UnboundedSender<(T::Address, T::RxBuffer)>,
+    rx: mpsc::UnboundedReceiver<(T::Address, T::RxBuffer)>,
+    transport: T::TxAgent,
+
+    app: A,
+    client_table: HashMap<ClientId, (RequestNumber, ReplyMessage)>,
+}
+
+impl<T: Transport, A: App> Replica<T, A> {
+    pub fn new(transport: &T, replica_id: ReplicaId, app: A) -> Self {
+        assert_eq!(replica_id, 0);
+        let (tx, rx) = mpsc::unbounded_channel();
+        Self {
+            address: transport.config().replica_address[0].clone(),
+            tx,
+            rx,
+            transport: transport.tx_agent(),
+            app,
+            client_table: HashMap::new(),
+        }
+    }
+
+    pub fn register(&self, transport: &mut T) {
+        let tx = self.tx.clone();
+        transport.register(self, move |remote, buffer| {
+            tx.send((remote.clone(), buffer)).unwrap()
+        });
+    }
+}
+
+impl<T: Transport, A> Receiver<T> for Replica<T, A> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
+    }
+}
+
+impl<T: Transport, A: App> Replica<T, A> {
+    pub async fn run(&mut self) {
+        while let Some((remote, buffer)) = self.rx.recv().await {
+            let message: RequestMessage = deserialize(buffer.as_ref()).unwrap();
+            self.handle_request(remote, message);
+        }
+        unreachable!();
+    }
+
+    fn handle_request(&mut self, remote: T::Address, message: RequestMessage) {
+        if let Some((request_number, reply)) = self.client_table.get(&message.client_id) {
+            if *request_number > message.request_number {
+                return;
+            }
+            if *request_number == message.request_number {
+                self.transport
+                    .send_message(self, &remote, serialize(reply.clone()));
+                return;
+            }
+        }
+
+        let result = self.app.execute(message.op);
+        let reply = ReplyMessage {
+            request_number: message.request_number,
+            result,
+        };
+        self.client_table
+            .insert(message.client_id, (message.request_number, reply.clone()));
+        self.transport.send_message(self, &remote, serialize(reply));
     }
 }
 
@@ -218,119 +224,74 @@ impl Client {
 mod tests {
     use super::*;
     use crate::app::mock::App;
-    use crate::simulated::{Transport, *};
-    use ::futures::future::*;
+    use crate::transport::simulated::Transport;
+    use crate::Invoke;
+    use std::iter;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::Arc;
+    use tokio::test;
 
-    struct System {
-        replica: Option<Replica>,
-        replica_thread: Option<JoinHandle<()>>,
-        client: Vec<Client>,
-    }
-
-    struct Blueprint(Arc<Config>, usize); // number of clients
-
-    impl TestSystem for System {
-        type Blueprint = Blueprint;
-        fn new(transport: &mut Transport, blueprint: Self::Blueprint) -> Self {
-            let replica = Replica::new(blueprint.0.clone(), Box::new(App {}));
-            transport.register(&replica);
-            Self {
-                replica: Some(replica),
-                replica_thread: None,
-                client: (0..blueprint.1)
-                    .map(|i| {
-                        let client = Client::new(
-                            blueprint.0.clone(),
-                            Transport::address(&format!("client-{}", i)),
-                        );
-                        transport.register(&client);
-                        client
-                    })
-                    .collect(),
-            }
-        }
-        fn set_up(&mut self, transport: Arc<Transport>) {
-            let mut replica = self.replica.take().unwrap();
-            replica.init(transport.clone());
-            for client in &mut self.client {
-                client.init(transport.clone());
-            }
-            self.replica_thread = Some(spawn_local(async move { replica.run().await }));
-        }
-        fn tear_down(self) {
-            self.replica_thread.unwrap().abort();
-        }
-    }
-
-    #[tokio::test]
+    #[test(start_paused = true)]
     async fn one_request() {
-        let config = Arc::new(Config {
-            f: 0,
-            address_list: vec![Transport::address("replica-0")],
-        });
-        Transport::run(
-            config.clone(),
-            Blueprint(config, 1),
-            |system: &mut System, _transport| {
-                Box::pin(async {
-                    let result = system.client[0].invoke(b"hello".to_vec()).await;
-                    assert_eq!(result, b"reply: hello");
-                })
-            },
-        )
-        .await;
+        let mut transport = Transport::new(1, 0);
+
+        let mut replica = Replica::new(&transport, 0, App::default());
+        replica.register(&mut transport);
+        let replica = spawn(async move { replica.run().await });
+
+        let mut client = Client::new(&transport);
+        client.register(&mut transport);
+
+        let transport = spawn(async move { transport.deliver_now().await });
+        select! {
+            result = client.invoke(b"hello".to_vec()) => {
+                assert_eq!(result, b"reply: hello".to_vec());
+            }
+            _ = transport => unreachable!(),
+        }
+
+        replica.abort();
     }
 
-    #[tokio::test]
-    async fn one_client_ten_request() {
-        let config = Arc::new(Config {
-            f: 0,
-            address_list: vec![Transport::address("replica-0")],
-        });
-        Transport::run(
-            config.clone(),
-            Blueprint(config, 1),
-            |system: &mut System, _transport| {
-                Box::pin(async {
-                    for i in 0..10 {
-                        assert_eq!(
-                            system.client[0]
-                                .invoke(format!("hello-{}", i).into_bytes())
-                                .await,
-                            format!("reply: hello-{}", i).into_bytes()
-                        );
-                    }
-                })
-            },
-        )
-        .await;
-    }
+    #[test(start_paused = true)]
+    async fn multiple_client_close_loop() {
+        let mut transport = Transport::new(1, 0);
+        let mut replica = Replica::new(&transport, 0, App::default());
+        replica.register(&mut transport);
+        let replica = spawn(async move { replica.run().await });
 
-    #[tokio::test]
-    async fn ten_client_one_request() {
-        let config = Arc::new(Config {
-            f: 0,
-            address_list: vec![Transport::address("replica-0")],
-        });
-        Transport::run(
-            config.clone(),
-            Blueprint(config, 10),
-            |system: &mut System, transport| {
-                Box::pin(async {
-                    transport.time_limit(Duration::from_millis(0));
-                    let result_list =
-                        join_all(
-                            system.client.iter_mut().enumerate().map(|(i, client)| {
-                                client.invoke(format!("hello+{}", i).into_bytes())
-                            }),
-                        )
+        let create_client = || {
+            let mut client = Client::new(&transport);
+            client.register(&mut transport);
+            let count = Arc::new(AtomicU32::new(1));
+            let client_count = count.clone();
+            let client = spawn(async move {
+                loop {
+                    let result = client
+                        .invoke(format!("request-{:?}", client_count).into_bytes())
                         .await;
-                    for (i, result) in result_list.into_iter().enumerate() {
-                        assert_eq!(result, format!("reply: hello+{}", i).into_bytes());
-                    }
-                })
-            },
-        )
-        .await;
+                    assert_eq!(
+                        result,
+                        format!("reply: request-{:?}", client_count).into_bytes()
+                    );
+                    client_count.fetch_add(1, Ordering::SeqCst);
+                }
+            });
+            (count, client)
+        };
+        let multiple_client: Vec<_> = iter::repeat_with(create_client).take(3).collect();
+
+        transport.insert_filter(
+            1,
+            Transport::delay(Duration::from_millis(5), Duration::from_millis(25)),
+        );
+        transport.deliver(Duration::from_secs(1)).await;
+
+        replica.abort();
+        multiple_client.into_iter().for_each(|(count, client)| {
+            client.abort();
+            assert!(count.load(Ordering::SeqCst) >= 20);
+            assert!(count.load(Ordering::SeqCst) <= 100);
+        });
     }
 }
