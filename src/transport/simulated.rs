@@ -154,35 +154,47 @@ impl Transport {
             select! {
                 _ = sleep_until(deadline) => break,
                 Some((source, dest, message, filtered)) = self.rx.recv() => {
-                    if filtered {
-                        (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
-                        continue;
-                    }
-
-                    let mut delay = Duration::ZERO;
-                    let mut drop = false;
-                    for filter in self.filter_table.values() {
-                        if !filter(&source, &dest, &message, &mut delay) {
-                            drop = true;
-                            break;
-                        }
-                    }
-                    println!("{} -> {} {:?} {}", source, dest, message, if drop {"[drop]".to_string()} else {
-                        format!("[delay = {:?}]", delay)
-                    });
-                    if drop {
-                        continue;
-                    } else if delay.is_zero() {
-                    (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
-                    } else {
-                        let tx = self.tx.clone();
-                        spawn(async move {
-                            sleep(delay).await;
-                            tx.send((source, dest, message, true)).unwrap();
-                        });
-                    }
-                }
+                    self.deliver_internal(source, dest, message, filtered);
+               }
             }
+        }
+    }
+
+    fn deliver_internal(&self, source: Address, dest: Address, message: Message, filtered: bool) {
+        if filtered {
+            (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
+            return;
+        }
+
+        let mut delay = Duration::ZERO;
+        let mut drop = false;
+        for filter in self.filter_table.values() {
+            if !filter(&source, &dest, &message, &mut delay) {
+                drop = true;
+                break;
+            }
+        }
+        println!(
+            "{} -> {} [message size = {}] {}",
+            source,
+            dest,
+            message.len(),
+            if drop {
+                "[drop]".to_string()
+            } else {
+                format!("[delay = {:?}]", delay)
+            }
+        );
+
+        if drop {
+        } else if delay.is_zero() {
+            (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
+        } else {
+            let tx = self.tx.clone();
+            spawn(async move {
+                sleep(delay).await;
+                tx.send((source, dest, message, true)).unwrap();
+            });
         }
     }
 
