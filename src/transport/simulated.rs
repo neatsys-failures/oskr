@@ -1,4 +1,3 @@
-use crate::common::ReplicaId;
 use crate::transport::{self, Config, Receiver};
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
@@ -38,6 +37,11 @@ pub struct TxAgent {
 
 impl transport::TxAgent for TxAgent {
     type Transport = Transport;
+
+    fn config(&self) -> &Config<Self::Transport> {
+        &self.config
+    }
+
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
@@ -50,14 +54,6 @@ impl transport::TxAgent for TxAgent {
         self.tx
             .send((source.get_address().clone(), dest.clone(), message, false))
             .unwrap();
-    }
-    fn send_message_to_replica(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        replica_id: ReplicaId,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        self.send_message(source, &format!("replica-{}", replica_id), message);
     }
     fn send_message_to_all(
         &self,
@@ -80,13 +76,6 @@ impl transport::TxAgent for TxAgent {
             }
         }
     }
-    fn send_message_to_multicast(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        todo!()
-    }
 }
 
 impl transport::Transport for Transport {
@@ -99,10 +88,6 @@ impl transport::Transport for Transport {
             tx: self.tx.clone(),
             config: self.config.clone(),
         }
-    }
-
-    fn config(&self) -> &Config<Self> {
-        &self.config
     }
 
     fn register(
@@ -123,7 +108,7 @@ impl transport::Transport for Transport {
         todo!()
     }
 
-    fn allocate_address(&self) -> Self::Address {
+    fn ephemeral_address(&self) -> Self::Address {
         format!(
             "client-{}",
             char::from_u32(self.recv_table.len() as u32 + 'A' as u32).unwrap()

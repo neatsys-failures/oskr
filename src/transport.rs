@@ -1,18 +1,17 @@
+pub mod dpdk;
 pub mod simulated;
 
 use crate::common::ReplicaId;
-use std::fmt::Debug;
 
 pub trait Transport
 where
     Self: 'static,
 {
-    type Address: Clone + Eq + Send + Debug;
-    type RxBuffer: AsRef<[u8]> + Send + Debug;
+    type Address: Clone + Eq + Send;
+    type RxBuffer: AsRef<[u8]> + Send;
     type TxAgent: TxAgent<Transport = Self> + Send;
 
     fn tx_agent(&self) -> Self::TxAgent;
-    fn config(&self) -> &Config<Self>;
 
     fn register(
         &mut self,
@@ -25,7 +24,7 @@ where
         rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
     );
 
-    fn allocate_address(&self) -> Self::Address;
+    fn ephemeral_address(&self) -> Self::Address;
 }
 
 pub trait Receiver<T: Transport> {
@@ -35,6 +34,9 @@ pub trait Receiver<T: Transport> {
 
 pub trait TxAgent {
     type Transport: Transport;
+
+    fn config(&self) -> &Config<Self::Transport>;
+
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
@@ -46,7 +48,13 @@ pub trait TxAgent {
         source: &impl Receiver<Self::Transport>,
         replica_id: ReplicaId,
         message: impl FnOnce(&mut [u8]) -> u16,
-    );
+    ) {
+        self.send_message(
+            source,
+            &self.config().replica_address[replica_id as usize],
+            message,
+        );
+    }
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
@@ -56,7 +64,13 @@ pub trait TxAgent {
         &self,
         source: &impl Receiver<Self::Transport>,
         message: impl FnOnce(&mut [u8]) -> u16,
-    );
+    ) {
+        self.send_message(
+            source,
+            self.config().multicast_address.as_ref().unwrap(),
+            message,
+        );
+    }
 }
 
 pub struct Config<T: Transport + ?Sized> {

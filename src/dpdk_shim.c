@@ -32,3 +32,7 @@ struct rte_mbuf *oskr_pktmbuf_alloc(struct rte_mempool *mp) {
 void oskr_pktmbuf_free(struct rte_mbuf *m) {
     rte_pktmbuf_free(m);
 }
+
+uint16_t oskr_mbuf_default_buf_size() {
+    return RTE_MBUF_DEFAULT_BUF_SIZE;
+}

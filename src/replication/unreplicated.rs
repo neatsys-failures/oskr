@@ -5,7 +5,6 @@ use bincode::deserialize;
 use derivative::Derivative;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
@@ -28,8 +27,8 @@ struct ReplyMessage {
 }
 
 pub struct Client<T: Transport> {
-    tx: mpsc::UnboundedSender<Event<T>>,
-    rx: mpsc::UnboundedReceiver<Event<T>>,
+    tx: mpsc::UnboundedSender<ClientEvent<T>>,
+    rx: mpsc::UnboundedReceiver<ClientEvent<T>>,
     transport: T::TxAgent,
 
     address: T::Address,
@@ -45,9 +44,12 @@ struct Invoke {
 }
 
 #[derive(Derivative)]
-#[derivative(Debug(bound = "T::Address: Debug, T::RxBuffer: Debug"))]
-enum Event<T: Transport> {
-    Receive(T::Address, T::RxBuffer),
+#[derivative(Debug(bound = ""))]
+enum ClientEvent<T: Transport> {
+    Receive(
+        #[derivative(Debug = "ignore")] T::Address,
+        #[derivative(Debug = "ignore")] T::RxBuffer,
+    ),
     SendTimer,
 }
 
@@ -64,7 +66,7 @@ impl<T: Transport> Client<T> {
             tx,
             rx,
             transport: transport.tx_agent(),
-            address: transport.allocate_address(),
+            address: transport.ephemeral_address(),
             client_id: generate_id(),
             request_number: 0,
             invoke: None,
@@ -74,7 +76,8 @@ impl<T: Transport> Client<T> {
     pub fn register(&self, transport: &mut T) {
         let tx = self.tx.clone();
         transport.register(self, move |remote, buffer| {
-            tx.send(Event::Receive(remote.clone(), buffer)).unwrap();
+            tx.send(ClientEvent::Receive(remote.clone(), buffer))
+                .unwrap();
         });
     }
 }
@@ -97,7 +100,7 @@ impl<'a, T: Transport> crate::Invoke for &'a mut Client<T> {
             let mut send = interval(Duration::from_millis(1000));
             loop {
                 send.tick().await;
-                send_timer_tx.send(Event::SendTimer).unwrap();
+                send_timer_tx.send(ClientEvent::SendTimer).unwrap();
             }
         });
 
@@ -110,11 +113,11 @@ impl<'a, T: Transport> crate::Invoke for &'a mut Client<T> {
                     },
                     Some(event) = self.rx.recv() => {
                         match event {
-                            Event::Receive(remote, buffer) => {
+                            ClientEvent::Receive(remote, buffer) => {
                                 let message: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
                                 self.handle_reply(remote, message);
                             }
-                            Event::SendTimer => self.send_request(),
+                            ClientEvent::SendTimer => self.send_request(),
                         }
                     }
                     else => unreachable!(),
@@ -152,23 +155,31 @@ impl<T: Transport> Client<T> {
 
 pub struct Replica<T: Transport, A> {
     address: T::Address,
-    tx: mpsc::UnboundedSender<(T::Address, T::RxBuffer)>,
-    rx: mpsc::UnboundedReceiver<(T::Address, T::RxBuffer)>,
+    tx: mpsc::UnboundedSender<ReplicaReceive<T>>,
+    rx: mpsc::UnboundedReceiver<ReplicaReceive<T>>,
     transport: T::TxAgent,
 
     app: A,
     client_table: HashMap<ClientId, (RequestNumber, ReplyMessage)>,
 }
 
+#[derive(Derivative)]
+#[derivative(Debug(bound = ""))]
+struct ReplicaReceive<T: Transport>(
+    #[derivative(Debug = "ignore")] T::Address,
+    #[derivative(Debug = "ignore")] T::RxBuffer,
+);
+
 impl<T: Transport, A: App> Replica<T, A> {
     pub fn new(transport: &T, replica_id: ReplicaId, app: A) -> Self {
         assert_eq!(replica_id, 0);
         let (tx, rx) = mpsc::unbounded_channel();
+        let transport = transport.tx_agent();
         Self {
             address: transport.config().replica_address[0].clone(),
             tx,
             rx,
-            transport: transport.tx_agent(),
+            transport,
             app,
             client_table: HashMap::new(),
         }
@@ -177,7 +188,7 @@ impl<T: Transport, A: App> Replica<T, A> {
     pub fn register(&self, transport: &mut T) {
         let tx = self.tx.clone();
         transport.register(self, move |remote, buffer| {
-            tx.send((remote.clone(), buffer)).unwrap()
+            tx.send(ReplicaReceive(remote.clone(), buffer)).unwrap();
         });
     }
 }
@@ -190,7 +201,7 @@ impl<T: Transport, A> Receiver<T> for Replica<T, A> {
 
 impl<T: Transport, A: App> Replica<T, A> {
     pub async fn run(&mut self) {
-        while let Some((remote, buffer)) = self.rx.recv().await {
+        while let Some(ReplicaReceive(remote, buffer)) = self.rx.recv().await {
             let message: RequestMessage = deserialize(buffer.as_ref()).unwrap();
             self.handle_request(remote, message);
         }
