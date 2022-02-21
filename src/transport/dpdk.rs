@@ -1,5 +1,6 @@
 use crate::transport::{self, Config, Receiver};
 use std::collections::HashMap;
+use std::env;
 use std::ffi::CString;
 use std::marker::{PhantomData, PhantomPinned};
 use std::mem::MaybeUninit;
@@ -23,6 +24,7 @@ struct rte_mbuf {
 extern "C" {
     // interfaces that exist in rte_* libraries
     fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
+    fn rte_socket_id() -> c_int;
     fn rte_pktmbuf_pool_create(
         name: NonNull<c_char>,
         n: c_uint,
@@ -59,6 +61,8 @@ extern "C" {
     fn mbuf_to_buffer_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8>;
     fn mbuf_get_packet_length(mbuf: NonNull<rte_mbuf>) -> u16;
     fn mbuf_set_packet_length(mbuf: NonNull<rte_mbuf>, length: u16);
+    // one interface to hide all setup detail
+    fn setup_port(port_id: u16, n_rx: u16, n_tx: u16, pktmpool: NonNull<rte_mempool>) -> c_int;
 }
 
 pub struct RxBuffer {
@@ -153,7 +157,9 @@ pub struct Transport {
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
 }
-pub type RecvTable = HashMap<Address, Box<dyn Fn(&Address, RxBuffer) + Send>>;
+type RecvTable = HashMap<Address, Box<dyn Fn(&Address, RxBuffer) + Send>>;
+
+unsafe impl Send for Transport {}
 
 impl transport::Transport for Transport {
     type Address = Address;
@@ -190,25 +196,45 @@ impl transport::Transport for Transport {
 }
 
 impl Transport {
-    pub fn new(config: Config<Self>) -> Self {
-        let port_id = 0; // TODO
-        let pktmpool = unsafe {
+    pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16) -> Self {
+        let args0: Vec<_> = [
+            env::args().next().unwrap(),
+            //
+        ]
+        .into_iter()
+        .map(|arg| CString::new(arg).unwrap())
+        .collect(); // stop here to keep CString alive
+        let mut args: Vec<_> = args0
+            .iter()
+            .map(|arg| NonNull::new(arg.as_ptr() as *mut c_char).unwrap())
+            .collect();
+
+        unsafe {
+            let ret = rte_eal_init(
+                args.len() as i32,
+                NonNull::new(&mut *args as *mut [_] as *mut _).unwrap(),
+            );
+            assert_eq!(ret, 0);
             let name = CString::new("MBUF_POOL").unwrap();
-            rte_pktmbuf_pool_create(
+            let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
                 8191,
                 250,
                 0,
                 oskr_mbuf_default_buf_size(),
                 rte_eth_dev_socket_id(port_id),
-            )
-        };
-        let pktmpool = NonNull::new(pktmpool).unwrap();
-        Self {
-            port_id,
-            pktmpool,
-            config: Arc::new(config),
-            recv_table: HashMap::new(),
+            );
+            let pktmpool = NonNull::new(pktmpool).unwrap();
+
+            let ret = setup_port(port_id, n_rx, 1, pktmpool);
+            assert_eq!(ret, 0);
+
+            Self {
+                port_id,
+                pktmpool,
+                config: Arc::new(config),
+                recv_table: HashMap::new(),
+            }
         }
     }
 
@@ -230,6 +256,12 @@ impl Transport {
 
     // must be run with spawn blocking
     pub fn run(&self, queue_id: u16) {
+        if unsafe { rte_socket_id() != rte_eth_dev_socket_id(self.port_id) } {
+            println!(
+                "warn: queue {} rx thread and device on different socket",
+                queue_id
+            );
+        }
         loop {
             let burst = unsafe {
                 let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
