@@ -87,6 +87,6 @@ int setup_port(uint16_t port_id, uint16_t n_rx, uint16_t n_tx, struct rte_mempoo
         return -1;
     }
 
-    //
+    // add flow rules when necessary
     return 0;
 }
