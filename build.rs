@@ -1,29 +1,43 @@
-use pkg_config::probe_library;
-use std::env;
-use std::ops::Deref;
+use std::process::Command;
+use std::str;
 
 fn main() {
-    env::set_var("PKG_CONFIG_PATH", "target/dpdk/meson-uninstalled");
-    let dpdk = probe_library("libdpdk-uninstalled").unwrap();
+    let dpdk_cflags = Command::new("pkg-config")
+        .args(["--cflags", "--static", "libdpdk-uninstalled"])
+        .env("PKG_CONFIG_PATH", "target/dpdk/meson-uninstalled")
+        .output()
+        .unwrap()
+        .stdout;
+    let dpdk_cflags: Vec<_> = str::from_utf8(&dpdk_cflags)
+        .unwrap()
+        .split_whitespace()
+        .collect();
+
+    let dpdk_libs = Command::new("pkg-config")
+        .args(["--libs", "--static", "libdpdk-uninstalled"])
+        .env("PKG_CONFIG_PATH", "target/dpdk/meson-uninstalled")
+        .output()
+        .unwrap()
+        .stdout;
+    let dpdk_libs: Vec<_> = str::from_utf8(&dpdk_libs)
+        .unwrap()
+        .split_whitespace()
+        .collect();
 
     let mut build = cc::Build::new();
     let mut build = build
         .file("src/dpdk_shim.c")
-        .includes(dpdk.include_paths)
         // any better way?
         .flag("-march=native");
-    for (var, val) in &dpdk.defines {
-        build = build.define(var, val.as_ref().map(Deref::deref));
+    for flag in dpdk_cflags {
+        build = build.flag(flag);
     }
     build.compile("dpdk_shim");
 
-    for lib in dpdk.libs {
-        println!("cargo:rustc-link-lib={}", lib);
+    for flag in dpdk_libs {
+        println!("cargo:rustc-link-arg={}", flag);
     }
-    for link_path in dpdk.link_paths {
-        println!("cargo:rustc-link-search={}", link_path.display());
-        println!("cargo:rustc-link-arg=-Wl,-rpath={}", link_path.display());
-    }
+    println!("cargo:rustc-link-arg=-lc");
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");

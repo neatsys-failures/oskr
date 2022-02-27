@@ -1,3 +1,4 @@
+use core_affinity::CoreId;
 use oskr::common::Opaque;
 use oskr::replication::unreplicated;
 use oskr::transport::dpdk::Transport;
@@ -17,13 +18,12 @@ impl App for NullApp {
 
 fn main() {
     let core_mask: u128 = 0xff; // TODO
-    let rx_core_mask: u128 = 0x1;
+    let rx_core_mask: u128 = 0x01;
     let port_id = 0;
     let replica_id = 0;
 
-    let (rx_core, worker_core): (Vec<_>, Vec<_>) = core_affinity::get_core_ids()
-        .unwrap()
-        .into_iter()
+    let (rx_core, worker_core): (Vec<_>, Vec<_>) = (0..128)
+        .map(|id| CoreId { id })
         .filter(|core| 1_u128 << core.id & core_mask != 0)
         .partition(|core| 1_u128 << core.id & rx_core_mask != 0);
     assert_eq!(rx_core.len(), 1);
@@ -39,8 +39,9 @@ fn main() {
     let thread_start = move || {
         let worker_core = worker_core.clone();
         move || {
-            let core = worker_core.lock().unwrap().pop().unwrap();
-            core_affinity::set_for_current(core);
+            if let Some(core) = worker_core.lock().unwrap().pop() {
+                core_affinity::set_for_current(core);
+            }
         }
     };
     let runtime = Builder::new_multi_thread()
@@ -52,7 +53,7 @@ fn main() {
         .unwrap();
 
     let config = Config {
-        replica_address: vec![],
+        replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
         multicast_address: None,
         n_fault: 0,
     };

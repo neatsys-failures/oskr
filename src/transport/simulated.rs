@@ -109,10 +109,14 @@ impl transport::Transport for Transport {
     }
 
     fn ephemeral_address(&self) -> Self::Address {
-        format!(
-            "client-{}",
-            char::from_u32(self.recv_table.len() as u32 + 'A' as u32).unwrap()
-        )
+        let mut label = 'A' as u32;
+        loop {
+            let address = format!("client-{}", char::from_u32(label).unwrap());
+            if !self.recv_table.contains_key(&address) {
+                return address;
+            }
+            label += 1;
+        }
     }
 }
 
