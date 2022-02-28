@@ -32,6 +32,7 @@ struct rte_ether_addr {
 extern "C" {
     // interfaces that exist in rte_* libraries
     fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
+    fn rte_thread_register() -> c_int;
     fn rte_socket_id() -> c_int;
     fn rte_pktmbuf_pool_create(
         name: NonNull<c_char>,
@@ -270,7 +271,7 @@ impl Transport {
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
                 8191,
-                256,
+                250,
                 0,
                 oskr_mbuf_default_buf_size(),
                 rte_eth_dev_socket_id(port_id),
@@ -307,6 +308,9 @@ impl Transport {
 
     // must be run with spawn blocking
     pub fn run(&self, queue_id: u16) {
+        let ret = unsafe { rte_thread_register() };
+        assert_eq!(ret, 0);
+
         let mut mac_addr = MaybeUninit::uninit();
         let mac_addr = unsafe {
             rte_eth_macaddr_get(self.port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap());
@@ -329,6 +333,7 @@ impl Transport {
                 queue_id, socket, dev_socket
             );
         }
+
         loop {
             let burst = unsafe {
                 let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();

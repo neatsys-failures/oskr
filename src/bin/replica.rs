@@ -17,7 +17,7 @@ impl App for NullApp {
 }
 
 fn main() {
-    let core_mask: u128 = 0xff; // TODO
+    let core_mask: u128 = 0x03; // TODO
     let rx_core_mask: u128 = 0x01;
     let port_id = 0;
     let replica_id = 0;
