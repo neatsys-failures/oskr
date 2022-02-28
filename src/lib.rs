@@ -6,6 +6,7 @@ pub mod replication {
 pub mod app {
     pub mod mock;
 }
+pub mod dpdk_shim;
 
 use common::Opaque;
 use std::future::Future;

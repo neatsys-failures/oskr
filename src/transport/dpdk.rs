@@ -32,7 +32,7 @@ struct rte_ether_addr {
 extern "C" {
     // interfaces that exist in rte_* libraries
     fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
-    fn rte_thread_register() -> c_int;
+    pub fn rte_thread_register() -> c_int;
     fn rte_socket_id() -> c_int;
     fn rte_pktmbuf_pool_create(
         name: NonNull<c_char>,
@@ -73,6 +73,7 @@ extern "C" {
     fn mbuf_set_packet_length(mbuf: NonNull<rte_mbuf>, length: u16);
     // one interface to hide all setup detail
     fn setup_port(port_id: u16, n_rx: u16, n_tx: u16, pktmpool: NonNull<rte_mempool>) -> c_int;
+    pub fn print_errno();
 }
 
 pub struct RxBuffer {
@@ -143,7 +144,7 @@ impl TxAgent {
         copy_nonoverlapping(&source.id, data.offset(15), 1);
         copy_nonoverlapping(
             // https://stackoverflow.com/a/52682687
-            &0x8000_u16.to_be_bytes() as *const _,
+            &0x88d5_u16.to_be_bytes() as *const _,
             data.offset(12),
             2,
         );
@@ -251,7 +252,8 @@ impl Transport {
     pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16) -> Self {
         let args0: Vec<_> = [
             env::args().next().unwrap(),
-            //
+            "-c".to_string(),
+            "0x01".to_string(),
         ]
         .into_iter()
         .map(|arg| CString::new(arg).unwrap())
@@ -266,7 +268,7 @@ impl Transport {
                 args.len() as i32,
                 NonNull::new(&mut *args as *mut [_] as *mut _).unwrap(),
             );
-            assert_eq!(ret, 0);
+            assert!(ret >= 0);
             let name = CString::new("MBUF_POOL").unwrap();
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
@@ -308,9 +310,6 @@ impl Transport {
 
     // must be run with spawn blocking
     pub fn run(&self, queue_id: u16) {
-        let ret = unsafe { rte_thread_register() };
-        assert_eq!(ret, 0);
-
         let mut mac_addr = MaybeUninit::uninit();
         let mac_addr = unsafe {
             rte_eth_macaddr_get(self.port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap());

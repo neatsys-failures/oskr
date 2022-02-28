@@ -105,3 +105,7 @@ int setup_port(uint16_t port_id, uint16_t n_rx, uint16_t n_tx, struct rte_mempoo
     // add flow rules when necessary
     return 0;
 }
+
+void print_errno() {
+    printf("%s\n", rte_strerror(rte_errno));
+}

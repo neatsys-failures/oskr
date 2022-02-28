@@ -1,7 +1,7 @@
 use core_affinity::CoreId;
 use oskr::common::Opaque;
 use oskr::replication::unreplicated;
-use oskr::transport::dpdk::Transport;
+use oskr::transport::dpdk::{rte_thread_register, Transport};
 use oskr::transport::Config;
 use oskr::App;
 use std::sync::{Arc, Mutex};
@@ -21,6 +21,11 @@ fn main() {
     let rx_core_mask: u128 = 0x01;
     let port_id = 0;
     let replica_id = 0;
+    let config = Config {
+        replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
+        multicast_address: None,
+        n_fault: 0,
+    };
 
     let (rx_core, worker_core): (Vec<_>, Vec<_>) = (0..128)
         .map(|id| CoreId { id })
@@ -42,8 +47,11 @@ fn main() {
             if let Some(core) = worker_core.lock().unwrap().pop() {
                 core_affinity::set_for_current(core);
             }
+            assert_eq!(unsafe { rte_thread_register() }, 0);
         }
     };
+
+    let mut transport = Transport::setup(config, port_id, 1);
     let runtime = Builder::new_multi_thread()
         .enable_time()
         .worker_threads(worker_threads)
@@ -51,13 +59,6 @@ fn main() {
         .on_thread_start(thread_start())
         .build()
         .unwrap();
-
-    let config = Config {
-        replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
-        multicast_address: None,
-        n_fault: 0,
-    };
-    let mut transport = Transport::setup(config, port_id, 1);
 
     runtime.block_on(async move {
         // TODO select replica and app
