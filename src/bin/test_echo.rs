@@ -14,7 +14,8 @@ use std::{
 
 use oskr::dpdk_shim::{
     oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_mbuf_default_buf_size, oskr_pktmbuf_alloc,
-    rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_pktmbuf_pool_create, setup_port, Address,
+    oskr_pktmbuf_free, rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_pktmbuf_pool_create,
+    setup_port, Address,
 };
 
 fn main() {
@@ -51,7 +52,7 @@ fn main() {
 
     let name = CString::new("MBUF_POOL").unwrap();
     let name = NonNull::new(&name as *const _ as *mut _).unwrap();
-    let pktmpool = unsafe {
+    let pktmpool = NonNull::new(unsafe {
         rte_pktmbuf_pool_create(
             name,
             8191,
@@ -60,20 +61,20 @@ fn main() {
             oskr_mbuf_default_buf_size(),
             rte_eth_dev_socket_id(port_id),
         )
-    };
-    let pktmpool = NonNull::new(pktmpool).unwrap();
+    })
+    .unwrap();
     let ret = unsafe { setup_port(port_id, 1, 1, pktmpool) };
     assert_eq!(ret, 0);
 
     if invoke {
-        let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(pktmpool) }).unwrap();
-        let data = unsafe { rte_mbuf::get_data(mbuf) };
-        unsafe {
-            rte_mbuf::set_source(data, &address);
-            rte_mbuf::set_dest(data, &server_address);
-            rte_mbuf::set_buffer_length(mbuf, 0);
-        }
         for _ in 0..10 {
+            let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(pktmpool) }).unwrap();
+            let data = unsafe { rte_mbuf::get_data(mbuf) };
+            unsafe {
+                rte_mbuf::set_source(data, &address);
+                rte_mbuf::set_dest(data, &server_address);
+                rte_mbuf::set_buffer_length(mbuf, 0);
+            }
             let ret = unsafe {
                 oskr_eth_tx_burst(
                     port_id,
@@ -111,6 +112,7 @@ fn main() {
             let mbuf = NonNull::new(*mbuf).unwrap();
             let data = unsafe { rte_mbuf::get_data(mbuf) };
             let (source, dest) = unsafe { (rte_mbuf::get_source(data), rte_mbuf::get_dest(data)) };
+            unsafe { oskr_pktmbuf_free(mbuf) };
             if dest != address {
                 continue;
             }
