@@ -154,7 +154,7 @@ impl Transport {
         }
     }
 
-    pub fn run(&self, queue_id: u16) {
+    fn run_internal(&self, queue_id: u16, dispatch: impl Fn(Address, Address, RxBuffer) -> bool) {
         let (socket, dev_socket) =
             unsafe { (rte_socket_id(), rte_eth_dev_socket_id(self.port_id)) };
         if socket != dev_socket {
@@ -180,13 +180,35 @@ impl Transport {
                 unsafe {
                     let data = rte_mbuf::get_data(mbuf);
                     let (source, dest) = (rte_mbuf::get_source(data), rte_mbuf::get_dest(data));
-                    if let Some(rx_agent) = self.recv_table.get(&dest) {
-                        rx_agent(&source, rte_mbuf::into_rx_buffer(mbuf, data));
-                    } else {
+                    if !dispatch(source, dest, rte_mbuf::into_rx_buffer(mbuf, data)) {
                         println!("warn: unknown destination {}", dest);
                     }
                 }
             }
         }
+    }
+
+    pub fn run(&self, queue_id: u16) {
+        self.run_internal(queue_id, |source, dest, buffer| {
+            if let Some(rx_agent) = self.recv_table.get(&dest) {
+                rx_agent(&source, buffer);
+                true
+            } else {
+                false
+            }
+        });
+    }
+
+    pub fn run1(&self) {
+        assert_eq!(self.recv_table.len(), 1);
+        let (address, rx_agent) = self.recv_table.iter().next().unwrap();
+        self.run_internal(0, |source, dest, buffer| {
+            if dest == *address {
+                rx_agent(&source, buffer);
+                true
+            } else {
+                false
+            }
+        });
     }
 }
