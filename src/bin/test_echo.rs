@@ -39,7 +39,7 @@ fn main() {
     let ret = unsafe {
         rte_eal_init(
             args.len() as c_int,
-            NonNull::new(&mut args as &mut [_] as *mut [_] as *mut _).unwrap(),
+            NonNull::new(&mut *args as *mut [_] as *mut _).unwrap(),
         )
     };
     assert_eq!(ret, args.len() as c_int - 1);
