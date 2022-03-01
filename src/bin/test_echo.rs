@@ -25,6 +25,12 @@ fn main() {
         .nth(1)
         .map(|arg| arg == "invoke")
         .unwrap_or(false);
+    let mut n_concurrent = 1;
+    if invoke {
+        if let Some(arg) = env::args().nth(2) {
+            n_concurrent = arg.parse().unwrap();
+        }
+    }
 
     let prog = env::args().nth(0).unwrap();
     let args = [&prog, "-c", "0x01"];
@@ -52,7 +58,7 @@ fn main() {
 
     let name = CString::new("MBUF_POOL").unwrap();
     let name = NonNull::new(&name as *const _ as *mut _).unwrap();
-    let pktmpool = NonNull::new(unsafe {
+    let mem_pool = NonNull::new(unsafe {
         rte_pktmbuf_pool_create(
             name,
             8191,
@@ -63,17 +69,17 @@ fn main() {
         )
     })
     .unwrap();
-    let ret = unsafe { setup_port(port_id, 1, 1, pktmpool) };
+    let ret = unsafe { setup_port(port_id, 1, 1, mem_pool) };
     assert_eq!(ret, 0);
 
     if invoke {
-        for _ in 0..10 {
-            let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(pktmpool) }).unwrap();
+        for _ in 0..n_concurrent {
+            let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(mem_pool) }).unwrap();
             let data = unsafe { rte_mbuf::get_data(mbuf) };
             unsafe {
+                rte_mbuf::set_buffer_length(mbuf, 0);
                 rte_mbuf::set_source(data, &address);
                 rte_mbuf::set_dest(data, &server_address);
-                rte_mbuf::set_buffer_length(mbuf, 0);
             }
             let ret = unsafe {
                 oskr_eth_tx_burst(
@@ -107,22 +113,23 @@ fn main() {
                 32,
             )
         };
-        let burst = &unsafe { burst.assume_init() }[..burst_size as usize];
+        let burst = unsafe { &burst.assume_init()[..burst_size as usize] };
         for mbuf in burst {
             let mbuf = NonNull::new(*mbuf).unwrap();
             let data = unsafe { rte_mbuf::get_data(mbuf) };
             let (source, dest) = unsafe { (rte_mbuf::get_source(data), rte_mbuf::get_dest(data)) };
             unsafe { oskr_pktmbuf_free(mbuf) };
+
             if dest != address {
                 continue;
             }
 
-            let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(pktmpool) }).unwrap();
+            let mbuf = NonNull::new(unsafe { oskr_pktmbuf_alloc(mem_pool) }).unwrap();
             let data = unsafe { rte_mbuf::get_data(mbuf) };
             unsafe {
+                rte_mbuf::set_buffer_length(mbuf, 0);
                 rte_mbuf::set_source(data, &dest);
                 rte_mbuf::set_dest(data, &source);
-                rte_mbuf::set_buffer_length(mbuf, 0);
             }
             let ret = unsafe {
                 oskr_eth_tx_burst(
