@@ -8,14 +8,12 @@ pub mod app {
 }
 pub mod dpdk_shim;
 
+use async_trait::async_trait;
 use common::Opaque;
-use std::future::Future;
 
+#[async_trait]
 pub trait Invoke {
-    type Future: Future<Output = Opaque> + Send;
-    // has to implement against `&'a mut Client` to get a chance to acquire lifetime
-    // still waiting for GAT
-    fn invoke(self, op: Opaque) -> Self::Future;
+    async fn invoke(&mut self, op: Opaque) -> Opaque;
 }
 
 pub trait App {
