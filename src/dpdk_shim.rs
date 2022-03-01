@@ -69,6 +69,7 @@ extern "C" {
     fn mbuf_get_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8>;
     fn mbuf_get_packet_length(mbuf: NonNull<rte_mbuf>) -> u16;
     fn mbuf_set_packet_length(mbuf: NonNull<rte_mbuf>, length: u16);
+
     // one interface to hide all setup detail
     pub fn setup_port(port_id: u16, n_rx: u16, n_tx: u16, pktmpool: NonNull<rte_mempool>) -> c_int;
 }
@@ -144,6 +145,7 @@ impl rte_mbuf {
         mbuf_set_packet_length(mbuf, length + 16);
     }
 
+    // this method instead of Into<RxBuffer> because I want it keep unsafe
     pub unsafe fn into_rx_buffer(mbuf: NonNull<rte_mbuf>, data: NonNull<u8>) -> RxBuffer {
         let buffer = NonNull::new(data.as_ptr().offset(16)).unwrap();
         let length = mbuf_get_packet_length(mbuf) - 16;
@@ -152,6 +154,11 @@ impl rte_mbuf {
             buffer,
             length,
         }
+    }
+
+    pub unsafe fn get_tx_buffer<'a>(data: NonNull<u8>) -> &'a mut [u8] {
+        // TODO decide maximum length with reason
+        slice::from_raw_parts_mut(data.as_ptr().offset(16), 1480)
     }
 
     pub unsafe fn get_source(data: NonNull<u8>) -> Address {

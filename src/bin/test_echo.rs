@@ -21,18 +21,17 @@ use oskr::dpdk_shim::{
 fn main() {
     let server_address: Address = "b8:ce:f6:2a:2f:94#0".parse().unwrap();
     let port_id = 0;
-    let invoke = env::args()
-        .nth(1)
-        .map(|arg| arg == "invoke")
-        .unwrap_or(false);
+
+    let mut args = env::args();
+    let prog = args.next().unwrap();
+    let invoke = args.next().map(|arg| arg == "invoke").unwrap_or(false);
     let mut n_concurrent = 1;
     if invoke {
-        if let Some(arg) = env::args().nth(2) {
+        if let Some(arg) = args.next() {
             n_concurrent = arg.parse().unwrap();
         }
     }
 
-    let prog = env::args().nth(0).unwrap();
     let args = [&prog, "-c", "0x01"];
     let args: Vec<_> = args
         .into_iter()
@@ -94,14 +93,14 @@ fn main() {
     }
 
     let count = Arc::new(AtomicU32::new(0));
-    spawn((|| {
+    spawn({
         let count = count.clone();
         move || loop {
             sleep(Duration::from_secs(1));
             let count = count.swap(0, Ordering::SeqCst);
             println!("{}", count);
         }
-    })());
+    });
 
     loop {
         let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();

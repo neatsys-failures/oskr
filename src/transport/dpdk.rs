@@ -1,160 +1,29 @@
-use crate::transport::{self, Config, Receiver};
-use std::collections::HashMap;
-use std::convert::Infallible;
-use std::env;
-use std::ffi::CString;
-use std::fmt::{self, Display, Formatter};
-use std::marker::{PhantomData, PhantomPinned};
-use std::mem::MaybeUninit;
-use std::os::raw::{c_char, c_int, c_uint};
-use std::ptr::{copy_nonoverlapping, NonNull};
-use std::slice;
-use std::str::FromStr;
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    env,
+    ffi::CString,
+    mem::MaybeUninit,
+    os::raw::{c_char, c_int},
+    ptr::NonNull,
+    sync::Arc,
+};
 
-#[repr(C)]
-struct rte_mempool {
-    _data: [u8; 0],
-    _marker: PhantomData<(*mut u8, PhantomPinned)>,
-}
-
-#[repr(C)]
-struct rte_mbuf {
-    _data: [u8; 0],
-    _marker: PhantomData<(*mut u8, PhantomPinned)>,
-}
-
-#[repr(C)]
-struct rte_ether_addr {
-    addr_bytes: [u8; 6],
-}
-
-extern "C" {
-    // interfaces that exist in rte_* libraries
-    fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
-    pub fn rte_thread_register() -> c_int;
-    fn rte_socket_id() -> c_int;
-    fn rte_pktmbuf_pool_create(
-        name: NonNull<c_char>,
-        n: c_uint,
-        cache_size: c_uint,
-        priv_size: u16,
-        data_room_size: u16,
-        socket_id: c_int,
-    ) -> *mut rte_mempool;
-    fn rte_eth_dev_socket_id(port_id: u16) -> c_int;
-    fn rte_eth_macaddr_get(port_id: u16, mac_addr: NonNull<rte_ether_addr>) -> c_int;
-
-    // interfaces that provided in `static inline` fashion, and "instantiated"
-    // by DPDK shim
-    // the "rte_*" prefix is replaced to "oskr_*" to indicate symbol's owner
-    fn oskr_pktmbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
-    fn oskr_pktmbuf_free(m: NonNull<rte_mbuf>);
-    fn oskr_eth_rx_burst(
-        port_id: u16,
-        queue_id: u16,
-        rx_pkts: NonNull<*mut rte_mbuf>,
-        nb_pkts: u16,
-    ) -> u16;
-    fn oskr_eth_tx_burst(
-        port_id: u16,
-        queue_id: u16,
-        tx_pkts: NonNull<NonNull<rte_mbuf>>,
-        nb_pkts: u16,
-    ) -> u16;
-    fn oskr_mbuf_default_buf_size() -> u16; // RTE_MBUF_DEFAULT_BUF_SIZE
-
-    // addiational custom interfaces on rte_mbuf, not correspond to anything of
-    // DPDK
-    // it seems tricky to replicate rte_mbuf's struct layout from Rust side, so
-    // necessary operations directly performed on struct fields are wrapped
-    fn mbuf_get_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8>;
-    fn mbuf_get_packet_length(mbuf: NonNull<rte_mbuf>) -> u16;
-    fn mbuf_set_packet_length(mbuf: NonNull<rte_mbuf>, length: u16);
-    // one interface to hide all setup detail
-    fn setup_port(port_id: u16, n_rx: u16, n_tx: u16, pktmpool: NonNull<rte_mempool>) -> c_int;
-    pub fn print_errno();
-}
-
-pub struct RxBuffer {
-    mbuf: NonNull<rte_mbuf>,
-    buffer: NonNull<u8>,
-    length: u16,
-}
-
-unsafe impl Send for RxBuffer {}
-
-impl AsRef<[u8]> for RxBuffer {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.buffer.as_ptr(), self.length as usize) }
-    }
-}
-
-impl Drop for RxBuffer {
-    fn drop(&mut self) {
-        unsafe { oskr_pktmbuf_free(self.mbuf) }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Address {
-    mac: [u8; 6],
-    id: u8,
-}
-
-impl FromStr for Address {
-    type Err = Infallible;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut split = s.split('#');
-        let mac = split.next().unwrap();
-        let id = split.next().unwrap();
-        let mac: Vec<_> = mac
-            .split(':')
-            .map(|x| u8::from_str_radix(x, 16).unwrap())
-            .collect();
-        Ok(Self {
-            mac: mac.try_into().unwrap(),
-            id: id.parse().unwrap(),
-        })
-    }
-}
-
-impl Display for Address {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}#{}",
-            self.mac[0], self.mac[1], self.mac[2], self.mac[3], self.mac[4], self.mac[5], self.id
-        )
-    }
-}
+use crate::{
+    dpdk_shim::{
+        oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_mbuf_default_buf_size, oskr_pktmbuf_alloc,
+        rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
+        rte_socket_id, setup_port, Address, RxBuffer,
+    },
+    transport::{self, Config, Receiver},
+};
 
 pub struct TxAgent {
-    pktmpool: NonNull<rte_mempool>,
+    mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
     config: Arc<Config<Transport>>,
 }
 
 unsafe impl Send for TxAgent {}
-
-impl TxAgent {
-    unsafe fn set_source_address(data: NonNull<u8>, source: &Address) {
-        let data = data.as_ptr();
-        copy_nonoverlapping(&source.mac as *const _, data.offset(6), 6);
-        copy_nonoverlapping(&source.id, data.offset(15), 1);
-        copy_nonoverlapping(
-            // https://stackoverflow.com/a/52682687
-            &0x88d5_u16.to_be_bytes() as *const _,
-            data.offset(12),
-            2,
-        );
-    }
-    unsafe fn set_dest_address(data: NonNull<u8>, dest: &Address) {
-        let data = data.as_ptr();
-        copy_nonoverlapping(&dest.mac as *const _, data.offset(0), 6);
-        copy_nonoverlapping(&dest.id, data.offset(14), 1);
-    }
-}
 
 impl transport::TxAgent for TxAgent {
     type Transport = Transport;
@@ -170,13 +39,12 @@ impl transport::TxAgent for TxAgent {
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         unsafe {
-            let mut mbuf = NonNull::new(oskr_pktmbuf_alloc(self.pktmpool)).unwrap();
-            let data = mbuf_get_data(mbuf);
-            Self::set_source_address(data, source.get_address());
-            Self::set_dest_address(data, dest);
-            let buffer = slice::from_raw_parts_mut(data.as_ptr().offset(16), 1480);
-            let length = message(buffer) + 16;
-            mbuf_set_packet_length(mbuf, length);
+            let mut mbuf = NonNull::new(oskr_pktmbuf_alloc(self.mbuf_pool)).unwrap();
+            let data = rte_mbuf::get_data(mbuf);
+            rte_mbuf::set_source(data, source.get_address());
+            rte_mbuf::set_dest(data, dest);
+            let length = message(rte_mbuf::get_tx_buffer(data));
+            rte_mbuf::set_buffer_length(mbuf, length);
             let ret = oskr_eth_tx_burst(self.port_id, 0, NonNull::new(&mut mbuf).unwrap(), 1);
             assert_eq!(ret, 1);
         }
@@ -191,7 +59,7 @@ impl transport::TxAgent for TxAgent {
 }
 
 pub struct Transport {
-    pktmpool: NonNull<rte_mempool>,
+    mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
@@ -207,7 +75,7 @@ impl transport::Transport for Transport {
 
     fn tx_agent(&self) -> Self::TxAgent {
         Self::TxAgent {
-            pktmpool: self.pktmpool,
+            mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
             config: self.config.clone(),
         }
@@ -230,45 +98,39 @@ impl transport::Transport for Transport {
     }
 
     fn ephemeral_address(&self) -> Self::Address {
-        let mut mac_addr = MaybeUninit::uninit();
-        let mac_addr = unsafe {
-            rte_eth_macaddr_get(self.port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap());
-            mac_addr.assume_init()
-        };
-        let mut address = Self::Address {
-            mac: mac_addr.addr_bytes,
-            id: 254, // save 255 for multicast
-        };
-        loop {
+        for id in (0..=254).rev() {
+            let address = unsafe { Address::new_local(self.port_id, id) };
             if !self.recv_table.contains_key(&address) {
                 return address;
             }
-            address.id -= 1;
         }
+        unreachable!();
     }
 }
 
 impl Transport {
     pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16) -> Self {
-        let args0: Vec<_> = [
+        let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
             "0x01".to_string(),
-        ]
-        .into_iter()
-        .map(|arg| CString::new(arg).unwrap())
-        .collect(); // stop here to keep CString alive
-        let mut args: Vec<_> = args0
+        ];
+        let args: Vec<_> = args
+            .into_iter()
+            .map(|arg| CString::new(arg).unwrap())
+            .collect(); // stop here to keep CString alive
+        let mut args: Vec<_> = args
             .iter()
             .map(|arg| NonNull::new(arg.as_ptr() as *mut c_char).unwrap())
             .collect();
 
         unsafe {
             let ret = rte_eal_init(
-                args.len() as i32,
+                args.len() as c_int,
                 NonNull::new(&mut *args as *mut [_] as *mut _).unwrap(),
             );
-            assert!(ret >= 0);
+            assert_eq!(ret, args.len() as c_int - 1);
+
             let name = CString::new("MBUF_POOL").unwrap();
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
@@ -278,52 +140,21 @@ impl Transport {
                 oskr_mbuf_default_buf_size(),
                 rte_eth_dev_socket_id(port_id),
             );
-            let pktmpool = NonNull::new(pktmpool).unwrap();
+            let mbuf_pool = NonNull::new(pktmpool).unwrap();
 
-            let ret = setup_port(port_id, n_rx, 1, pktmpool);
+            let ret = setup_port(port_id, n_rx, 1, mbuf_pool);
             assert_eq!(ret, 0);
 
             Self {
                 port_id,
-                pktmpool,
+                mbuf_pool,
                 config: Arc::new(config),
                 recv_table: HashMap::new(),
             }
         }
     }
 
-    unsafe fn get_source_address(data: NonNull<u8>) -> Address {
-        let data = data.as_ptr();
-        let mut address = Address::default();
-        copy_nonoverlapping(data.offset(6), &mut address.mac as *mut _, 6);
-        copy_nonoverlapping(data.offset(15), &mut address.id, 1);
-        address
-    }
-
-    unsafe fn get_dest_address(data: NonNull<u8>) -> Address {
-        let data = data.as_ptr();
-        let mut address = Address::default();
-        copy_nonoverlapping(data.offset(0), &mut address.mac as *mut _, 6);
-        copy_nonoverlapping(data.offset(14), &mut address.id, 1);
-        address
-    }
-
-    // must be run with spawn blocking
     pub fn run(&self, queue_id: u16) {
-        let mut mac_addr = MaybeUninit::uninit();
-        let mac_addr = unsafe {
-            rte_eth_macaddr_get(self.port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap());
-            mac_addr.assume_init()
-        };
-        for address in self.recv_table.keys() {
-            if address.mac != mac_addr.addr_bytes {
-                println!(
-                    "warn: registered address (mac = {:?}) and device (mac = {:?}) difference",
-                    address.mac, mac_addr.addr_bytes
-                );
-            }
-        }
-
         let (socket, dev_socket) =
             unsafe { (rte_socket_id(), rte_eth_dev_socket_id(self.port_id)) };
         if socket != dev_socket {
@@ -347,20 +178,10 @@ impl Transport {
             for mbuf in burst {
                 let mbuf = NonNull::new(*mbuf).unwrap();
                 unsafe {
-                    let data = mbuf_get_data(mbuf);
-                    let source = Transport::get_source_address(data);
-                    let dest = Transport::get_dest_address(data);
-                    let buffer = NonNull::new(data.as_ptr().offset(16)).unwrap();
-                    let length = mbuf_get_packet_length(mbuf) - 16;
+                    let data = rte_mbuf::get_data(mbuf);
+                    let (source, dest) = (rte_mbuf::get_source(data), rte_mbuf::get_dest(data));
                     if let Some(rx_agent) = self.recv_table.get(&dest) {
-                        rx_agent(
-                            &source,
-                            RxBuffer {
-                                mbuf,
-                                buffer,
-                                length,
-                            },
-                        );
+                        rx_agent(&source, rte_mbuf::into_rx_buffer(mbuf, data));
                     } else {
                         println!("warn: unknown destination {}", dest);
                     }
