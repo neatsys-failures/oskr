@@ -1,8 +1,8 @@
-use bincode::serialize_into;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
-use serde::Serialize;
 use std::io::Cursor;
+
+use bincode::serialize_into;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use serde::Serialize;
 
 pub type ReplicaId = u8;
 pub type ClientId = [u8; 4];

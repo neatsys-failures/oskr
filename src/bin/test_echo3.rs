@@ -19,7 +19,7 @@ use oskr::{
 fn main() {
     let server_address = "b8:ce:f6:2a:2f:94#0".parse().unwrap();
     let port_id = 0;
-    let n_tx = 7;
+    let n_tx = 7; // for some reason 7 is maximum number of tx queue that works
 
     let config = Config {
         replica_address: vec![server_address],

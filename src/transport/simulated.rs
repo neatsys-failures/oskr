@@ -1,19 +1,20 @@
-use crate::transport::{self, Config, Receiver};
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
 use rand::{thread_rng, Rng};
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::select;
-use tokio::sync::mpsc;
-use tokio::task::spawn;
-use tokio::time::{sleep, sleep_until, Instant};
+use tokio::{
+    select, spawn,
+    sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    time::{sleep, sleep_until, Instant},
+};
+
+use crate::transport::{self, Config, Receiver};
 
 type Address = String;
 type Message = Vec<u8>;
 
 pub struct Transport {
-    rx: mpsc::UnboundedReceiver<(Address, Address, Message, bool)>,
-    tx: mpsc::UnboundedSender<(Address, Address, Message, bool)>,
+    rx: UnboundedReceiver<(Address, Address, Message, bool)>,
+    tx: UnboundedSender<(Address, Address, Message, bool)>,
     recv_table: RecvTable,
     config: Arc<Config<Self>>,
     filter_table: FilterTable,
@@ -31,7 +32,7 @@ impl AsRef<[u8]> for RxBuffer {
 }
 
 pub struct TxAgent {
-    tx: mpsc::UnboundedSender<(Address, Address, Message, bool)>,
+    tx: UnboundedSender<(Address, Address, Message, bool)>,
     config: Arc<Config<Transport>>,
 }
 
@@ -127,7 +128,7 @@ impl Transport {
             multicast_address: None, // TODO
             n_fault,
         };
-        let (tx, rx) = mpsc::unbounded_channel();
+        let (tx, rx) = unbounded_channel();
         Self {
             rx,
             tx,
