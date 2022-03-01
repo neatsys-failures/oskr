@@ -1,12 +1,16 @@
 pub mod common;
+pub mod executor;
 pub mod transport;
+
+pub mod dpdk_shim;
+
 pub mod replication {
     pub mod unreplicated;
 }
+
 pub mod app {
     pub mod mock;
 }
-pub mod dpdk_shim;
 
 use async_trait::async_trait;
 use common::Opaque;
