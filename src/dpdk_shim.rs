@@ -1,5 +1,6 @@
 use std::{
     convert::Infallible,
+    ffi::c_void,
     fmt::{self, Display, Formatter},
     intrinsics::copy_nonoverlapping,
     marker::{PhantomData, PhantomPinned},
@@ -27,10 +28,22 @@ pub struct rte_ether_addr {
     addr_bytes: [u8; 6],
 }
 
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub enum rte_rmt_call_main_t {
+    SKIP_MAIN = 0,
+    CALL_MAIN,
+}
+
 extern "C" {
     // interfaces that exist in rte_* libraries
     pub fn rte_eal_init(argc: c_int, argv: NonNull<NonNull<c_char>>) -> c_int;
     pub fn rte_thread_register() -> c_int;
+    pub fn rte_eal_mp_remote_launch(
+        f: extern "C" fn(*mut c_void) -> c_int,
+        arg: *mut c_void,
+        call_main: rte_rmt_call_main_t,
+    );
     pub fn rte_socket_id() -> c_int;
     pub fn rte_pktmbuf_pool_create(
         name: NonNull<c_char>,
@@ -61,6 +74,7 @@ extern "C" {
         nb_pkts: u16,
     ) -> u16;
     pub fn oskr_mbuf_default_buf_size() -> u16; // RTE_MBUF_DEFAULT_BUF_SIZE
+    pub fn oskr_lcore_id() -> c_uint;
 
     // addiational custom interfaces on rte_mbuf, not correspond to anything of
     // DPDK
@@ -97,7 +111,7 @@ impl Drop for RxBuffer {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Address {
     mac: [u8; 6],
-    id: u8,
+    pub id: u8,
 }
 
 impl Address {

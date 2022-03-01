@@ -19,7 +19,7 @@ fn main() {
         n_fault: 0,
         multicast_address: None,
     };
-    let mut transport = Transport::setup(config, port_id, 1);
+    let mut transport = Transport::setup(config, port_id, 1, 1);
 
     let mut args = env::args();
     let _prog = args.next();

@@ -10,9 +10,9 @@ use std::{
 
 use crate::{
     dpdk_shim::{
-        oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_mbuf_default_buf_size, oskr_pktmbuf_alloc,
-        rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
-        rte_socket_id, setup_port, Address, RxBuffer,
+        oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_lcore_id, oskr_mbuf_default_buf_size,
+        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_mempool,
+        rte_pktmbuf_pool_create, rte_socket_id, setup_port, Address, RxBuffer,
     },
     transport::{self, Config, Receiver},
 };
@@ -20,6 +20,7 @@ use crate::{
 pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
+    n_tx: u16,
     config: Arc<Config<Transport>>,
 }
 
@@ -45,7 +46,10 @@ impl transport::TxAgent for TxAgent {
             rte_mbuf::set_dest(data, dest);
             let length = message(rte_mbuf::get_tx_buffer(data));
             rte_mbuf::set_buffer_length(mbuf, length);
-            let ret = oskr_eth_tx_burst(self.port_id, 0, NonNull::new(&mut mbuf).unwrap(), 1);
+
+            let queue_id = oskr_lcore_id() as u16 % self.n_tx;
+            let ret =
+                oskr_eth_tx_burst(self.port_id, queue_id, NonNull::new(&mut mbuf).unwrap(), 1);
             assert_eq!(ret, 1);
         }
     }
@@ -61,6 +65,7 @@ impl transport::TxAgent for TxAgent {
 pub struct Transport {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
+    n_tx: u16,
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
 }
@@ -77,6 +82,7 @@ impl transport::Transport for Transport {
         Self::TxAgent {
             mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
+            n_tx: self.n_tx,
             config: self.config.clone(),
         }
     }
@@ -109,11 +115,11 @@ impl transport::Transport for Transport {
 }
 
 impl Transport {
-    pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16) -> Self {
+    pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16, n_tx: u16) -> Self {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0x01".to_string(),
+            "0xffff".to_string(),
         ];
         let args: Vec<_> = args
             .into_iter()
@@ -142,11 +148,12 @@ impl Transport {
             );
             let mbuf_pool = NonNull::new(pktmpool).unwrap();
 
-            let ret = setup_port(port_id, n_rx, 1, mbuf_pool);
+            let ret = setup_port(port_id, n_rx, n_tx, mbuf_pool);
             assert_eq!(ret, 0);
 
             Self {
                 port_id,
+                n_tx,
                 mbuf_pool,
                 config: Arc::new(config),
                 recv_table: HashMap::new(),

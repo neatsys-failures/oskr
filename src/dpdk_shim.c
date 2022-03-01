@@ -41,6 +41,11 @@ uint16_t oskr_mbuf_default_buf_size()
     return RTE_MBUF_DEFAULT_BUF_SIZE;
 }
 
+unsigned oskr_lcore_id()
+{
+    return rte_lcore_id();
+}
+
 int setup_port(uint16_t port_id, uint16_t n_rx, uint16_t n_tx, struct rte_mempool *pktmpool)
 {
     struct rte_eth_conf port_conf;
