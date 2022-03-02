@@ -1,6 +1,9 @@
 use std::{
-    sync::{Arc, Mutex, MutexGuard},
-    thread::{self, Thread},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc, Mutex, MutexGuard,
+    },
+    thread::{self, park, Thread},
 };
 
 use crate::transport::{Receiver, Transport};
@@ -10,6 +13,7 @@ pub struct Executor<S> {
     stateful_list: Mutex<Vec<Box<dyn FnOnce(&mut S, &Self) + Send>>>,
     // stateless list
     park_list: Mutex<Vec<Thread>>,
+    spin_park: AtomicU32,
 }
 
 pub enum Work<'a, S> {
@@ -23,7 +27,31 @@ impl<S> Executor<S> {
             state: Mutex::new(state),
             stateful_list: Mutex::new(Vec::new()),
             park_list: Mutex::new(Vec::new()),
+            spin_park: AtomicU32::new(0),
         }
+    }
+
+    fn park(&self) {
+        let id = self.spin_park.fetch_add(1, Ordering::SeqCst) + 1;
+        loop {
+            let park_id = self.spin_park.load(Ordering::SeqCst);
+            if park_id < id {
+                return;
+            }
+            if park_id > id {
+                self.park_list.lock().unwrap().push(thread::current());
+                thread::park();
+                return;
+            }
+        }
+    }
+
+    fn unpark(&self) {
+        let mut park_list = self.park_list.lock().unwrap();
+        while let Some(thread) = park_list.pop() {
+            thread.unpark();
+        }
+        self.spin_park.store(0, Ordering::SeqCst);
     }
 
     pub fn register_stateful<T: Transport>(
@@ -44,20 +72,15 @@ impl<S> Executor<S> {
 
     pub fn submit_stateful(&self, task: impl FnOnce(&mut S, &Self) + Send + 'static) {
         self.stateful_list.lock().unwrap().push(Box::new(task));
-        if let Some(thread) = self.park_list.lock().unwrap().pop() {
-            thread.unpark();
-        }
+        self.unpark();
     }
 
-    fn steal_with_state<'a>(&self, state: MutexGuard<'a, S>) -> Work<'a, S> {
-        loop {
-            if let Some(task) = self.stateful_list.lock().unwrap().pop() {
-                return Work::Stateful(task, state);
-            }
-            // try steal stateless task
-            self.park_list.lock().unwrap().push(thread::current());
-            thread::park();
+    fn steal_with_state<'a>(&'a self, state: MutexGuard<'a, S>) -> Work<'a, S> {
+        if let Some(task) = self.stateful_list.lock().unwrap().pop() {
+            return Work::Stateful(task, state);
         }
+        drop(state);
+        self.steal_without_state()
     }
 
     fn steal_without_state(&self) -> Work<'_, S> {
@@ -69,7 +92,7 @@ impl<S> Executor<S> {
                 }
             }
             self.park_list.lock().unwrap().push(thread::current());
-            thread::park();
+            self.park();
         }
     }
 
