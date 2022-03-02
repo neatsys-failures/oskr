@@ -55,9 +55,7 @@ impl<T: Transport> Client<T> {
             request_number: 0,
         };
         transport.register(&client, move |remote, buffer| {
-            tx.send((remote, buffer))
-                .map_err(|_| "failed receive message")
-                .unwrap();
+            let _ = tx.send((remote, buffer)); // unregister?
         });
         client
     }
