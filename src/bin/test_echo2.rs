@@ -45,7 +45,7 @@ fn main() {
             let transport = transport.tx_agent();
             let count = count.clone();
             move |remote, _buffer| {
-                transport.send_message(&receiver, remote, |_buffer| 0);
+                transport.send_message(&receiver, &remote, |_buffer| 0);
                 count.fetch_add(1, Ordering::SeqCst);
             }
         })
