@@ -19,7 +19,7 @@ pub struct Transport {
     config: Arc<Config<Self>>,
     filter_table: FilterTable,
 }
-type RecvTable = HashMap<Address, Box<dyn Fn(&Address, RxBuffer) + Send>>;
+type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 type FilterTable =
     HashMap<u32, Box<dyn Fn(&Address, &Address, &[u8], &mut Duration) -> bool + Send>>;
 
@@ -94,7 +94,7 @@ impl transport::Transport for Transport {
     fn register(
         &mut self,
         receiver: &impl Receiver<Self>,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) where
         Self: Sized,
     {
@@ -104,7 +104,7 @@ impl transport::Transport for Transport {
 
     fn register_multicast(
         &mut self,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
         todo!()
     }
@@ -152,7 +152,7 @@ impl Transport {
 
     fn deliver_internal(&self, source: Address, dest: Address, message: Message, filtered: bool) {
         if filtered {
-            (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
+            (self.recv_table.get(&dest).unwrap())(source, RxBuffer(message));
             return;
         }
 
@@ -178,7 +178,7 @@ impl Transport {
 
         if drop {
         } else if delay.is_zero() {
-            (self.recv_table.get(&dest).unwrap())(&source, RxBuffer(message));
+            (self.recv_table.get(&dest).unwrap())(source, RxBuffer(message));
         } else {
             let tx = self.tx.clone();
             spawn(async move {

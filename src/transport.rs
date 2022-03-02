@@ -16,12 +16,12 @@ where
     fn register(
         &mut self,
         receiver: &impl Receiver<Self>,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) where
         Self: Sized;
     fn register_multicast(
         &mut self,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     );
 
     fn ephemeral_address(&self) -> Self::Address;

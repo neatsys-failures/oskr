@@ -69,7 +69,7 @@ pub struct Transport {
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
 }
-type RecvTable = HashMap<Address, Box<dyn Fn(&Address, RxBuffer) + Send>>;
+type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 
 unsafe impl Send for Transport {}
 
@@ -90,7 +90,7 @@ impl transport::Transport for Transport {
     fn register(
         &mut self,
         receiver: &impl Receiver<Self>,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
         self.recv_table
             .insert(*receiver.get_address(), Box::new(rx_agent));
@@ -98,7 +98,7 @@ impl transport::Transport for Transport {
 
     fn register_multicast(
         &mut self,
-        rx_agent: impl Fn(&Self::Address, Self::RxBuffer) + 'static + Send,
+        rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
         todo!()
     }
@@ -198,7 +198,7 @@ impl Transport {
     pub fn run(&self, queue_id: u16) {
         self.run_internal(queue_id, |source, dest, buffer| {
             if let Some(rx_agent) = self.recv_table.get(&dest) {
-                rx_agent(&source, buffer);
+                rx_agent(source, buffer);
                 true
             } else {
                 false
@@ -211,7 +211,7 @@ impl Transport {
         let (address, rx_agent) = self.recv_table.iter().next().unwrap();
         self.run_internal(0, |source, dest, buffer| {
             if dest == *address {
-                rx_agent(&source, buffer);
+                rx_agent(source, buffer);
                 true
             } else {
                 false

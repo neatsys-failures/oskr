@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use bincode::deserialize;
@@ -10,9 +10,10 @@ use tokio::{
 };
 
 use crate::{
-    common::{generate_id, serialize, ClientId, Opaque, RequestNumber},
+    common::{generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber},
+    executor::Executor,
     transport::{Receiver, Transport, TxAgent},
-    Invoke,
+    App, Invoke,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,7 +55,7 @@ impl<T: Transport> Client<T> {
             request_number: 0,
         };
         transport.register(&client, move |remote, buffer| {
-            tx.send((remote.clone(), buffer))
+            tx.send((remote, buffer))
                 .map_err(|_| "failed receive message")
                 .unwrap();
         });
@@ -87,5 +88,64 @@ impl<T: Transport> Invoke for Client<T> {
                 else => unreachable!(),
             }
         }
+    }
+}
+
+pub struct Replica<T: Transport, App> {
+    address: T::Address,
+    transport: T::TxAgent,
+
+    app: App,
+    op_number: OpNumber,
+    client_table: HashMap<ClientId, ReplyMessage>,
+}
+
+impl<T: Transport, A> Receiver<T> for Replica<T, A> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
+    }
+}
+
+impl<T: Transport, A: App + Send + 'static> Executor<Replica<T, A>> {
+    pub fn register_new(transport: &mut T, replica_id: ReplicaId, app: A) -> Arc<Self> {
+        assert_eq!(replica_id, 0);
+        let replica = Arc::new(Self::new(Replica {
+            address: transport.tx_agent().config().replica_address[0].clone(),
+            transport: transport.tx_agent(),
+            app,
+            op_number: 0,
+            client_table: HashMap::new(),
+        }));
+        replica.register_stateful(transport, Replica::receive_buffer);
+        replica
+    }
+}
+
+impl<T: Transport, A: App> Replica<T, A> {
+    fn receive_buffer(
+        &mut self,
+        _executor: &Executor<Self>,
+        remote: T::Address,
+        buffer: T::RxBuffer,
+    ) {
+        let request: RequestMessage = deserialize(buffer.as_ref()).unwrap();
+        if let Some(reply) = self.client_table.get(&request.client_id) {
+            if reply.request_number > request.request_number {
+                return;
+            }
+            if reply.request_number == request.request_number {
+                self.transport.send_message(self, &remote, serialize(reply));
+                return;
+            }
+        }
+
+        self.op_number += 1;
+        let result = self.app.execute(request.op);
+        let reply = ReplyMessage {
+            request_number: request.request_number,
+            result,
+        };
+        self.client_table.insert(request.client_id, reply.clone());
+        self.transport.send_message(self, &remote, serialize(reply));
     }
 }
