@@ -20,8 +20,8 @@ use tokio::{runtime, spawn, time::sleep};
 
 fn main() {
     let port_id = 0;
-    let n_worker = 1;
-    let n_client = 1;
+    let n_worker = 2;
+    let n_client = 240;
     let duration_second = 10;
     let config = Config {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
@@ -30,9 +30,11 @@ fn main() {
     };
 
     let mut transport = Transport::setup(config, port_id, 1, n_worker);
+    let k = (n_client - 1) / n_worker + 1;
     let client_list: Vec<Vec<_>> = (0..n_worker)
         .map(|i| {
-            (i * n_worker..n_client.min((i + 1) * n_worker))
+            (i * k..n_client.min((i + 1) * k))
+                // TODO select client type
                 .map(|_| unreplicated::Client::register_new(&mut transport))
                 .collect()
         })
@@ -43,12 +45,11 @@ fn main() {
         count: Arc<AtomicU32>,
         duration_second: u32,
     }
-    // TODO prevent leak memory
-    let worker_data = Box::leak(Box::new(WorkerData {
+    let mut worker_data = WorkerData {
         client_list,
         count: Arc::new(AtomicU32::new(0)),
         duration_second,
-    }));
+    };
     extern "C" fn worker<Client: Receiver<Transport> + Invoke + Send + 'static>(
         arg: *mut c_void,
     ) -> i32 {
@@ -94,7 +95,7 @@ fn main() {
     unsafe {
         rte_eal_mp_remote_launch(
             worker::<unreplicated::Client<Transport>>,
-            worker_data as *mut _ as *mut _,
+            &mut worker_data as *mut _ as *mut _,
             rte_rmt_call_main_t::SKIP_MAIN,
         );
     }
