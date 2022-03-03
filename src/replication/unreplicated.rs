@@ -98,6 +98,7 @@ impl<T: Transport> Invoke for Client<T> {
                     return reply.result;
                 }
             } else {
+                println!("resend");
                 self.transport
                     .send_message_to_replica(self, 0, serialize(request.clone()));
             }

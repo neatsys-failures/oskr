@@ -29,7 +29,7 @@ use quanta::Clock;
 fn main() {
     let port_id = 0;
     let n_worker = 16;
-    let n_client = 40;
+    let n_client = 12;
     let duration_second = 10;
     let config = Config {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],

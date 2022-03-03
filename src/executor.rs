@@ -1,7 +1,4 @@
-use std::{
-    sync::{Arc, Mutex, MutexGuard},
-    thread::{self, Thread},
-};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::transport::{Receiver, Transport};
 
@@ -9,7 +6,6 @@ pub struct Executor<S> {
     state: Mutex<S>,
     stateful_list: Mutex<Vec<Box<dyn FnOnce(&mut S, &Self) + Send>>>,
     // stateless list
-    park_list: Mutex<Vec<Thread>>,
 }
 
 pub enum Work<'a, S> {
@@ -22,7 +18,6 @@ impl<S> Executor<S> {
         Self {
             state: Mutex::new(state),
             stateful_list: Mutex::new(Vec::new()),
-            park_list: Mutex::new(Vec::new()),
         }
     }
 
@@ -43,20 +38,25 @@ impl<S> Executor<S> {
     }
 
     pub fn submit_stateful(&self, task: impl FnOnce(&mut S, &Self) + Send + 'static) {
-        self.stateful_list.lock().unwrap().push(Box::new(task));
-        if let Some(thread) = self.park_list.lock().unwrap().pop() {
-            thread.unpark();
+        loop {
+            if let Ok(mut stateful_list) = self.stateful_list.try_lock() {
+                stateful_list.push(Box::new(task));
+                return;
+            }
         }
     }
 
-    fn steal_with_state<'a>(&self, state: MutexGuard<'a, S>) -> Work<'a, S> {
+    fn steal_with_state<'a>(&'a self, state: MutexGuard<'a, S>) -> Work<'_, S> {
         loop {
-            if let Some(task) = self.stateful_list.lock().unwrap().pop() {
+            let mut stateful_list = loop {
+                if let Ok(stateful_list) = self.stateful_list.try_lock() {
+                    break stateful_list;
+                }
+            };
+            if let Some(task) = stateful_list.pop() {
                 return Work::Stateful(task, state);
             }
             // try steal stateless task
-            self.park_list.lock().unwrap().push(thread::current());
-            thread::park();
         }
     }
 
@@ -64,12 +64,8 @@ impl<S> Executor<S> {
         loop {
             // try steal stateless task
             if let Ok(state) = self.state.try_lock() {
-                if let Some(task) = self.stateful_list.lock().unwrap().pop() {
-                    return Work::Stateful(task, state);
-                }
+                return self.steal_with_state(state);
             }
-            self.park_list.lock().unwrap().push(thread::current());
-            thread::park();
         }
     }
 
