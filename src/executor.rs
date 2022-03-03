@@ -4,9 +4,10 @@ use crate::transport::{Receiver, Transport};
 
 pub struct Executor<S> {
     state: Mutex<S>,
-    stateful_list: Mutex<Vec<Box<dyn FnOnce(&mut S, &Self) + Send>>>,
+    stateful_list: StatefulList<Self, S>,
     // stateless list
 }
+type StatefulList<E, S> = Mutex<Vec<Box<dyn FnOnce(&mut S, &E) + Send>>>;
 
 pub enum Work<'a, S> {
     Stateful(Box<dyn FnOnce(&mut S, &Executor<S>)>, MutexGuard<'a, S>),

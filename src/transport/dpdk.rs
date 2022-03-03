@@ -105,7 +105,7 @@ impl transport::Transport for Transport {
 
     fn ephemeral_address(&self) -> Self::Address {
         for id in (0..=254).rev() {
-            let address = unsafe { Address::new_local(self.port_id, id) };
+            let address = Address::new_local(self.port_id, id);
             if !self.recv_table.contains_key(&address) {
                 return address;
             }

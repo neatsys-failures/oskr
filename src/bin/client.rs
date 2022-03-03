@@ -81,6 +81,7 @@ fn main() {
     extern "C" fn worker<Client: Receiver<Transport> + Invoke + Send + 'static>(
         arg: *mut c_void,
     ) -> i32 {
+        // TODO take a safer shared reference
         let worker_data: &mut WorkerData<Client> = unsafe { &mut *(arg as *mut _) };
         let index = unsafe { rte_lcore_index(oskr_lcore_id() as c_int) };
         let client_list =
@@ -93,8 +94,8 @@ fn main() {
         let duration_second = worker_data.duration_second;
         let barrier = worker_data.barrier.clone();
         let hist = worker_data.hist.clone();
-        drop(worker_data);
 
+        // I want a broadcast :|
         let (mut client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
             .into_iter()
             .map(|mut client| {
@@ -154,7 +155,7 @@ fn main() {
             }
         }
 
-        hist.lock().unwrap().add(worker_hist).unwrap();
+        *hist.lock().unwrap() += worker_hist;
         if barrier.wait().is_leader() {
             for v in hist.lock().unwrap().iter_quantiles(1) {
                 println!(
@@ -166,7 +167,7 @@ fn main() {
             }
             process::exit(0); // TODO more graceful
         } else {
-            loop {}
+            0
         }
     }
     unsafe {

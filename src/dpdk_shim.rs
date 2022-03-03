@@ -116,10 +116,10 @@ pub struct Address {
 }
 
 impl Address {
-    pub unsafe fn new_local(port_id: u16, id: u8) -> Self {
+    pub fn new_local(port_id: u16, id: u8) -> Self {
         let mut mac_addr = MaybeUninit::uninit();
-        rte_eth_macaddr_get(port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap());
-        let mac = mac_addr.assume_init().addr_bytes;
+        unsafe { rte_eth_macaddr_get(port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap()) };
+        let mac = unsafe { mac_addr.assume_init() }.addr_bytes;
         Self { mac, id }
     }
 }
@@ -152,14 +152,20 @@ impl Display for Address {
 }
 
 impl rte_mbuf {
+    /// # Safety
+    /// `mbuf` points to a valid `rte_mbuf` struct.
     pub unsafe fn get_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8> {
         mbuf_get_data(mbuf)
     }
 
+    /// # Safety
+    /// `mbuf` points to a valid `rte_mbuf` struct.
     pub unsafe fn set_buffer_length(mbuf: NonNull<rte_mbuf>, length: u16) {
         mbuf_set_packet_length(mbuf, length + 16);
     }
 
+    /// # Safety
+    /// `mbuf` points to a valid `rte_mbuf` struct, `data` is from `get_data(mbuf)`.
     // this method instead of Into<RxBuffer> because I want it keep unsafe
     pub unsafe fn into_rx_buffer(mbuf: NonNull<rte_mbuf>, data: NonNull<u8>) -> RxBuffer {
         let buffer = NonNull::new(data.as_ptr().offset(16)).unwrap();
@@ -171,11 +177,15 @@ impl rte_mbuf {
         }
     }
 
+    /// # Safety
+    /// `data` is a valid `mbuf`'s data pointer.
     pub unsafe fn get_tx_buffer<'a>(data: NonNull<u8>) -> &'a mut [u8] {
         // TODO decide maximum length with reason
         slice::from_raw_parts_mut(data.as_ptr().offset(16), 1480)
     }
 
+    /// # Safety
+    /// `data` is a valid `mbuf`'s data pointer.
     pub unsafe fn get_source(data: NonNull<u8>) -> Address {
         let data = data.as_ptr();
         let mut address = Address::default();
@@ -184,6 +194,8 @@ impl rte_mbuf {
         address
     }
 
+    /// # Safety
+    /// `data` is a valid `mbuf`'s data pointer.
     pub unsafe fn set_source(data: NonNull<u8>, address: &Address) {
         let data = data.as_ptr();
         copy_nonoverlapping(&address.mac as *const _, data.offset(6), 6);
@@ -192,6 +204,8 @@ impl rte_mbuf {
         copy_nonoverlapping(&0x88d5u16.to_be_bytes() as *const _, data.offset(12), 2);
     }
 
+    /// # Safety
+    /// `data` is a valid mbuf's data pointer.
     pub unsafe fn get_dest(data: NonNull<u8>) -> Address {
         let data = data.as_ptr();
         let mut address = Address::default();
@@ -200,6 +214,8 @@ impl rte_mbuf {
         address
     }
 
+    /// # Safety
+    /// `data` is a valid mbuf's data pointer.
     pub unsafe fn set_dest(data: NonNull<u8>, address: &Address) {
         let data = data.as_ptr();
         copy_nonoverlapping(&address.mac as *const _, data.offset(0), 6);

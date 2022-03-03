@@ -50,7 +50,7 @@ fn main() {
     assert_eq!(ret, args.len() as c_int - 1);
 
     let address = if invoke {
-        unsafe { Address::new_local(port_id, 254) }
+        Address::new_local(port_id, 254)
     } else {
         server_address
     };
