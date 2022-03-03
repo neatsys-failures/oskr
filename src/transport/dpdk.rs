@@ -119,7 +119,7 @@ impl Transport {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0xffff".to_string(),
+            "0xffff0000ffff".to_string(),
         ];
         let args: Vec<_> = args
             .into_iter()

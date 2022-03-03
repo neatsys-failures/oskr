@@ -1,6 +1,7 @@
 use std::{
     ffi::c_void,
     mem::take,
+    os::raw::c_int,
     process,
     sync::{
         atomic::{AtomicU32, Ordering},
@@ -14,11 +15,11 @@ use async_std::{
     prelude::FutureExt,
     task::{block_on, sleep, spawn},
 };
-use futures::future::join_all;
+use futures::{executor::LocalPool, future::join_all, task::SpawnExt};
 use hdrhistogram::Histogram;
 use oskr::{
     common::Opaque,
-    dpdk_shim::{oskr_lcore_id, rte_eal_mp_remote_launch, rte_rmt_call_main_t},
+    dpdk_shim::{oskr_lcore_id, rte_eal_mp_remote_launch, rte_lcore_index, rte_rmt_call_main_t},
     replication::unreplicated,
     transport::{dpdk::Transport, Config, Receiver},
     Invoke,
@@ -27,8 +28,8 @@ use quanta::Clock;
 
 fn main() {
     let port_id = 0;
-    let n_worker = 1;
-    let n_client = 1;
+    let n_worker = 16;
+    let n_client = 40;
     let duration_second = 10;
     let config = Config {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
@@ -65,71 +66,81 @@ fn main() {
         arg: *mut c_void,
     ) -> i32 {
         let worker_data: &mut WorkerData<Client> = unsafe { &mut *(arg as *mut _) };
-        let client_list = if let Some(client_list) = worker_data
-            .client_list
-            .get_mut(unsafe { oskr_lcore_id() } as usize - 1)
-        {
-            println!("client count: {}", client_list.len());
-            take(client_list)
-        } else {
-            return 0;
-        };
+        let index = unsafe { rte_lcore_index(oskr_lcore_id() as c_int) };
+        let client_list =
+            if let Some(client_list) = worker_data.client_list.get_mut(index as usize - 1) {
+                take(client_list)
+            } else {
+                return 0;
+            };
         let count = worker_data.count.clone();
         let duration_second = worker_data.duration_second;
         let barrier = worker_data.barrier.clone();
         let hist = worker_data.hist.clone();
         drop(worker_data);
 
-        let worker_hist: Histogram<_> = block_on(async move {
-            let (shutdown_tx, shutdown) = bounded(1);
-            let client_list: Vec<_> = client_list
-                .into_iter()
-                .map(|mut client| {
-                    let shutdown = shutdown.clone();
-                    let count = count.clone();
-                    spawn(async move {
-                        println!("{}", client.get_address());
-                        let clock = Clock::new();
-                        let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
-                        loop {
-                            let start = clock.start();
-                            if async {
-                                client.invoke(Opaque::default()).await;
-                                false
+        let mut pool = LocalPool::new();
+        let worker_hist: Arc<Mutex<Option<Histogram<u64>>>> = Arc::new(Mutex::new(None));
+        let _ = pool.spawner().spawn({
+            let worker_hist = worker_hist.clone();
+            async move {
+                let (shutdown_tx, shutdown) = bounded(1);
+                let client_list: Vec<_> = client_list
+                    .into_iter()
+                    .map(|mut client| {
+                        let shutdown = shutdown.clone();
+                        let count = count.clone();
+                        spawn(async move {
+                            println!("{}", client.get_address());
+                            let clock = Clock::new();
+                            let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
+                            loop {
+                                let start = clock.start();
+                                if async {
+                                    client.invoke(Opaque::default()).await;
+                                    false
+                                }
+                                .race(async {
+                                    shutdown.recv().await.unwrap();
+                                    true
+                                })
+                                .await
+                                {
+                                    return hist;
+                                }
+                                let end = clock.end();
+                                hist += clock.delta(start, end).as_nanos() as u64;
+                                count.fetch_add(1, Ordering::SeqCst);
                             }
-                            .race(async {
-                                shutdown.recv().await.unwrap();
-                                true
-                            })
-                            .await
-                            {
-                                return hist;
-                            }
-                            let end = clock.end();
-                            hist += clock.delta(start, end).as_nanos() as u64;
-                            count.fetch_add(1, Ordering::SeqCst);
-                        }
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            if unsafe { oskr_lcore_id() } == 1 {
-                for _ in 0..duration_second {
-                    sleep(Duration::from_secs(1)).await;
-                    let count = count.swap(0, Ordering::SeqCst);
-                    println!("{}", count);
+                if index == 1 {
+                    for _ in 0..duration_second {
+                        sleep(Duration::from_secs(1)).await;
+                        let count = count.swap(0, Ordering::SeqCst);
+                        println!("{}", count);
+                    }
+                } else {
+                    sleep(Duration::from_secs(duration_second as u64 + 1)).await;
                 }
-            } else {
-                sleep(Duration::from_secs(duration_second as u64 + 1)).await;
-            }
 
-            for _ in 0..client_list.len() {
-                shutdown_tx.send(()).await.unwrap();
+                for _ in 0..client_list.len() {
+                    shutdown_tx.send(()).await.unwrap();
+                }
+                *worker_hist.lock().unwrap() = Some(join_all(client_list).await.into_iter().sum());
             }
-            join_all(client_list).await.into_iter().sum()
         });
 
-        hist.lock().unwrap().add(worker_hist).unwrap();
+        while worker_hist.lock().unwrap().is_none() {
+            pool.run_until_stalled();
+        }
+
+        hist.lock()
+            .unwrap()
+            .add(worker_hist.lock().unwrap().take().unwrap())
+            .unwrap();
         if barrier.wait().is_leader() {
             for v in hist.lock().unwrap().iter_quantiles(1) {
                 println!(
