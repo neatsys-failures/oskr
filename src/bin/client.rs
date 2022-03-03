@@ -9,6 +9,11 @@ use std::{
     time::Duration,
 };
 
+use async_std::{
+    channel::bounded,
+    prelude::FutureExt,
+    task::{block_on, sleep, spawn},
+};
 use futures::future::join_all;
 use hdrhistogram::Histogram;
 use oskr::{
@@ -19,12 +24,11 @@ use oskr::{
     Invoke,
 };
 use quanta::Clock;
-use tokio::{runtime, select, spawn, sync::broadcast, time::sleep};
 
 fn main() {
     let port_id = 0;
     let n_worker = 1;
-    let n_client = 200;
+    let n_client = 1;
     let duration_second = 10;
     let config = Config {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
@@ -65,34 +69,41 @@ fn main() {
             .client_list
             .get_mut(unsafe { oskr_lcore_id() } as usize - 1)
         {
+            println!("client count: {}", client_list.len());
             take(client_list)
         } else {
             return 0;
         };
-        let count = &worker_data.count;
+        let count = worker_data.count.clone();
         let duration_second = worker_data.duration_second;
         let barrier = worker_data.barrier.clone();
         let hist = worker_data.hist.clone();
+        drop(worker_data);
 
-        let runtime = runtime::Builder::new_current_thread()
-            .enable_time()
-            .build()
-            .unwrap();
-        let worker_hist: Histogram<_> = runtime.block_on(async move {
-            let (shutdown, _) = broadcast::channel(1);
+        let worker_hist: Histogram<_> = block_on(async move {
+            let (shutdown_tx, shutdown) = bounded(1);
             let client_list: Vec<_> = client_list
                 .into_iter()
                 .map(|mut client| {
-                    let mut shutdown = shutdown.subscribe();
+                    let shutdown = shutdown.clone();
+                    let count = count.clone();
                     spawn(async move {
                         println!("{}", client.get_address());
                         let clock = Clock::new();
                         let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
                         loop {
                             let start = clock.start();
-                            select! {
-                                _ = client.invoke(Opaque::default()) => {}
-                                _ = shutdown.recv() => return hist,
+                            if async {
+                                client.invoke(Opaque::default()).await;
+                                false
+                            }
+                            .race(async {
+                                shutdown.recv().await.unwrap();
+                                true
+                            })
+                            .await
+                            {
+                                return hist;
                             }
                             let end = clock.end();
                             hist += clock.delta(start, end).as_nanos() as u64;
@@ -112,12 +123,10 @@ fn main() {
                 sleep(Duration::from_secs(duration_second as u64 + 1)).await;
             }
 
-            shutdown.send(()).unwrap();
-            join_all(client_list)
-                .await
-                .into_iter()
-                .map(Result::unwrap)
-                .sum()
+            for _ in 0..client_list.len() {
+                shutdown_tx.send(()).await.unwrap();
+            }
+            join_all(client_list).await.into_iter().sum()
         });
 
         hist.lock().unwrap().add(worker_hist).unwrap();
