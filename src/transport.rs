@@ -1,4 +1,5 @@
 pub mod dpdk;
+#[cfg(test)]
 pub mod simulated;
 
 use crate::common::ReplicaId;

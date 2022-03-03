@@ -1,21 +1,19 @@
 use std::{
     ffi::c_void,
+    future::Future,
     mem::take,
     os::raw::c_int,
+    pin::Pin,
     process,
     sync::{
         atomic::{AtomicU32, Ordering},
         Arc, Barrier, Mutex,
     },
+    task::{Context, Poll},
     time::Duration,
 };
 
-use async_std::{
-    channel::bounded,
-    prelude::FutureExt,
-    task::{block_on, sleep, spawn},
-};
-use futures::{executor::LocalPool, future::join_all, task::SpawnExt};
+use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::Histogram;
 use oskr::{
     common::Opaque,
@@ -24,12 +22,30 @@ use oskr::{
     transport::{dpdk::Transport, Config, Receiver},
     Invoke,
 };
-use quanta::Clock;
+use quanta::{Clock, Instant};
+
+struct Timeout(Instant);
+impl Timeout {
+    fn boxed() -> BoxFuture<'static, ()> {
+        Box::pin(Self(Instant::now()))
+    }
+}
+impl Future for Timeout {
+    type Output = ();
+    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
+        // configurable?
+        if Instant::now().duration_since(self.0) >= Duration::from_millis(1000) {
+            Poll::Ready(())
+        } else {
+            Poll::Pending
+        }
+    }
+}
 
 fn main() {
     let port_id = 0;
-    let n_worker = 16;
-    let n_client = 12;
+    let n_worker = 20;
+    let n_client = 20;
     let duration_second = 10;
     let config = Config {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
@@ -43,7 +59,7 @@ fn main() {
         .map(|i| {
             (i * k..n_client.min((i + 1) * k))
                 // TODO select client type
-                .map(|_| unreplicated::Client::register_new(&mut transport))
+                .map(|_| unreplicated::Client::register_new(&mut transport, Timeout::boxed))
                 .collect()
         })
         .collect();
@@ -51,7 +67,7 @@ fn main() {
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
-        duration_second: u32,
+        duration_second: u64,
         hist: Arc<Mutex<Histogram<u64>>>,
         barrier: Arc<Barrier>,
     }
@@ -79,68 +95,66 @@ fn main() {
         let hist = worker_data.hist.clone();
         drop(worker_data);
 
-        let mut pool = LocalPool::new();
-        let worker_hist: Arc<Mutex<Option<Histogram<u64>>>> = Arc::new(Mutex::new(None));
-        let _ = pool.spawner().spawn({
-            let worker_hist = worker_hist.clone();
-            async move {
-                let (shutdown_tx, shutdown) = bounded(1);
-                let client_list: Vec<_> = client_list
-                    .into_iter()
-                    .map(|mut client| {
-                        let shutdown = shutdown.clone();
-                        let count = count.clone();
-                        spawn(async move {
-                            println!("{}", client.get_address());
-                            let clock = Clock::new();
-                            let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
-                            loop {
-                                let start = clock.start();
-                                if async {
-                                    client.invoke(Opaque::default()).await;
-                                    false
-                                }
-                                .race(async {
-                                    shutdown.recv().await.unwrap();
-                                    true
-                                })
-                                .await
-                                {
-                                    return hist;
-                                }
-                                let end = clock.end();
-                                hist += clock.delta(start, end).as_nanos() as u64;
-                                count.fetch_add(1, Ordering::SeqCst);
+        let (mut client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
+            .into_iter()
+            .map(|mut client| {
+                let count = count.clone();
+                let (shutdown_tx, mut shutdown) = oneshot::channel();
+                (
+                    Box::pin(async move {
+                        println!("{}", client.get_address());
+                        let clock = Clock::new();
+                        let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
+                        loop {
+                            let start = clock.start();
+                            select! {
+                                _ = client.invoke(Opaque::default()).fuse() => {},
+                                _ = shutdown => return hist,
                             }
-                        })
-                    })
-                    .collect();
+                            let end = clock.end();
+                            hist += clock.delta(start, end).as_nanos() as u64;
+                            count.fetch_add(1, Ordering::SeqCst);
+                        }
+                    }),
+                    shutdown_tx,
+                )
+            })
+            .unzip();
 
-                if index == 1 {
-                    for _ in 0..duration_second {
-                        sleep(Duration::from_secs(1)).await;
-                        let count = count.swap(0, Ordering::SeqCst);
-                        println!("{}", count);
-                    }
-                } else {
-                    sleep(Duration::from_secs(duration_second as u64 + 1)).await;
+        let poll_clock = Clock::new();
+        let mut poll = |duration| {
+            let start = poll_clock.start();
+            while poll_clock.delta(start, poll_clock.end()) < duration {
+                for mut client in &mut client_list {
+                    let _ = Pin::new(&mut client).poll(&mut Context::from_waker(noop_waker_ref()));
                 }
-
-                for _ in 0..client_list.len() {
-                    shutdown_tx.send(()).await.unwrap();
-                }
-                *worker_hist.lock().unwrap() = Some(join_all(client_list).await.into_iter().sum());
             }
-        });
-
-        while worker_hist.lock().unwrap().is_none() {
-            pool.run_until_stalled();
+        };
+        if index == 1 {
+            for _ in 0..duration_second {
+                poll(Duration::from_secs(1));
+                let count = count.swap(0, Ordering::SeqCst);
+                println!("{}", count);
+            }
+        } else {
+            poll(Duration::from_secs(duration_second));
         }
 
-        hist.lock()
-            .unwrap()
-            .add(worker_hist.lock().unwrap().take().unwrap())
-            .unwrap();
+        for shutdown in shutdown_list {
+            shutdown.send(()).unwrap();
+        }
+        let mut worker_hist = Histogram::new(2).unwrap();
+        for mut client in client_list {
+            if let Poll::Ready(hist) =
+                Pin::new(&mut client).poll(&mut Context::from_waker(noop_waker_ref()))
+            {
+                worker_hist += hist;
+            } else {
+                unreachable!();
+            }
+        }
+
+        hist.lock().unwrap().add(worker_hist).unwrap();
         if barrier.wait().is_leader() {
             for v in hist.lock().unwrap().iter_quantiles(1) {
                 println!(

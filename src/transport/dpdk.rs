@@ -11,8 +11,8 @@ use std::{
 use crate::{
     dpdk_shim::{
         oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_lcore_id, oskr_mbuf_default_buf_size,
-        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_mbuf, rte_mempool,
-        rte_pktmbuf_pool_create, rte_socket_id, setup_port, Address, RxBuffer,
+        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_lcore_index, rte_mbuf,
+        rte_mempool, rte_pktmbuf_pool_create, rte_socket_id, setup_port, Address, RxBuffer,
     },
     transport::{self, Config, Receiver},
 };
@@ -47,7 +47,7 @@ impl transport::TxAgent for TxAgent {
             let length = message(rte_mbuf::get_tx_buffer(data));
             rte_mbuf::set_buffer_length(mbuf, length);
 
-            let queue_id = oskr_lcore_id() as u16 % self.n_tx;
+            let queue_id = rte_lcore_index(oskr_lcore_id() as c_int) as u16 % self.n_tx;
             let ret =
                 oskr_eth_tx_burst(self.port_id, queue_id, NonNull::new(&mut mbuf).unwrap(), 1);
             assert_eq!(ret, 1);
@@ -119,7 +119,7 @@ impl Transport {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0xffff0000ffff".to_string(),
+            "0xfffe0000ffff".to_string(),
         ];
         let args: Vec<_> = args
             .into_iter()

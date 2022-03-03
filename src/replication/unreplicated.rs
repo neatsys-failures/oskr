@@ -1,13 +1,12 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc};
 
-use async_std::{
-    channel::{unbounded, Receiver},
-    prelude::{FutureExt, StreamExt},
-    stream::interval,
-    task::spawn,
-};
 use async_trait::async_trait;
 use bincode::deserialize;
+use futures::{
+    channel::mpsc::{unbounded, UnboundedReceiver},
+    future::BoxFuture,
+    select, FutureExt, StreamExt,
+};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::{
@@ -34,7 +33,8 @@ pub struct Client<T: Transport> {
     address: T::Address,
     id: ClientId,
     transport: T::TxAgent,
-    rx: Receiver<(T::Address, T::RxBuffer)>,
+    rx: UnboundedReceiver<(T::Address, T::RxBuffer)>,
+    timeout: Box<dyn FnMut() -> BoxFuture<'static, ()> + Send>,
 
     request_number: RequestNumber,
 }
@@ -46,17 +46,21 @@ impl<T: Transport> transport::Receiver<T> for Client<T> {
 }
 
 impl<T: Transport> Client<T> {
-    pub fn register_new(transport: &mut T) -> Self {
+    pub fn register_new(
+        transport: &mut T,
+        timeout: impl FnMut() -> BoxFuture<'static, ()> + Send + 'static,
+    ) -> Self {
         let (tx, rx) = unbounded();
         let client = Self {
             address: transport.ephemeral_address(),
             id: generate_id(),
             transport: transport.tx_agent(),
             rx,
+            timeout: Box::new(timeout),
             request_number: 0,
         };
         transport.register(&client, move |remote, buffer| {
-            let _ = tx.try_send((remote, buffer)); // unregister?
+            let _ = tx.unbounded_send((remote, buffer)); // unregister?
         });
         client
     }
@@ -74,33 +78,19 @@ impl<T: Transport> Invoke for Client<T> {
 
         self.transport
             .send_message_to_replica(self, 0, serialize(request.clone()));
-        let (resend_tx, resend_rx) = unbounded();
-        let resend_timer = spawn(async move {
-            let mut interval = interval(Duration::from_millis(1000));
-            while let Some(_) = interval.next().await {
-                if resend_tx.send(()).await.is_err() {
-                    return;
-                }
-            }
-        });
-
         loop {
-            if let Some((_remote, buffer)) = async { Some(self.rx.recv().await.unwrap()) }
-                .race(async {
-                    resend_rx.recv().await.unwrap();
-                    None
-                })
-                .await
-            {
-                let reply: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
-                if reply.request_number == self.request_number {
-                    let _ = resend_timer.cancel().await;
-                    return reply.result;
+            select! {
+                recv = self.rx.next() => {
+                    let (_remote, buffer) = recv.unwrap();
+                    let reply: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
+                    if reply.request_number == self.request_number {
+                        return reply.result;
+                    }
                 }
-            } else {
-                println!("resend");
-                self.transport
-                    .send_message_to_replica(self, 0, serialize(request.clone()));
+                _ = (self.timeout)().fuse() => {
+                    println!("resend");
+                    self.transport.send_message_to_replica(self, 0, serialize(request.clone()));
+                }
             }
         }
     }
