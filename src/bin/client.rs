@@ -2,7 +2,6 @@ use std::{
     ffi::c_void,
     future::Future,
     mem::take,
-    os::raw::c_int,
     pin::Pin,
     process,
     sync::{
@@ -17,7 +16,7 @@ use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref,
 use hdrhistogram::Histogram;
 use oskr::{
     common::Opaque,
-    dpdk_shim::{oskr_lcore_id, rte_eal_mp_remote_launch, rte_lcore_index, rte_rmt_call_main_t},
+    dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
     transport::{dpdk::Transport, Config, Receiver},
     Invoke,
@@ -83,13 +82,12 @@ fn main() {
     ) -> i32 {
         // TODO take a safer shared reference
         let worker_data: &mut WorkerData<Client> = unsafe { &mut *(arg as *mut _) };
-        let index = unsafe { rte_lcore_index(oskr_lcore_id() as c_int) };
-        let client_list =
-            if let Some(client_list) = worker_data.client_list.get_mut(index as usize - 1) {
-                take(client_list)
-            } else {
-                return 0;
-            };
+        let worker_id = Transport::worker_id();
+        let client_list = if let Some(client_list) = worker_data.client_list.get_mut(worker_id) {
+            take(client_list)
+        } else {
+            return 0;
+        };
         let count = worker_data.count.clone();
         let duration_second = worker_data.duration_second;
         let barrier = worker_data.barrier.clone();
@@ -131,7 +129,7 @@ fn main() {
                 }
             }
         };
-        if index == 1 {
+        if worker_id == 0 {
             for _ in 0..duration_second {
                 poll(Duration::from_secs(1));
                 let count = count.swap(0, Ordering::SeqCst);
@@ -158,8 +156,11 @@ fn main() {
         *hist.lock().unwrap() += worker_hist;
         if barrier.wait().is_leader() {
             for v in hist.lock().unwrap().iter_quantiles(1) {
+                if v.count_since_last_iteration() == 0 {
+                    continue;
+                }
                 println!(
-                    "quantile {:.7} latency {}ns\tcount {}",
+                    "{:.7} {}ns\twith {} samples",
                     v.quantile_iterated_to(),
                     v.value_iterated_to(),
                     v.count_since_last_iteration()

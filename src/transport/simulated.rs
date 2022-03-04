@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
+use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
 use tokio::{
     select, spawn,
@@ -136,6 +137,11 @@ impl Transport {
             config: Arc::new(config),
             filter_table: HashMap::new(),
         }
+    }
+
+    pub fn client_timeout() -> BoxFuture<'static, ()> {
+        // configurable?
+        Box::pin(sleep(Duration::from_millis(1000)))
     }
 
     pub async fn deliver(&mut self, duration: Duration) {

@@ -47,7 +47,8 @@ impl transport::TxAgent for TxAgent {
             let length = message(rte_mbuf::get_tx_buffer(data));
             rte_mbuf::set_buffer_length(mbuf, length);
 
-            let queue_id = rte_lcore_index(oskr_lcore_id() as c_int) as u16 % self.n_tx;
+            // should be cache-able, but that will make TxAgent !Send
+            let queue_id = Transport::worker_id() as u16;
             let ret =
                 oskr_eth_tx_burst(self.port_id, queue_id, NonNull::new(&mut mbuf).unwrap(), 1);
             assert_eq!(ret, 1);
@@ -193,6 +194,10 @@ impl Transport {
                 }
             }
         }
+    }
+
+    pub fn worker_id() -> usize {
+        (unsafe { rte_lcore_index(oskr_lcore_id() as c_int) }) as usize - 1
     }
 
     pub fn run(&self, queue_id: u16) {

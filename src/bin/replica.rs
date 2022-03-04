@@ -1,8 +1,8 @@
-use std::{ffi::c_void, os::raw::c_uint, sync::Arc};
+use std::{ffi::c_void, sync::Arc};
 
 use oskr::{
     common::Opaque,
-    dpdk_shim::{oskr_lcore_id, rte_eal_mp_remote_launch, rte_rmt_call_main_t},
+    dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     executor::Executor,
     replication::unreplicated,
     transport::{dpdk::Transport, Config},
@@ -26,7 +26,7 @@ fn main() {
         multicast_address: None,
     };
 
-    let mut transport = Transport::setup(config, port_id, 1, n_worker);
+    let mut transport = Transport::setup(config, port_id, 1, n_worker as u16);
     // TODO select replica type
     let replica = Executor::<unreplicated::Replica<Transport, _>>::register_new(
         &mut transport,
@@ -36,7 +36,7 @@ fn main() {
 
     struct WorkerData<Replica> {
         replica: Arc<Executor<Replica>>,
-        n_worker: u16,
+        n_worker: usize,
     }
     let worker_data = WorkerData { replica, n_worker };
     extern "C" fn worker<Replica>(arg: *mut c_void) -> i32 {
@@ -44,11 +44,16 @@ fn main() {
         let replica = worker_data.replica.clone();
         let n_worker = worker_data.n_worker;
 
-        if unsafe { oskr_lcore_id() } > n_worker as c_uint {
+        let worker_id = Transport::worker_id();
+        if worker_id >= n_worker {
             return 0;
+        } else if worker_id == 0 {
+            // it runs slower with this optimization...
+            // replica.run_stateful_worker();
+            replica.run_worker();
+        } else {
+            // run stateless worker
         }
-
-        replica.worker_loop();
         unreachable!();
     }
 

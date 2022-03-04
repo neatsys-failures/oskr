@@ -70,7 +70,7 @@ impl<S> Executor<S> {
         }
     }
 
-    pub fn worker_loop(&self) {
+    pub fn run_worker(&self) {
         let mut work = self.steal_without_state();
         loop {
             match work {
@@ -85,4 +85,22 @@ impl<S> Executor<S> {
             }
         }
     }
+
+    pub fn run_stateful_worker(&self) {
+        let mut state = self.state.lock().unwrap();
+        loop {
+            let mut stateful_list = loop {
+                if let Ok(stateful_list) = self.stateful_list.try_lock() {
+                    break stateful_list;
+                }
+            };
+            if let Some(task) = stateful_list.pop() {
+                task(&mut *state, self);
+            } else {
+                // park
+            }
+        }
+    }
+
+    // run stateless worker
 }
