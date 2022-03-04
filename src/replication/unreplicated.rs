@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_trait::async_trait;
 use bincode::deserialize;
@@ -11,7 +11,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::{
     common::{generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber},
-    executor::Executor,
+    executor::{Submit, SubmitExt},
     transport::{self, Transport, TxAgent},
     App, Invoke,
 };
@@ -96,47 +96,46 @@ impl<T: Transport> Invoke for Client<T> {
     }
 }
 
-pub struct Replica<T: Transport, App> {
+pub struct Replica<T: Transport> {
     address: T::Address,
     transport: T::TxAgent,
 
-    app: App,
     op_number: OpNumber,
     client_table: HashMap<ClientId, ReplyMessage>,
+    app: Box<dyn App>,
 }
 
-impl<T: Transport, A> transport::Receiver<T> for Replica<T, A> {
+impl<T: Transport> transport::Receiver<T> for Replica<T> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
 }
 
-impl<T: Transport, A: App + Send + 'static> Replica<T, A> {
-    pub fn register_new<E: Executor<Self> + 'static>(
+impl<T: Transport> Replica<T> {
+    pub fn register_new(
         transport: &mut T,
+        submit: impl Submit<Self> + Send + 'static,
         replica_id: ReplicaId,
-        app: A,
-    ) -> Arc<E> {
+        app: impl App + Send + 'static,
+    ) -> Self {
         assert_eq!(replica_id, 0);
-        let replica = Arc::new(E::from(Replica {
+        let replica = Replica {
             address: transport.tx_agent().config().replica_address[0].clone(),
             transport: transport.tx_agent(),
-            app,
+            app: Box::new(app),
             op_number: 0,
             client_table: HashMap::new(),
-        }));
-        replica.register_stateful(transport, Replica::receive_buffer);
+        };
+
+        transport.register(&replica, move |remote, buffer| {
+            submit.stateful(move |replica| replica.receive_buffer(remote, buffer))
+        });
         replica
     }
 }
 
-impl<T: Transport, A: App> Replica<T, A> {
-    fn receive_buffer(
-        &mut self,
-        _executor: &impl Executor<Self>,
-        remote: T::Address,
-        buffer: T::RxBuffer,
-    ) {
+impl<T: Transport> Replica<T> {
+    fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
         let request: RequestMessage = deserialize(buffer.as_ref()).unwrap();
         if let Some(reply) = self.client_table.get(&request.client_id) {
             if reply.request_number > request.request_number {
@@ -169,7 +168,7 @@ mod tests {
         time::timeout,
     };
 
-    use crate::{app::mock::App, executor::Executor, transport::simulated::Transport, Invoke};
+    use crate::{app::mock::App, executor::Submit, transport::simulated::Transport, Invoke};
 
     use super::Client;
 

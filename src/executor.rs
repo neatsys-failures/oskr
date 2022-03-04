@@ -1,21 +1,37 @@
 use std::sync::Arc;
 
-use crate::transport::{Receiver, Transport};
-
 pub mod worker_pool;
+// generally speaking it can be used in hypothetical async production env
+// just tokio is dev dep for now so it has to be disable unless test
+#[cfg(test)]
+pub mod tokio;
 
-pub trait Executor<State>
+pub trait Submit<State> {
+    fn stateful_boxed(&self, task: Box<dyn FnOnce(&mut State) + Send>);
+    fn stateless_boxed(&self, task: Box<dyn FnOnce() + Send>);
+}
+
+impl<T, S> Submit<S> for Arc<T>
 where
-    Self: From<State>,
+    T: Submit<S>,
 {
-    fn register_stateful<T: Transport>(
-        self: &Arc<Self>,
-        transport: &mut T,
-        // like this, or simply fn(...)?
-        task: impl Fn(&mut State, &Self, T::Address, T::RxBuffer) + Send + Copy + 'static,
-    ) where
-        State: Receiver<T> + Send + 'static;
+    fn stateful_boxed(&self, task: Box<dyn FnOnce(&mut S) + Send>) {
+        T::stateful_boxed(self, task)
+    }
+    fn stateless_boxed(&self, task: Box<dyn FnOnce() + Send>) {
+        T::stateless_boxed(self, task)
+    }
+}
 
-    fn submit_stateful(&self, task: impl FnOnce(&mut State, &Self) + Send + 'static);
-    fn submit_stateless(&self, task: impl FnOnce(&Self) + Send + 'static);
+pub trait SubmitExt<State> {
+    fn stateful(&self, task: impl FnOnce(&mut State) + Send + 'static);
+    fn stateless(&self, task: impl FnOnce() + Send + 'static);
+}
+impl<T: Submit<S>, S> SubmitExt<S> for T {
+    fn stateful(&self, task: impl FnOnce(&mut S) + Send + 'static) {
+        self.stateful_boxed(Box::new(task))
+    }
+    fn stateless(&self, task: impl FnOnce() + Send + 'static) {
+        self.stateless_boxed(Box::new(task))
+    }
 }
