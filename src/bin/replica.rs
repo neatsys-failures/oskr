@@ -3,7 +3,7 @@ use std::{ffi::c_void, sync::Arc};
 use oskr::{
     common::Opaque,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
-    executor::Executor,
+    executor::worker_pool::Executor,
     replication::unreplicated,
     transport::{dpdk::Transport, Config},
     App,
@@ -28,11 +28,8 @@ fn main() {
 
     let mut transport = Transport::setup(config, port_id, 1, n_worker as u16);
     // TODO select replica type
-    let replica = Executor::<unreplicated::Replica<Transport, _>>::register_new(
-        &mut transport,
-        replica_id,
-        NullApp,
-    );
+    let replica: Arc<Executor<_>> =
+        unreplicated::Replica::<Transport, _>::register_new(&mut transport, replica_id, NullApp);
 
     struct WorkerData<Replica> {
         replica: Arc<Executor<Replica>>,

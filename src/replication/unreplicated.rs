@@ -111,10 +111,14 @@ impl<T: Transport, A> transport::Receiver<T> for Replica<T, A> {
     }
 }
 
-impl<T: Transport, A: App + Send + 'static> Executor<Replica<T, A>> {
-    pub fn register_new(transport: &mut T, replica_id: ReplicaId, app: A) -> Arc<Self> {
+impl<T: Transport, A: App + Send + 'static> Replica<T, A> {
+    pub fn register_new<E: Executor<Self> + 'static>(
+        transport: &mut T,
+        replica_id: ReplicaId,
+        app: A,
+    ) -> Arc<E> {
         assert_eq!(replica_id, 0);
-        let replica = Arc::new(Self::new(Replica {
+        let replica = Arc::new(E::from(Replica {
             address: transport.tx_agent().config().replica_address[0].clone(),
             transport: transport.tx_agent(),
             app,
@@ -129,7 +133,7 @@ impl<T: Transport, A: App + Send + 'static> Executor<Replica<T, A>> {
 impl<T: Transport, A: App> Replica<T, A> {
     fn receive_buffer(
         &mut self,
-        _executor: &Executor<Self>,
+        _executor: &impl Executor<Self>,
         remote: T::Address,
         buffer: T::RxBuffer,
     ) {
@@ -152,5 +156,25 @@ impl<T: Transport, A: App> Replica<T, A> {
         };
         self.client_table.insert(request.client_id, reply.clone());
         self.transport.send_message(self, &remote, serialize(reply));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use tokio::{
+        spawn,
+        task::{spawn_blocking, yield_now},
+        time::timeout,
+    };
+
+    use crate::{app::mock::App, executor::Executor, transport::simulated::Transport, Invoke};
+
+    use super::Client;
+
+    #[tokio::test(start_paused = true)]
+    async fn one_request() {
+        let mut transport = Transport::new(1, 0);
     }
 }
