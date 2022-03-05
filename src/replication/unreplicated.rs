@@ -11,7 +11,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::{
     common::{generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber},
-    executor::{Submit, SubmitExt},
+    executor::{Executor, StatefulContext},
     transport::{self, Transport, TxAgent},
     App, Invoke,
 };
@@ -96,45 +96,40 @@ impl<T: Transport> Invoke for Client<T> {
     }
 }
 
-pub struct Replica<T: Transport> {
-    address: T::Address,
-    transport: T::TxAgent,
-
+pub struct Replica {
     op_number: OpNumber,
     client_table: HashMap<ClientId, ReplyMessage>,
     app: Box<dyn App>,
 }
 
-impl<T: Transport> transport::Receiver<T> for Replica<T> {
-    fn get_address(&self) -> &T::Address {
-        &self.address
-    }
-}
-
-impl<T: Transport> Replica<T> {
-    pub fn register_new(
+impl Replica {
+    pub fn register_new<T: Transport>(
         transport: &mut T,
-        submit: impl Submit<Self> + Send + 'static,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
-    ) -> Self {
+    ) -> Executor<Self, T> {
         assert_eq!(replica_id, 0);
-        let replica = Replica {
-            address: transport.tx_agent().config().replica_address[0].clone(),
-            transport: transport.tx_agent(),
-            app: Box::new(app),
-            op_number: 0,
-            client_table: HashMap::new(),
-        };
+        let replica = Executor::new(
+            transport.tx_agent(),
+            transport.tx_agent().config().replica_address[0].clone(),
+            Self {
+                app: Box::new(app),
+                op_number: 0,
+                client_table: HashMap::new(),
+            },
+        );
 
-        transport.register(&replica, move |remote, buffer| {
-            submit.stateful(move |replica| replica.receive_buffer(remote, buffer))
+        replica.with_state(|replica| {
+            let submit = replica.submit.clone();
+            transport.register(replica, move |remote, buffer| {
+                submit.stateful(move |replica| replica.receive_buffer(remote, buffer))
+            });
         });
         replica
     }
 }
 
-impl<T: Transport> Replica<T> {
+impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
         let request: RequestMessage = deserialize(buffer.as_ref()).unwrap();
         if let Some(reply) = self.client_table.get(&request.client_id) {
@@ -159,21 +154,4 @@ impl<T: Transport> Replica<T> {
 }
 
 #[cfg(test)]
-mod tests {
-    use std::time::Duration;
-
-    use tokio::{
-        spawn,
-        task::{spawn_blocking, yield_now},
-        time::timeout,
-    };
-
-    use crate::{app::mock::App, executor::Submit, transport::simulated::Transport, Invoke};
-
-    use super::Client;
-
-    #[tokio::test(start_paused = true)]
-    async fn one_request() {
-        let mut transport = Transport::new(1, 0);
-    }
-}
+mod tests {}

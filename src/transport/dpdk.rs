@@ -17,6 +17,7 @@ use crate::{
     transport::{self, Config, Receiver},
 };
 
+#[derive(Clone)]
 pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,

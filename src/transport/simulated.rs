@@ -32,6 +32,7 @@ impl AsRef<[u8]> for RxBuffer {
     }
 }
 
+#[derive(Clone)]
 pub struct TxAgent {
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     config: Arc<Config<Transport>>,

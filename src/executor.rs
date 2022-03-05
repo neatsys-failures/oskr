@@ -1,37 +1,137 @@
-use std::sync::Arc;
+use std::{
+    ops::{Deref, DerefMut},
+    sync::{Arc, Mutex, MutexGuard},
+};
 
-pub mod worker_pool;
-// generally speaking it can be used in hypothetical async production env
-// just tokio is dev dep for now so it has to be disable unless test
-#[cfg(test)]
-pub mod tokio;
+use crate::transport::{Receiver, Transport};
 
-pub trait Submit<State> {
-    fn stateful_boxed(&self, task: Box<dyn FnOnce(&mut State) + Send>);
-    fn stateless_boxed(&self, task: Box<dyn FnOnce() + Send>);
+pub struct Executor<State, T: Transport> {
+    state: Mutex<State>,
+    transport: T::TxAgent,
+    address: T::Address,
+    submit: Arc<Submit<State, T>>,
 }
 
-impl<T, S> Submit<S> for Arc<T>
-where
-    T: Submit<S>,
-{
-    fn stateful_boxed(&self, task: Box<dyn FnOnce(&mut S) + Send>) {
-        T::stateful_boxed(self, task)
+pub struct StatefulContext<'a, State, T: Transport> {
+    state: MutexGuard<'a, State>,
+    pub transport: T::TxAgent,
+    address: T::Address,
+    pub submit: Arc<Submit<State, T>>,
+}
+
+// stateless context
+
+pub struct Submit<State, T: Transport> {
+    stateful_list: Mutex<Vec<StatefulTask<State, T>>>,
+    // stateless list
+}
+type StatefulTask<S, T> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send>;
+// stateless task
+
+impl<S, T: Transport> Executor<S, T> {
+    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+        Self {
+            state: Mutex::new(state),
+            transport,
+            address,
+            submit: Arc::new(Submit {
+                stateful_list: Mutex::new(Vec::new()),
+            }),
+        }
     }
-    fn stateless_boxed(&self, task: Box<dyn FnOnce() + Send>) {
-        T::stateless_boxed(self, task)
+
+    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
+        f(&StatefulContext {
+            state: self.state.lock().unwrap(),
+            transport: self.transport.clone(),
+            address: self.address.clone(),
+            submit: self.submit.clone(),
+        })
     }
 }
 
-pub trait SubmitExt<State> {
-    fn stateful(&self, task: impl FnOnce(&mut State) + Send + 'static);
-    fn stateless(&self, task: impl FnOnce() + Send + 'static);
-}
-impl<T: Submit<S>, S> SubmitExt<S> for T {
-    fn stateful(&self, task: impl FnOnce(&mut S) + Send + 'static) {
-        self.stateful_boxed(Box::new(task))
+impl<'a, S, T: Transport> Receiver<T> for StatefulContext<'a, S, T> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
     }
-    fn stateless(&self, task: impl FnOnce() + Send + 'static) {
-        self.stateless_boxed(Box::new(task))
+}
+
+impl<'a, S, T: Transport> Deref for StatefulContext<'a, S, T> {
+    type Target = S;
+    fn deref(&self) -> &Self::Target {
+        &*self.state
+    }
+}
+
+impl<'a, S, T: Transport> DerefMut for StatefulContext<'a, S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut *self.state
+    }
+}
+
+impl<S, T: Transport> Submit<S, T> {
+    pub fn stateful(
+        &self,
+        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
+    ) {
+        loop {
+            if let Ok(stateful_list) = self.stateful_list.try_lock() {
+                break stateful_list;
+            }
+        }
+        .push(Box::new(task));
+    }
+}
+
+enum Task<'a, S, T: Transport> {
+    Stateful(StatefulTask<S, T>, StatefulContext<'a, S, T>),
+    // stateless
+}
+
+impl<S, T: Transport> Executor<S, T> {
+    fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S, T>) -> Task<'_, S, T> {
+        loop {
+            let mut stateful_list = loop {
+                if let Ok(stateful_list) = self.submit.stateful_list.try_lock() {
+                    break stateful_list;
+                }
+            };
+            if let Some(task) = stateful_list.pop() {
+                return Task::Stateful(task, context);
+            }
+
+            // try steal stateless task
+        }
+    }
+
+    fn steal_without_state(&self) -> Task<'_, S, T> {
+        loop {
+            // try steal stateless task
+
+            if let Ok(state) = self.state.try_lock() {
+                let context = StatefulContext {
+                    state,
+                    // TODO reuse from stateless context
+                    transport: self.transport.clone(),
+                    address: self.address.clone(),
+                    submit: self.submit.clone(),
+                };
+                return self.steal_with_state(context);
+            }
+        }
+    }
+
+    pub fn run_worker(&self) {
+        let mut steal = self.steal_without_state();
+        loop {
+            match steal {
+                // TODO stateless task
+                //
+                Task::Stateful(task, mut context) => {
+                    task(&mut context);
+                    steal = self.steal_with_state(context);
+                }
+            }
+        }
     }
 }
