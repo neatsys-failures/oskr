@@ -21,7 +21,6 @@ use crate::{
 pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
-    n_tx: u16,
     config: Arc<Config<Transport>>,
 }
 
@@ -67,7 +66,6 @@ impl transport::TxAgent for TxAgent {
 pub struct Transport {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
-    n_tx: u16,
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
 }
@@ -84,7 +82,6 @@ impl transport::Transport for Transport {
         Self::TxAgent {
             mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
-            n_tx: self.n_tx,
             config: self.config.clone(),
         }
     }
@@ -121,7 +118,7 @@ impl Transport {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0xfffe0000ffff".to_string(),
+            "0xfffe0000ffff".to_string(), // TODO configurable
         ];
         let args: Vec<_> = args
             .into_iter()
@@ -155,7 +152,6 @@ impl Transport {
 
             Self {
                 port_id,
-                n_tx,
                 mbuf_pool,
                 config: Arc::new(config),
                 recv_table: HashMap::new(),

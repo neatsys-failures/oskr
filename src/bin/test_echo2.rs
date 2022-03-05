@@ -1,3 +1,5 @@
+// same as test_echo, except use dpdk::Transport instead of raw dpdk_shim
+// set up multiple clients with different address
 use std::{
     env,
     sync::{

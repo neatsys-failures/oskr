@@ -1,3 +1,4 @@
+// One-to-one replication of test_echo.c
 use std::{
     env,
     ffi::CString,
