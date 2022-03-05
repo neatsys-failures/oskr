@@ -1,10 +1,18 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+    time::Duration,
+};
 
 use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
 use tokio::{
     select, spawn,
-    sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    sync::{
+        mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+        Mutex, MutexGuard,
+    },
     time::{sleep, sleep_until, Instant},
 };
 
@@ -219,5 +227,82 @@ impl Transport {
             *delay += thread_rng().gen_range(min..max); // TODO
             true
         }
+    }
+}
+
+pub struct Executor<State>(Submit<State>);
+
+impl<S> Executor<S> {
+    pub fn new(transport: TxAgent, address: Address, state: S) -> Self {
+        Self(Submit {
+            state: Arc::new(Mutex::new(state)),
+            transport,
+            address,
+        })
+    }
+
+    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
+        f(&StatefulContext {
+            state: self.0.state.try_lock().unwrap(),
+            transport: self.0.transport.clone(),
+            submit: self.0.clone(),
+        });
+    }
+}
+
+pub struct StatefulContext<'a, State> {
+    state: MutexGuard<'a, State>,
+    pub transport: TxAgent,
+    pub submit: Submit<State>,
+}
+
+impl<'a, S> Receiver<Transport> for StatefulContext<'a, S> {
+    fn get_address(&self) -> &Address {
+        &self.submit.address
+    }
+}
+
+impl<'a, S> Deref for StatefulContext<'a, S> {
+    type Target = S;
+    fn deref(&self) -> &Self::Target {
+        &*self.state
+    }
+}
+
+impl<'a, S> DerefMut for StatefulContext<'a, S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut *self.state
+    }
+}
+
+pub struct Submit<State> {
+    state: Arc<Mutex<State>>,
+    transport: TxAgent,
+    address: Address,
+}
+
+impl<S> Clone for Submit<S> {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            transport: self.transport.clone(),
+            address: self.address.clone(),
+        }
+    }
+}
+
+impl<S> Submit<S> {
+    pub fn stateful(&self, task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static)
+    where
+        S: Send + 'static,
+    {
+        let submit = self.clone();
+        spawn(async move {
+            task(&mut StatefulContext {
+                state: submit.state.lock().await,
+                transport: submit.transport.clone(),
+                submit: submit.clone(),
+            });
+        });
     }
 }
