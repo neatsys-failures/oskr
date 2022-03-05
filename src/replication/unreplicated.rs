@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use bincode::deserialize;
 use futures::{
     channel::mpsc::{unbounded, UnboundedReceiver},
     future::BoxFuture,
@@ -10,7 +9,9 @@ use futures::{
 use serde_derive::{Deserialize, Serialize};
 
 use crate::{
-    common::{generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber},
+    common::{
+        deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
+    },
     executor::{Executor, StatefulContext},
     transport::{self, Transport, TxAgent},
     App, Invoke,
