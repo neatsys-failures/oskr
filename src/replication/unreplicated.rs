@@ -154,4 +154,26 @@ impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use std::time::Duration;
+
+    use tokio::{spawn, time::timeout};
+
+    use crate::{app::mock::App, simulated::Transport, Invoke};
+
+    use super::{Client, Replica};
+
+    #[tokio::test(start_paused = true)]
+    async fn one_request() {
+        let mut transport = Transport::new(1, 0);
+        Replica::register_new(&mut transport, 0, App::default());
+        let mut client = Client::register_new(&mut transport, Transport::client_timeout);
+        spawn(async move { transport.deliver_now().await });
+        assert_eq!(
+            timeout(Duration::from_micros(1), client.invoke(b"hello".to_vec()))
+                .await
+                .unwrap(),
+            b"reply: hello".to_vec()
+        );
+    }
+}
