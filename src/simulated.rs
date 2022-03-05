@@ -230,10 +230,18 @@ impl Transport {
     }
 }
 
-pub struct Executor<State>(Submit<State>);
+// actually what I want is a Executor which can only pair with
+// simulated::Transport, only T: transport::Transport
+// but Rust does not have specialization, and the corresponding RFC seems
+// stalled
+// then the only approach I can think of is to add constrait when implementing
+// trait, but for Executor I decide to do conditional compiling instead of
+// trait
+// really hope this would be solved
+pub struct Executor<State, T: transport::Transport>(Submit<State, T>);
 
-impl<S> Executor<S> {
-    pub fn new(transport: TxAgent, address: Address, state: S) -> Self {
+impl<S, T: transport::Transport> Executor<S, T> {
+    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
         Self(Submit {
             state: Arc::new(Mutex::new(state)),
             transport,
@@ -241,7 +249,7 @@ impl<S> Executor<S> {
         })
     }
 
-    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
+    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
         f(&StatefulContext {
             state: self.0.state.try_lock().unwrap(),
             transport: self.0.transport.clone(),
@@ -250,38 +258,38 @@ impl<S> Executor<S> {
     }
 }
 
-pub struct StatefulContext<'a, State> {
+pub struct StatefulContext<'a, State, T: transport::Transport> {
     state: MutexGuard<'a, State>,
-    pub transport: TxAgent,
-    pub submit: Submit<State>,
+    pub transport: T::TxAgent,
+    pub submit: Submit<State, T>,
 }
 
-impl<'a, S> Receiver<Transport> for StatefulContext<'a, S> {
-    fn get_address(&self) -> &Address {
+impl<'a, S, T: transport::Transport> Receiver<T> for StatefulContext<'a, S, T> {
+    fn get_address(&self) -> &T::Address {
         &self.submit.address
     }
 }
 
-impl<'a, S> Deref for StatefulContext<'a, S> {
+impl<'a, S, T: transport::Transport> Deref for StatefulContext<'a, S, T> {
     type Target = S;
     fn deref(&self) -> &Self::Target {
         &*self.state
     }
 }
 
-impl<'a, S> DerefMut for StatefulContext<'a, S> {
+impl<'a, S, T: transport::Transport> DerefMut for StatefulContext<'a, S, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.state
     }
 }
 
-pub struct Submit<State> {
+pub struct Submit<State, T: transport::Transport> {
     state: Arc<Mutex<State>>,
-    transport: TxAgent,
-    address: Address,
+    transport: T::TxAgent,
+    address: T::Address,
 }
 
-impl<S> Clone for Submit<S> {
+impl<S, T: transport::Transport> Clone for Submit<S, T> {
     fn clone(&self) -> Self {
         Self {
             state: self.state.clone(),
@@ -291,9 +299,11 @@ impl<S> Clone for Submit<S> {
     }
 }
 
-impl<S> Submit<S> {
-    pub fn stateful(&self, task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static)
-    where
+impl<S, T: transport::Transport> Submit<S, T> {
+    pub fn stateful(
+        &self,
+        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
+    ) where
         S: Send + 'static,
     {
         let submit = self.clone();

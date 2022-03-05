@@ -13,8 +13,9 @@ use std::{
 };
 
 use oskr::{
+    dpdk::Transport,
     dpdk_shim::{oskr_lcore_id, rte_eal_mp_remote_launch},
-    transport::{self, dpdk::Transport, Config, Transport as _, TxAgent as _},
+    transport::{self, Config, Transport as _, TxAgent as _},
 };
 
 fn main() {

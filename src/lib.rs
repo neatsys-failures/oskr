@@ -1,8 +1,19 @@
-pub mod common;
-pub mod executor;
 pub mod transport;
 
+pub mod dpdk;
 pub mod dpdk_shim;
+
+#[cfg(test)]
+pub mod simulated;
+
+#[cfg(not(test))]
+pub mod executor;
+#[cfg(test)]
+pub mod executor {
+    pub use crate::simulated::{Executor, StatefulContext, Submit};
+}
+
+pub mod common;
 
 pub mod replication {
     pub mod unreplicated;

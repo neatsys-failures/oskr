@@ -10,7 +10,10 @@ use std::{
     time::Duration,
 };
 
-use oskr::transport::{self, dpdk::Transport, Config, Transport as _, TxAgent};
+use oskr::{
+    dpdk::Transport,
+    transport::{self, Config, Transport as _, TxAgent},
+};
 
 fn main() {
     let server_address = "b8:ce:f6:2a:2f:94#0".parse().unwrap();

@@ -16,9 +16,10 @@ use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref,
 use hdrhistogram::Histogram;
 use oskr::{
     common::Opaque,
+    dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
-    transport::{dpdk::Transport, Config, Receiver},
+    transport::{Config, Receiver},
     Invoke,
 };
 use quanta::{Clock, Instant};

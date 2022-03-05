@@ -2,10 +2,11 @@ use std::{ffi::c_void, sync::Arc};
 
 use oskr::{
     common::Opaque,
+    dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     executor::Executor,
     replication::unreplicated,
-    transport::{dpdk::Transport, Config},
+    transport::Config,
     App,
 };
 

@@ -99,7 +99,7 @@ impl<T: Transport> Invoke for Client<T> {
 pub struct Replica {
     op_number: OpNumber,
     client_table: HashMap<ClientId, ReplyMessage>,
-    app: Box<dyn App>,
+    app: Box<dyn App + Send>,
 }
 
 impl Replica {
