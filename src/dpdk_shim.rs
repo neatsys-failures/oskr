@@ -154,20 +154,20 @@ impl Display for Address {
 impl rte_mbuf {
     /// # Safety
     /// `mbuf` points to a valid `rte_mbuf` struct.
-    pub unsafe fn get_data(mbuf: NonNull<rte_mbuf>) -> NonNull<u8> {
+    pub unsafe fn get_data(mbuf: NonNull<Self>) -> NonNull<u8> {
         mbuf_get_data(mbuf)
     }
 
     /// # Safety
     /// `mbuf` points to a valid `rte_mbuf` struct.
-    pub unsafe fn set_buffer_length(mbuf: NonNull<rte_mbuf>, length: u16) {
+    pub unsafe fn set_buffer_length(mbuf: NonNull<Self>, length: u16) {
         mbuf_set_packet_length(mbuf, length + 16);
     }
 
     /// # Safety
     /// `mbuf` points to a valid `rte_mbuf` struct, `data` is from `get_data(mbuf)`.
     // this method instead of Into<RxBuffer> because I want it keep unsafe
-    pub unsafe fn into_rx_buffer(mbuf: NonNull<rte_mbuf>, data: NonNull<u8>) -> RxBuffer {
+    pub unsafe fn into_rx_buffer(mbuf: NonNull<Self>, data: NonNull<u8>) -> RxBuffer {
         let buffer = NonNull::new(data.as_ptr().offset(16)).unwrap();
         let length = mbuf_get_packet_length(mbuf) - 16;
         RxBuffer {

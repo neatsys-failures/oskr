@@ -49,8 +49,7 @@ impl transport::TxAgent for TxAgent {
 
             // should be cache-able, but that will make TxAgent !Send
             let queue_id = Transport::worker_id() as u16;
-            let ret =
-                oskr_eth_tx_burst(self.port_id, queue_id, NonNull::new(&mut mbuf).unwrap(), 1);
+            let ret = oskr_eth_tx_burst(self.port_id, queue_id, (&mut mbuf).into(), 1);
             assert_eq!(ret, 1);
         }
     }
@@ -130,10 +129,7 @@ impl Transport {
             .collect();
 
         unsafe {
-            let ret = rte_eal_init(
-                args.len() as c_int,
-                NonNull::new(&mut *args as *mut [_] as *mut _).unwrap(),
-            );
+            let ret = rte_eal_init(args.len() as c_int, args.first_mut().unwrap().into());
             assert_eq!(ret, args.len() as c_int - 1);
 
             let name = CString::new("MBUF_POOL").unwrap();
