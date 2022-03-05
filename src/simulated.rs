@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    fmt::{self, Debug, Formatter},
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
@@ -15,6 +16,7 @@ use tokio::{
     },
     time::{sleep, sleep_until, Instant},
 };
+use tracing::trace;
 
 use crate::transport::{self, Config, Receiver};
 
@@ -31,6 +33,12 @@ pub struct Transport {
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 type FilterTable =
     HashMap<u32, Box<dyn Fn(&Address, &Address, &[u8], &mut Duration) -> bool + Send>>;
+
+impl Debug for Transport {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "(simulated)")
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct RxBuffer(Message);
@@ -153,6 +161,7 @@ impl Transport {
         Box::pin(sleep(Duration::from_millis(1000)))
     }
 
+    #[tracing::instrument]
     pub async fn deliver(&mut self, duration: Duration) {
         let deadline = Instant::now() + duration;
         loop {
@@ -179,7 +188,7 @@ impl Transport {
                 break;
             }
         }
-        println!(
+        trace!(
             "{} -> {} [message size = {}] {}",
             source,
             dest,
@@ -191,10 +200,7 @@ impl Transport {
             }
         );
 
-        if drop {
-        } else if delay.is_zero() {
-            (self.recv_table.get(&dest).unwrap())(source, RxBuffer(message));
-        } else {
+        if !drop {
             let tx = self.tx.clone();
             spawn(async move {
                 sleep(delay).await;

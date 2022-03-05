@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fmt::{self, Debug, Formatter},
+};
 
 use async_trait::async_trait;
 use futures::{
@@ -7,6 +10,7 @@ use futures::{
     select, FutureExt, StreamExt,
 };
 use serde_derive::{Deserialize, Serialize};
+use tracing::warn;
 
 use crate::{
     common::{
@@ -40,6 +44,19 @@ pub struct Client<T: Transport> {
     request_number: RequestNumber,
 }
 
+impl<T: Transport> Debug for Client<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Client({}{}{}{})",
+            char::from(self.id[0]),
+            char::from(self.id[1]),
+            char::from(self.id[2]),
+            char::from(self.id[3])
+        )
+    }
+}
+
 impl<T: Transport> transport::Receiver<T> for Client<T> {
     fn get_address(&self) -> &T::Address {
         &self.address
@@ -69,6 +86,7 @@ impl<T: Transport> Client<T> {
 
 #[async_trait]
 impl<T: Transport> Invoke for Client<T> {
+    #[tracing::instrument]
     async fn invoke(&mut self, op: Opaque) -> Opaque {
         self.request_number += 1;
         let request = RequestMessage {
@@ -89,7 +107,7 @@ impl<T: Transport> Invoke for Client<T> {
                     }
                 }
                 _ = (self.timeout)().fuse() => {
-                    println!("resend");
+                    warn!("resend for request number {}", self.request_number);
                     self.transport.send_message_to_replica(self, 0, serialize(request.clone()));
                 }
             }
@@ -160,15 +178,17 @@ mod tests {
 
     use tokio::{spawn, time::timeout};
 
-    use crate::{app::mock::App, simulated::Transport, Invoke};
+    use crate::{app::mock::App, simulated::Transport, tests::TRACING, Invoke};
 
     use super::{Client, Replica};
 
     #[tokio::test(start_paused = true)]
     async fn one_request() {
+        *TRACING;
         let mut transport = Transport::new(1, 0);
         Replica::register_new(&mut transport, 0, App::default());
         let mut client = Client::register_new(&mut transport, Transport::client_timeout);
+
         spawn(async move { transport.deliver_now().await });
         assert_eq!(
             timeout(Duration::from_micros(1), client.invoke(b"hello".to_vec()))
@@ -176,5 +196,26 @@ mod tests {
                 .unwrap(),
             b"reply: hello".to_vec()
         );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn multiple_request() {
+        *TRACING;
+        let mut transport = Transport::new(1, 0);
+        Replica::register_new(&mut transport, 0, App::default());
+        let mut client = Client::register_new(&mut transport, Transport::client_timeout);
+
+        spawn(async move { transport.deliver_now().await });
+        for i in 0..10 {
+            assert_eq!(
+                timeout(
+                    Duration::from_micros(1),
+                    client.invoke(format!("#{}", i).as_bytes().to_vec())
+                )
+                .await
+                .unwrap(),
+                format!("reply: #{}", i).as_bytes().to_vec()
+            );
+        }
     }
 }

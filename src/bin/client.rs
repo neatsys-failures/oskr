@@ -43,6 +43,8 @@ impl Future for Timeout {
 }
 
 fn main() {
+    tracing_subscriber::fmt::init();
+
     let port_id = 0;
     let n_worker = 20;
     let n_client = 20;
