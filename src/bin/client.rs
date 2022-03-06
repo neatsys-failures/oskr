@@ -158,17 +158,14 @@ fn main() {
 
         *hist.lock().unwrap() += worker_hist;
         if barrier.wait().is_leader() {
-            for v in hist.lock().unwrap().iter_quantiles(1) {
-                if v.count_since_last_iteration() == 0 {
-                    continue;
-                }
-                println!(
-                    "{:.7} {}ns\twith {} samples",
-                    v.quantile_iterated_to(),
-                    v.value_iterated_to(),
-                    v.count_since_last_iteration()
-                );
-            }
+            let hist = hist.lock().unwrap();
+            println!(
+                "min {:?} p50 {:?} mean {:?} p99 {:?}",
+                Duration::from_nanos(hist.min()),
+                Duration::from_nanos(hist.value_at_quantile(0.5)),
+                Duration::from_nanos(hist.mean() as u64),
+                Duration::from_nanos(hist.value_at_quantile(0.99))
+            );
             process::exit(0); // TODO more graceful
         } else {
             0
