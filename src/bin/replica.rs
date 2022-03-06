@@ -60,7 +60,7 @@ fn main() {
 
     unsafe {
         rte_eal_mp_remote_launch(
-            worker::<unreplicated::Replica<Transport>>,
+            worker::<unreplicated::Replica>,
             &worker_data as *const _ as *mut _,
             rte_rmt_call_main_t::SKIP_MAIN,
         );
