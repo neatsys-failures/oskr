@@ -244,9 +244,9 @@ impl Transport {
 // trait, but for Executor I decide to do conditional compiling instead of
 // trait
 // really hope this would be solved
-pub struct Executor<State, T: transport::Transport>(Submit<State, T>);
+pub struct Director<State, T: transport::Transport>(Submit<State, T>);
 
-impl<S, T: transport::Transport> Executor<S, T> {
+impl<S, T: transport::Transport> Director<S, T> {
     pub fn new(address: T::Address, state: S) -> Self {
         Self(Submit {
             state: Arc::new(Mutex::new(state)),

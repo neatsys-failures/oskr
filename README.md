@@ -27,5 +27,5 @@ because the core of this project is based on a specialized actor model.
 3. To run unit tests: `cargo test --lib`.
 4. To build benchmark executables: `cargo build --release`.
 
-To run benchmark, `target/dpdk` must exist in working directory. More \
+To run benchmark, `target/dpdk` must exist in working directory. More
 instruction work in progress.

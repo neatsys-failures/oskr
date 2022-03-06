@@ -10,10 +10,10 @@ pub mod dpdk_shim;
 pub mod simulated;
 
 #[cfg(not(test))]
-pub mod executor;
+pub mod director;
 #[cfg(test)]
-pub mod executor {
-    pub use crate::simulated::{Executor, StatefulContext, Submit};
+pub mod director {
+    pub use crate::simulated::{Director, StatefulContext, Submit};
 }
 
 pub mod common;
