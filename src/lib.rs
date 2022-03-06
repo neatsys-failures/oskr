@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use common::Opaque;
+use std::{future::Future, time::Duration};
 
 pub mod transport;
 
@@ -33,6 +34,14 @@ pub trait Invoke {
 
 pub trait App {
     fn execute(&mut self, op: Opaque) -> Opaque;
+}
+
+pub trait AsyncExecutor<'a, T> {
+    type JoinHandle: Future<Output = T>;
+    type Timeout: Future<Output = Result<T, Self::Elapsed>> + Send;
+    type Elapsed;
+    fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle;
+    fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout;
 }
 
 #[cfg(test)]

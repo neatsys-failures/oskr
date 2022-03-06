@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     ffi::c_void,
     future::Future,
     mem::take,
@@ -20,25 +21,59 @@ use oskr::{
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
     transport::{Config, Receiver},
-    Invoke,
+    AsyncExecutor as _, Invoke,
 };
 use quanta::{Clock, Instant};
 
-struct Timeout(Instant);
-impl Timeout {
-    fn boxed() -> BoxFuture<'static, ()> {
-        Box::pin(Self(Instant::now()))
+struct AsyncExecutor;
+impl AsyncExecutor {
+    thread_local! {
+        static TASK_LIST: RefCell<Vec<BoxFuture<'static, ()>>> = RefCell::new(Vec::new());
+    }
+    fn poll_now() {
+        Self::TASK_LIST.with(|task_list| {
+            for task in &mut *task_list.borrow_mut() {
+                let _ = Pin::new(task).poll(&mut Context::from_waker(noop_waker_ref()));
+            }
+        });
+    }
+    fn poll(duration: Duration) {
+        let clock = Clock::new();
+        let start = clock.start();
+        while clock.delta(start, clock.end()) < duration {
+            Self::poll_now();
+        }
     }
 }
-impl Future for Timeout {
-    type Output = ();
-    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // configurable?
-        if Instant::now().duration_since(self.0) >= Duration::from_millis(1000) {
-            Poll::Ready(())
+
+struct Timeout<'a, T>(BoxFuture<'a, T>, Instant);
+struct Elapsed;
+impl<'a, T> Future for Timeout<'a, T> {
+    type Output = Result<T, Elapsed>;
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if Instant::now() > self.1 {
+            Poll::Ready(Err(Elapsed))
         } else {
-            Poll::Pending
+            Pin::new(&mut self.0).poll(cx).map(Result::Ok)
         }
+    }
+}
+
+impl<'a, T: Send + 'static> oskr::AsyncExecutor<'a, T> for AsyncExecutor {
+    type JoinHandle = BoxFuture<'static, T>; // too lazy to invent new type
+    type Timeout = BoxFuture<'a, Result<T, Self::Elapsed>>;
+    type Elapsed = Elapsed;
+    fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
+        let (tx, rx) = oneshot::channel();
+        Self::TASK_LIST.with(|task_list| {
+            task_list.borrow_mut().push(Box::pin(async move {
+                tx.send(task.await).map_err(|_| "send fail").unwrap();
+            }))
+        });
+        Box::pin(async move { rx.await.unwrap() })
+    }
+    fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
+        Box::pin(Timeout(Box::pin(task), Instant::now() + duration))
     }
 }
 
@@ -61,7 +96,7 @@ fn main() {
         .map(|i| {
             (i * k..n_client.min((i + 1) * k))
                 // TODO select client type
-                .map(|_| unreplicated::Client::register_new(&mut transport, Timeout::boxed))
+                .map(|_| unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport))
                 .collect()
         })
         .collect();
@@ -97,13 +132,13 @@ fn main() {
         let hist = worker_data.hist.clone();
 
         // I want a broadcast :|
-        let (mut client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
+        let (client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
             .into_iter()
             .map(|mut client| {
                 let count = count.clone();
                 let (shutdown_tx, mut shutdown) = oneshot::channel();
                 (
-                    Box::pin(async move {
+                    AsyncExecutor::spawn(async move {
                         println!("{}", client.get_address());
                         let clock = Clock::new();
                         let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
@@ -123,28 +158,21 @@ fn main() {
             })
             .unzip();
 
-        let poll_clock = Clock::new();
-        let mut poll = |duration| {
-            let start = poll_clock.start();
-            while poll_clock.delta(start, poll_clock.end()) < duration {
-                for mut client in &mut client_list {
-                    let _ = Pin::new(&mut client).poll(&mut Context::from_waker(noop_waker_ref()));
-                }
-            }
-        };
         if worker_id == 0 {
             for _ in 0..duration_second {
-                poll(Duration::from_secs(1));
+                AsyncExecutor::poll(Duration::from_secs(1));
                 let count = count.swap(0, Ordering::SeqCst);
                 println!("{}", count);
             }
         } else {
-            poll(Duration::from_secs(duration_second));
+            AsyncExecutor::poll(Duration::from_secs(duration_second));
         }
 
         for shutdown in shutdown_list {
             shutdown.send(()).unwrap();
         }
+        AsyncExecutor::poll_now();
+
         let mut worker_hist = Histogram::new(2).unwrap();
         for mut client in client_list {
             if let Poll::Ready(hist) =
@@ -173,7 +201,7 @@ fn main() {
     }
     unsafe {
         rte_eal_mp_remote_launch(
-            worker::<unreplicated::Client<Transport>>,
+            worker::<unreplicated::Client<Transport, AsyncExecutor>>,
             &mut worker_data as *mut _ as *mut _,
             rte_rmt_call_main_t::SKIP_MAIN,
         );
