@@ -2,6 +2,8 @@ use std::process::Command;
 use std::str;
 
 fn main() {
+    // should we disable all DPDK stuff for test profile?
+
     let dpdk_cflags = Command::new("pkg-config")
         .args(["--cflags", "--static", "libdpdk-uninstalled"])
         .env("PKG_CONFIG_PATH", "target/dpdk/meson-uninstalled")
@@ -14,7 +16,7 @@ fn main() {
         .collect();
 
     let dpdk_libs = Command::new("pkg-config")
-        .args(["--libs", "--static", "libdpdk-uninstalled"])
+        .args(["--libs", "libdpdk-uninstalled"])
         .env("PKG_CONFIG_PATH", "target/dpdk/meson-uninstalled")
         .output()
         .unwrap()
@@ -38,6 +40,7 @@ fn main() {
         println!("cargo:rustc-link-arg={}", flag);
     }
     println!("cargo:rustc-link-arg=-lc");
+    println!("cargo:rustc-link-arg=-Wl,-rpath=target/dpdk/lib");
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");

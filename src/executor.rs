@@ -7,14 +7,12 @@ use crate::transport::{Receiver, Transport};
 
 pub struct Executor<State, T: Transport> {
     state: Mutex<State>,
-    transport: T::TxAgent,
     address: T::Address,
     submit: Arc<Submit<State, T>>,
 }
 
 pub struct StatefulContext<'a, State, T: Transport> {
     state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
     address: T::Address,
     pub submit: Arc<Submit<State, T>>,
 }
@@ -29,10 +27,9 @@ type StatefulTask<S, T> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S, T>)
 // stateless task
 
 impl<S, T: Transport> Executor<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+    pub fn new(address: T::Address, state: S) -> Self {
         Self {
             state: Mutex::new(state),
-            transport,
             address,
             submit: Arc::new(Submit {
                 stateful_list: Mutex::new(Vec::new()),
@@ -43,7 +40,6 @@ impl<S, T: Transport> Executor<S, T> {
     pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
         f(&StatefulContext {
             state: self.state.lock().unwrap(),
-            transport: self.transport.clone(),
             address: self.address.clone(),
             submit: self.submit.clone(),
         })
@@ -112,7 +108,6 @@ impl<S, T: Transport> Executor<S, T> {
                 let context = StatefulContext {
                     state,
                     // TODO reuse from stateless context
-                    transport: self.transport.clone(),
                     address: self.address.clone(),
                     submit: self.submit.clone(),
                 };

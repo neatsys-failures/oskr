@@ -247,10 +247,9 @@ impl Transport {
 pub struct Executor<State, T: transport::Transport>(Submit<State, T>);
 
 impl<S, T: transport::Transport> Executor<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+    pub fn new(address: T::Address, state: S) -> Self {
         Self(Submit {
             state: Arc::new(Mutex::new(state)),
-            transport,
             address,
         })
     }
@@ -258,7 +257,6 @@ impl<S, T: transport::Transport> Executor<S, T> {
     pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
         f(&StatefulContext {
             state: self.0.state.try_lock().unwrap(),
-            transport: self.0.transport.clone(),
             submit: self.0.clone(),
         });
     }
@@ -266,7 +264,6 @@ impl<S, T: transport::Transport> Executor<S, T> {
 
 pub struct StatefulContext<'a, State, T: transport::Transport> {
     state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
     pub submit: Submit<State, T>,
 }
 
@@ -291,7 +288,6 @@ impl<'a, S, T: transport::Transport> DerefMut for StatefulContext<'a, S, T> {
 
 pub struct Submit<State, T: transport::Transport> {
     state: Arc<Mutex<State>>,
-    transport: T::TxAgent,
     address: T::Address,
 }
 
@@ -299,7 +295,6 @@ impl<S, T: transport::Transport> Clone for Submit<S, T> {
     fn clone(&self) -> Self {
         Self {
             state: self.state.clone(),
-            transport: self.transport.clone(),
             address: self.address.clone(),
         }
     }
@@ -316,7 +311,6 @@ impl<S, T: transport::Transport> Submit<S, T> {
         spawn(async move {
             task(&mut StatefulContext {
                 state: submit.state.lock().await,
-                transport: submit.transport.clone(),
                 submit: submit.clone(),
             });
         });

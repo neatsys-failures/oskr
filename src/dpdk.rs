@@ -118,6 +118,8 @@ impl Transport {
             env::args().next().unwrap(),
             "-c".to_string(),
             "0xfffe0000ffff".to_string(), // TODO configurable
+            "-d".to_string(),
+            "./target/dpdk/drivers/".to_string(), // TODO any better way?
         ];
         let args: Vec<_> = args
             .into_iter()

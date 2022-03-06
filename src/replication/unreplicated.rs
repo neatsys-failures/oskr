@@ -115,23 +115,25 @@ impl<T: Transport> Invoke for Client<T> {
     }
 }
 
-pub struct Replica {
+pub struct Replica<T: Transport> {
+    transport: T::TxAgent,
+
     op_number: OpNumber,
     client_table: HashMap<ClientId, ReplyMessage>,
     app: Box<dyn App + Send>,
 }
 
-impl Replica {
-    pub fn register_new<T: Transport>(
+impl<T: Transport> Replica<T> {
+    pub fn register_new(
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
     ) -> Executor<Self, T> {
         assert_eq!(replica_id, 0);
         let replica = Executor::new(
-            transport.tx_agent(),
             transport.tx_agent().config().replica_address[0].clone(),
             Self {
+                transport: transport.tx_agent(),
                 app: Box::new(app),
                 op_number: 0,
                 client_table: HashMap::new(),
@@ -148,7 +150,7 @@ impl Replica {
     }
 }
 
-impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
+impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
         let request: RequestMessage = deserialize(buffer.as_ref()).unwrap();
         if let Some(reply) = self.client_table.get(&request.client_id) {
