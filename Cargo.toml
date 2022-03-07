@@ -24,10 +24,4 @@ tokio = { version = "1.15.0", features = ["full", "test-util"] }
 [build-dependencies]
 cc = "1.0.72"
 
-[profile.release]
-panic = "abort"
-
-[profile.dev]
-panic = "abort"
-
 [features]

@@ -21,6 +21,7 @@ pub mod common;
 
 pub mod replication {
     pub mod unreplicated;
+    pub mod pbft;
 }
 
 pub mod app {

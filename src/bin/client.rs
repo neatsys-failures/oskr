@@ -16,7 +16,7 @@ use std::{
 use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::Histogram;
 use oskr::{
-    common::Opaque,
+    common::{panic_abort, Opaque},
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
@@ -79,6 +79,7 @@ impl<'a, T: Send + 'static> oskr::AsyncExecutor<'a, T> for AsyncExecutor {
 
 fn main() {
     tracing_subscriber::fmt::init();
+    panic_abort();
 
     let port_id = 0;
     let n_worker = 20;

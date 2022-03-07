@@ -1,4 +1,8 @@
-use std::io::Cursor;
+use std::{
+    io::Cursor,
+    panic::{set_hook, take_hook},
+    process,
+};
 
 use bincode::Options;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -17,6 +21,7 @@ pub fn generate_id() -> ClientId {
 }
 
 pub type RequestNumber = u32;
+pub type ViewNumber = u8;
 pub type OpNumber = u32;
 pub type Opaque = Vec<u8>;
 
@@ -39,4 +44,13 @@ pub fn serialize<M: Serialize>(message: M) -> impl FnOnce(&mut [u8]) -> u16 {
             .unwrap();
         cursor.position() as u16
     }
+}
+
+pub fn panic_abort() {
+    let default_hook = take_hook();
+    set_hook(Box::new(move |info| {
+        default_hook(info);
+        println!("[oskr] force abort");
+        process::abort();
+    }));
 }
