@@ -12,8 +12,6 @@ use k256::ecdsa::{
 use serde::{Deserialize, Serialize};
 use serde_derive::{Deserialize, Serialize};
 
-use crate::common::MalformedMessage;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedMessage<M> {
     inner: Vec<u8>,
@@ -45,18 +43,24 @@ impl<M> SignedMessage<M> {
         }
     }
 
-    pub fn verify(self, key: &VerifyingKey) -> Result<M, Box<dyn Error + Send + Sync + 'static>>
+    pub fn verify(self, key: &VerifyingKey) -> Result<M, InauthenticMessage>
     where
         M: for<'a> Deserialize<'a>,
     {
         if key.verify(&self.inner, &self.signature).is_ok() {
             if let Ok(message) = bincode::DefaultOptions::new().deserialize(&self.inner) {
-                Ok(message)
-            } else {
-                Err(Box::new(MalformedMessage))
+                return Ok(message);
             }
-        } else {
-            Err(Box::new(InauthenticMessage))
         }
+        Err(InauthenticMessage)
+    }
+
+    pub fn assume_verified(self) -> M
+    where
+        M: for<'a> Deserialize<'a>,
+    {
+        bincode::DefaultOptions::new()
+            .deserialize(&self.inner)
+            .unwrap()
     }
 }

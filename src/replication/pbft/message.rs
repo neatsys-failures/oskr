@@ -5,8 +5,8 @@ use crate::common::{
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ReplicaMessage {
-    // we skip sign/verify request and reply messages, following convention
+pub enum ToReplica {
+    // we skip sign/verify request messages, following convention
     // besides performance issue, it is also hard to register client's identity
     // at runtime
     Request(Request),
