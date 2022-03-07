@@ -11,7 +11,7 @@ use futures::{
     StreamExt,
 };
 use serde_derive::{Deserialize, Serialize};
-use tracing::warn;
+use tracing::{debug, warn};
 
 use crate::{
     common::{
@@ -77,7 +77,7 @@ impl<T: Transport, E> Client<T, E> {
         };
         transport.register(&client, move |remote, buffer| {
             if tx.unbounded_send((remote, buffer)).is_err() {
-                warn!("client channel broken");
+                debug!("client channel broken");
             }
         });
         client

@@ -25,6 +25,7 @@ fn main() {
         replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
         n_fault: 0,
         multicast_address: None,
+        signing_key: Default::default(),
     };
 
     let mut transport = Transport::setup(config, port_id, 1, n_worker as u16);

@@ -1,4 +1,6 @@
 use std::{
+    error::Error,
+    fmt::{self, Display, Formatter},
     io::Cursor,
     panic::{set_hook, take_hook},
     process,
@@ -7,6 +9,8 @@ use std::{
 use bincode::Options;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
+
+pub mod signed;
 
 pub type ReplicaId = u8;
 pub type ClientId = [u8; 4];
@@ -27,6 +31,13 @@ pub type Opaque = Vec<u8>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct MalformedMessage;
+impl Display for MalformedMessage {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "malformed message")
+    }
+}
+impl Error for MalformedMessage {}
+
 // providing deserialize to avoid accidentially using bincode::deserialize
 // not unwrap by default for the sake of byzantine network
 pub fn deserialize<M: for<'a> Deserialize<'a>>(bytes: &[u8]) -> Result<M, MalformedMessage> {

@@ -1,10 +1,14 @@
+use std::{collections::HashMap, hash::Hash};
+
+use k256::ecdsa::{SigningKey, VerifyingKey};
+
 use crate::common::ReplicaId;
 
 pub trait Transport
 where
     Self: 'static,
 {
-    type Address: Clone + Eq + Send;
+    type Address: Clone + Eq + Hash + Send;
     type RxBuffer: AsRef<[u8]> + Send;
     type TxAgent: TxAgent<Transport = Self> + Clone + Send;
 
@@ -74,4 +78,15 @@ pub struct Config<T: Transport + ?Sized> {
     pub replica_address: Vec<T::Address>,
     pub multicast_address: Option<T::Address>,
     pub n_fault: usize,
+    // for non-signed protocol this is empty
+    pub signing_key: HashMap<T::Address, SigningKey>,
+}
+
+impl<T: Transport + ?Sized> Config<T> {
+    pub fn verifying_key(&self) -> HashMap<T::Address, VerifyingKey> {
+        self.signing_key
+            .iter()
+            .map(|(address, key)| (address.clone(), key.verifying_key()))
+            .collect()
+    }
 }

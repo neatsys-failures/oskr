@@ -146,6 +146,7 @@ impl Transport {
             replica_address: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
             multicast_address: None, // TODO
             n_fault,
+            signing_key: HashMap::new(), // TODO
         };
         let (tx, rx) = unbounded_channel();
         Self {

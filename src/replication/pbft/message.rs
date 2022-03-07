@@ -1,6 +1,19 @@
 use serde_derive::{Deserialize, Serialize};
 
-use crate::common::{ClientId, OpNumber, Opaque, ReplicaId, RequestNumber, ViewNumber};
+use crate::common::{
+    signed::SignedMessage, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber, ViewNumber,
+};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ReplicaMessage {
+    // we skip sign/verify request and reply messages, following convention
+    // besides performance issue, it is also hard to register client's identity
+    // at runtime
+    Request(Request),
+    PrePrepare(SignedMessage<PrePrepare>, Vec<Request>),
+    Prepare(SignedMessage<Prepare>),
+    Commit(SignedMessage<Commit>),
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Request {
