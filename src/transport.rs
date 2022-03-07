@@ -2,13 +2,13 @@ use std::{collections::HashMap, hash::Hash};
 
 use k256::ecdsa::{SigningKey, VerifyingKey};
 
-use crate::common::ReplicaId;
+use crate::common::{ReplicaId, ViewNumber};
 
 pub trait Transport
 where
     Self: 'static,
 {
-    type Address: Clone + Eq + Hash + Send;
+    type Address: Clone + Eq + Hash + Send + Sync;
     type RxBuffer: AsRef<[u8]> + Send;
     type TxAgent: TxAgent<Transport = Self> + Clone + Send;
 
@@ -88,5 +88,9 @@ impl<T: Transport + ?Sized> Config<T> {
             .iter()
             .map(|(address, key)| (address.clone(), key.verifying_key()))
             .collect()
+    }
+
+    pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
+        (view_number as usize % self.replica_address.len()) as ReplicaId
     }
 }

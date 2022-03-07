@@ -11,6 +11,7 @@ use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
 pub mod signed;
+pub use signed::SignedMessage;
 
 pub type ReplicaId = u8;
 pub type ClientId = [u8; 4];

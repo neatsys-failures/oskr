@@ -14,14 +14,14 @@ pub mod simulated;
 pub mod director;
 #[cfg(test)]
 pub mod director {
-    pub use crate::simulated::{Director, StatefulContext, Submit};
+    pub use crate::simulated::{Handle, StatefulContext, StatelessContext, Submit};
 }
 
 pub mod common;
 
 pub mod replication {
-    pub mod unreplicated;
     pub mod pbft;
+    pub mod unreplicated;
 }
 
 pub mod app {

@@ -2,7 +2,7 @@ use std::{ffi::c_void, sync::Arc};
 
 use oskr::{
     common::Opaque,
-    director::Director,
+    director::Handle,
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
@@ -37,7 +37,7 @@ fn main() {
     ));
 
     struct WorkerData<Replica> {
-        replica: Arc<Director<Replica, Transport>>,
+        replica: Arc<Handle<Replica, Transport>>,
         n_worker: usize,
     }
     let worker_data = WorkerData { replica, n_worker };

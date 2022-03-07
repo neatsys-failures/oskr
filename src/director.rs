@@ -5,7 +5,7 @@ use std::{
 
 use crate::transport::{Receiver, Transport};
 
-pub struct Director<State, T: Transport> {
+pub struct Handle<State, T: Transport> {
     state: Mutex<State>,
     transport: T::TxAgent,
     address: T::Address,
@@ -32,7 +32,7 @@ pub struct Submit<State, T: Transport> {
 type StatefulTask<S, T> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send>;
 type StatelessTask<S, T> = Box<dyn FnOnce(&StatelessContext<S, T>) + Send>;
 
-impl<S, T: Transport> Director<S, T> {
+impl<S, T: Transport> Handle<S, T> {
     pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
         Self {
             state: Mutex::new(state),
@@ -108,7 +108,7 @@ enum Task<'a, S, T: Transport> {
     Stateless(StatelessTask<S, T>, StatelessContext<S, T>),
 }
 
-impl<S, T: Transport> Director<S, T> {
+impl<S, T: Transport> Handle<S, T> {
     fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S, T>) -> Task<'_, S, T> {
         loop {
             let mut stateful_list = loop {

@@ -17,7 +17,7 @@ use crate::{
     common::{
         deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
     },
-    director::{Director, StatefulContext},
+    director::{Handle, StatefulContext},
     transport::{self, Transport, TxAgent},
     App, AsyncExecutor, Invoke,
 };
@@ -133,9 +133,9 @@ impl Replica {
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
-    ) -> Director<Self, T> {
+    ) -> Handle<Self, T> {
         assert_eq!(replica_id, 0);
-        let replica = Director::new(
+        let replica = Handle::new(
             transport.tx_agent(),
             transport.tx_agent().config().replica_address[0].clone(),
             Self {

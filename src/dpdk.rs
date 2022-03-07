@@ -117,7 +117,7 @@ impl Transport {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0xfffe0000ffff".to_string(), // TODO configurable
+            "0x7ffe00007fff".to_string(), // TODO configurable
             "-d".to_string(),
             "./target/dpdk/drivers/".to_string(), // TODO any better way?
         ];
