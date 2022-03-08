@@ -4,15 +4,14 @@ use std::{
     sync::Arc,
 };
 
-use bincode::Options;
 use k256::ecdsa::{SigningKey, VerifyingKey};
-use sha2::{Digest, Sha256};
+use sha2::{Digest as _, Sha256};
 use tracing::warn;
 
 use crate::{
     common::{
-        deserialize, serialize, ClientId, OpNumber, ReplicaId, RequestNumber, SignedMessage,
-        ViewNumber,
+        deserialize, serialize, ClientId, Digest, OpNumber, ReplicaId, RequestNumber,
+        SignedMessage, ViewNumber,
     },
     replication::pbft::message::{self, ToReplica},
     stage::{Handle, StatefulContext, StatelessContext},
@@ -33,9 +32,9 @@ pub struct Replica<T: Transport> {
     log: Vec<(ViewNumber, message::Request)>,
     batch: Vec<message::Request>,
 
-    digest_table: HashMap<[u8; 32], Range<OpNumber>>,
-    prepare_quorum: HashMap<[u8; 32], HashSet<ReplicaId>>,
-    commit_quorum: HashMap<[u8; 32], HashSet<ReplicaId>>,
+    digest_table: HashMap<Digest, Range<OpNumber>>,
+    prepare_quorum: HashMap<Digest, HashSet<ReplicaId>>,
+    commit_quorum: HashMap<Digest, HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
     route_table: HashMap<ClientId, T::Address>,
@@ -119,9 +118,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
 impl<T: Transport> StatelessContext<Replica<T>, T> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer, shared: Arc<Shared<T>>) {
         let mut buffer = buffer.as_ref();
-        let to_replica: Result<ToReplica, _> = bincode::DefaultOptions::new()
-            .allow_trailing_bytes()
-            .deserialize_from(&mut buffer);
+        let to_replica: Result<ToReplica, _> = deserialize(&mut buffer);
         let to_replica = if let Ok(to_replica) = to_replica {
             to_replica
         } else {
@@ -194,7 +191,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
 
         self.batch.push(message);
         if self.batch.len() == self.batch_size {
-            // close batch
+            self.close_batch();
         }
     }
 

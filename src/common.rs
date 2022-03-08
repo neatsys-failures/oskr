@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fmt::{self, Display, Formatter},
-    io::Cursor,
+    io::{Cursor, Read},
     panic::{set_hook, take_hook},
     process,
 };
@@ -29,6 +29,7 @@ pub type RequestNumber = u32;
 pub type ViewNumber = u8;
 pub type OpNumber = u32;
 pub type Opaque = Vec<u8>;
+pub type Digest = [u8; 32];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct MalformedMessage;
@@ -41,10 +42,10 @@ impl Error for MalformedMessage {}
 
 // providing deserialize to avoid accidentially using bincode::deserialize
 // not unwrap by default for the sake of byzantine network
-pub fn deserialize<M: for<'a> Deserialize<'a>>(bytes: &[u8]) -> Result<M, MalformedMessage> {
+pub fn deserialize<M: for<'a> Deserialize<'a>>(reader: impl Read) -> Result<M, MalformedMessage> {
     bincode::DefaultOptions::new()
         .allow_trailing_bytes()
-        .deserialize(bytes)
+        .deserialize_from(reader)
         .map_err(|_| MalformedMessage)
 }
 
@@ -58,6 +59,7 @@ pub fn serialize<M: Serialize>(message: M) -> impl FnOnce(&mut [u8]) -> u16 {
     }
 }
 
+// consider move to util
 pub fn panic_abort() {
     let default_hook = take_hook();
     set_hook(Box::new(move |info| {

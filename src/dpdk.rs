@@ -131,6 +131,7 @@ impl Transport {
             "0x7ffe00007fff".to_string(), // TODO configurable
             "-d".to_string(),
             "./target/dpdk/drivers/".to_string(), // TODO any better way?
+            "--no-telemetry".to_string(),
         ];
         let args: Vec<_> = args
             .into_iter()
