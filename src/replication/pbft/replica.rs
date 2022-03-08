@@ -4,6 +4,7 @@ use std::{
     sync::Arc,
 };
 
+use bincode::Options;
 use k256::ecdsa::{SigningKey, VerifyingKey};
 use sha2::{Digest, Sha256};
 use tracing::warn;
@@ -29,7 +30,7 @@ pub struct Replica<T: Transport> {
     op_number: OpNumber,
 
     client_table: HashMap<ClientId, (RequestNumber, Option<message::Reply>)>,
-    log: Vec<message::Request>,
+    log: Vec<(ViewNumber, message::Request)>,
     batch: Vec<message::Request>,
 
     digest_table: HashMap<[u8; 32], Range<OpNumber>>,
@@ -37,6 +38,7 @@ pub struct Replica<T: Transport> {
     commit_quorum: HashMap<[u8; 32], HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
+    route_table: HashMap<ClientId, T::Address>,
 }
 
 struct Shared<T: Transport> {
@@ -72,6 +74,7 @@ impl<T: Transport> Replica<T> {
                 prepare_quorum: HashMap::new(),
                 commit_quorum: HashMap::new(),
                 app: Box::new(app),
+                route_table: HashMap::new(),
             },
         );
 
@@ -82,12 +85,7 @@ impl<T: Transport> Replica<T> {
                     let shared = shared.clone();
                     submit.stateless(move |replica| replica.receive_buffer(remote, buffer, shared));
                 } else {
-                    let to_replica: Result<ToReplica, _> = deserialize(buffer.as_ref());
-                    if let Ok(ToReplica::Request(request)) = to_replica {
-                        submit.stateful(move |replica| replica.handle_request(remote, request));
-                    } else {
-                        warn!("receive malformed client message");
-                    }
+                    submit.stateful(move |replica| replica.receive_buffer(remote, buffer));
                 }
             });
         });
@@ -95,9 +93,38 @@ impl<T: Transport> Replica<T> {
     }
 }
 
+impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
+    fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
+        let to_replica: Result<ToReplica, _> = deserialize(buffer.as_ref());
+        let to_replica = if let Ok(to_replica) = to_replica {
+            to_replica
+        } else {
+            warn!("receive malformed client message");
+            return;
+        };
+        match to_replica {
+            ToReplica::Request(request) => {
+                self.route_table
+                    .entry(request.client_id)
+                    .or_insert(remote.clone());
+                self.handle_request(Some(remote), request);
+                return;
+            }
+            ToReplica::RelayedRequest(request) => {
+                self.handle_request(self.route_table.get(&request.client_id).cloned(), request);
+                return;
+            }
+            _ => warn!("receive unexpected client message"),
+        }
+    }
+}
+
 impl<T: Transport> StatelessContext<Replica<T>, T> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer, shared: Arc<Shared<T>>) {
-        let to_replica: Result<ToReplica, _> = deserialize(buffer.as_ref());
+        let mut buffer = buffer.as_ref();
+        let to_replica: Result<ToReplica, _> = bincode::DefaultOptions::new()
+            .allow_trailing_bytes()
+            .deserialize_from(&mut buffer);
         let to_replica = if let Ok(to_replica) = to_replica {
             to_replica
         } else {
@@ -106,10 +133,20 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
         };
         let verifying_key = &shared.verifying_key[&remote];
         match to_replica {
-            ToReplica::PrePrepare(pre_prepare, request_list) => {
+            ToReplica::PrePrepare(pre_prepare) => {
                 if let Ok(pre_prepare) = pre_prepare.verify(verifying_key) {
-                    // handle
-                    return;
+                    let mut hasher = Sha256::new();
+                    hasher.update(buffer);
+                    let digest = hasher.finalize();
+                    if digest[..] == pre_prepare.digest {
+                        let batch: Result<Vec<message::Request>, _> = deserialize(buffer);
+                        if let Ok(batch) = batch {
+                            self.submit.stateful(|replica| {
+                                replica.handle_pre_prepare(remote, pre_prepare, batch)
+                            });
+                            return;
+                        }
+                    }
                 }
             }
             _ => {}
@@ -119,28 +156,36 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
 }
 
 impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
-    fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+    fn handle_request(&mut self, remote: Option<T::Address>, message: message::Request) {
         if let Some((request_number, reply)) = self.client_table.get(&message.client_id) {
             if *request_number > message.request_number {
                 return;
             }
             if *request_number == message.request_number {
-                if let Some(reply) = reply {
-                    let reply = reply.clone();
-                    let shared = self.shared.clone();
-                    self.submit.stateless(move |replica| {
-                        replica.transport.send_message(
-                            replica,
-                            &remote,
-                            serialize(SignedMessage::sign(reply, &shared.signing_key)),
-                        );
-                    });
+                match (remote, reply) {
+                    (Some(remote), Some(reply)) => {
+                        let reply = reply.clone();
+                        let shared = self.shared.clone();
+                        self.submit.stateless(move |replica| {
+                            replica.transport.send_message(
+                                replica,
+                                &remote,
+                                serialize(SignedMessage::sign(reply, &shared.signing_key)),
+                            );
+                        });
+                    }
+                    _ => {}
                 }
             }
         }
 
-        if self.id != self.transport.config().view_primary(self.view_number) {
-            // TODO relay
+        let primary = self.transport.config().view_primary(self.view_number);
+        if self.id != primary {
+            self.transport.send_message_to_replica(
+                self,
+                primary,
+                serialize(ToReplica::RelayedRequest(message)),
+            );
             return;
         }
 
@@ -148,5 +193,21 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         if self.batch.len() == self.batch_size {
             // close batch
         }
+    }
+
+    fn close_batch(&mut self) {
+        if self.batch_size == 0 {
+            return;
+        }
+        //
+    }
+
+    fn handle_pre_prepare(
+        &mut self,
+        remote: T::Address,
+        message: message::PrePrepare,
+        batch: Vec<message::Request>,
+    ) {
+        //
     }
 }

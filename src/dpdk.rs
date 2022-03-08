@@ -11,8 +11,9 @@ use std::{
 use crate::{
     dpdk_shim::{
         oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_lcore_id, oskr_mbuf_default_buf_size,
-        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_lcore_index, rte_mbuf,
-        rte_mempool, rte_pktmbuf_pool_create, rte_socket_id, setup_port, Address, RxBuffer,
+        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_eth_macaddr_get,
+        rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create, rte_socket_id, setup_port,
+        Address, RxBuffer,
     },
     transport::{self, Config, Receiver},
 };
@@ -90,6 +91,16 @@ impl transport::Transport for Transport {
         receiver: &impl Receiver<Self>,
         rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
+        let mut port_mac = MaybeUninit::uninit();
+        let ret = unsafe {
+            rte_eth_macaddr_get(self.port_id, NonNull::new(port_mac.as_mut_ptr()).unwrap())
+        };
+        assert_eq!(ret, 0);
+        let port_mac = unsafe { port_mac.assume_init() };
+        if port_mac.addr_bytes != receiver.get_address().mac {
+            panic!();
+        }
+
         self.recv_table
             .insert(*receiver.get_address(), Box::new(rx_agent));
     }

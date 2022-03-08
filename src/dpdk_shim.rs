@@ -25,7 +25,7 @@ pub struct rte_mbuf {
 
 #[repr(C)]
 pub struct rte_ether_addr {
-    addr_bytes: [u8; 6],
+    pub addr_bytes: [u8; 6],
 }
 
 #[repr(C)]
@@ -55,7 +55,7 @@ extern "C" {
         socket_id: c_int,
     ) -> *mut rte_mempool;
     pub fn rte_eth_dev_socket_id(port_id: u16) -> c_int;
-    fn rte_eth_macaddr_get(port_id: u16, mac_addr: NonNull<rte_ether_addr>) -> c_int;
+    pub fn rte_eth_macaddr_get(port_id: u16, mac_addr: NonNull<rte_ether_addr>) -> c_int;
 
     // interfaces that provided in `static inline` fashion, and "instantiated"
     // by DPDK shim
@@ -111,7 +111,7 @@ impl Drop for RxBuffer {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Address {
-    mac: [u8; 6],
+    pub mac: [u8; 6],
     pub id: u8,
 }
 

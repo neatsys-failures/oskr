@@ -10,7 +10,9 @@ pub enum ToReplica {
     // besides performance issue, it is also hard to register client's identity
     // at runtime
     Request(Request),
-    PrePrepare(SignedMessage<PrePrepare>, Vec<Request>),
+    RelayedRequest(Request), // remote address ignored
+
+    PrePrepare(SignedMessage<PrePrepare>), // request batch piggybacked
     Prepare(SignedMessage<Prepare>),
     Commit(SignedMessage<Commit>),
 }
