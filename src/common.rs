@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fmt::{self, Display, Formatter},
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     panic::{set_hook, take_hook},
     process,
 };
@@ -49,7 +49,10 @@ pub fn deserialize<M: for<'a> Deserialize<'a>>(reader: impl Read) -> Result<M, M
         .map_err(|_| MalformedMessage)
 }
 
-pub fn serialize<M: Serialize>(message: M) -> impl FnOnce(&mut [u8]) -> u16 {
+pub fn serialize<M: Serialize, T: ?Sized>(message: M) -> impl FnOnce(&mut T) -> u16
+where
+    for<'a> Cursor<&'a mut T>: Write,
+{
     move |buffer| {
         let mut cursor = Cursor::new(buffer);
         bincode::DefaultOptions::new()

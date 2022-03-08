@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    io::Write,
     ops::Range,
     sync::Arc,
 };
@@ -27,13 +28,21 @@ pub struct Replica<T: Transport> {
 
     view_number: ViewNumber,
     op_number: OpNumber,
+    commit_number: OpNumber,
+
+    // instead of OpNumber, most data structure is keyed by Digest, because of
+    // two reasons:
+    // the implementation is built with batching from beginning, where
+    // consecutive OpNumber share the same Digest
+    // under BFT condition multiple version of message with same OpNumber can
+    // be received, making OpNumber not be unique key any more
+    digest_table: HashMap<OpNumber, Digest>,
 
     client_table: HashMap<ClientId, (RequestNumber, Option<message::Reply>)>,
-    log: Vec<(ViewNumber, message::Request)>,
+    log: HashMap<Digest, (SignedMessage<message::PrePrepare>, Vec<message::Request>)>,
     batch: Vec<message::Request>,
 
-    digest_table: HashMap<Digest, Range<OpNumber>>,
-    prepare_quorum: HashMap<Digest, HashSet<ReplicaId>>,
+    prepare_quorum: HashMap<Digest, HashMap<ReplicaId, SignedMessage<message::Prepare>>>,
     commit_quorum: HashMap<Digest, HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
@@ -66,8 +75,9 @@ impl<T: Transport> Replica<T> {
                 batch_size,
                 view_number: 0,
                 op_number: 0,
+                commit_number: 0,
                 client_table: HashMap::new(),
-                log: Vec::new(),
+                log: HashMap::new(),
                 batch: Vec::new(),
                 digest_table: HashMap::new(),
                 prepare_quorum: HashMap::new(),
@@ -196,10 +206,43 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     }
 
     fn close_batch(&mut self) {
+        assert!(self.transport.config().view_primary(self.view_number) == self.id);
         if self.batch_size == 0 {
             return;
         }
-        //
+
+        let batch: Vec<_> = self.batch.drain(..).collect();
+
+        let mut pre_prepare = message::PrePrepare {
+            view_number: self.view_number,
+            op_number: self.op_number + 1,
+            digest: Default::default(),
+        };
+        self.op_number += batch.len() as OpNumber;
+
+        let shared = self.shared.clone();
+        self.submit.stateless(move |replica| {
+            let mut batch_buffer = Vec::new();
+            serialize(batch.clone())(&mut batch_buffer);
+            let digest = Sha256::digest(&batch_buffer).into();
+            pre_prepare.digest = digest;
+
+            let op_number = pre_prepare.op_number;
+            let pre_prepare = SignedMessage::sign(pre_prepare, &shared.signing_key);
+
+            replica.transport.send_message_to_all(replica, |buffer| {
+                let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
+                (&mut buffer[offset as usize..])
+                    .write(&batch_buffer)
+                    .unwrap();
+                offset + batch_buffer.len() as u16
+            });
+
+            replica.submit.stateful(move |replica| {
+                replica.digest_table.insert(op_number, digest);
+                replica.log.insert(digest, (pre_prepare, batch));
+            });
+        });
     }
 
     fn handle_pre_prepare(
@@ -208,6 +251,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         message: message::PrePrepare,
         batch: Vec<message::Request>,
     ) {
-        //
+        if message.view_number < self.view_number {
+            return;
+        }
+        if message.view_number > self.view_number {
+            // TODO state transfer
+            return;
+        }
+        assert!(self.transport.config().view_primary(self.view_number) != self.id);
     }
 }
