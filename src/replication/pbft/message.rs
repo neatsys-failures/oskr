@@ -28,7 +28,7 @@ pub struct Request {
 pub struct Reply {
     pub view_number: ViewNumber,
     pub request_number: RequestNumber,
-    pub client_id: ClientId,
+    pub client_id: ClientId, // following pbft paper, but why we need this?
     pub replica_id: ReplicaId,
     pub result: Opaque,
 }

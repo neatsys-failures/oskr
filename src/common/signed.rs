@@ -2,6 +2,7 @@ use std::{
     error::Error,
     fmt::{self, Display, Formatter},
     marker::PhantomData,
+    ops::{Deref, DerefMut},
 };
 
 use bincode::Options;
@@ -29,6 +30,22 @@ impl Display for InauthenticMessage {
 }
 impl Error for InauthenticMessage {}
 
+#[derive(Debug, Clone)]
+pub struct VerifiedMessage<M>(M, SignedMessage<M>);
+
+impl<M> Deref for VerifiedMessage<M> {
+    type Target = M;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<M> DerefMut for VerifiedMessage<M> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl<M> SignedMessage<M> {
     pub fn sign(message: M, key: &SigningKey) -> Self
     where
@@ -43,18 +60,19 @@ impl<M> SignedMessage<M> {
         }
     }
 
-    pub fn verify(self, key: &VerifyingKey) -> Result<M, InauthenticMessage>
+    pub fn verify(self, key: &VerifyingKey) -> Result<VerifiedMessage<M>, InauthenticMessage>
     where
         M: for<'a> Deserialize<'a>,
     {
         if key.verify(&self.inner, &self.signature).is_ok() {
             if let Ok(message) = bincode::DefaultOptions::new().deserialize(&self.inner) {
-                return Ok(message);
+                return Ok(VerifiedMessage(message, self));
             }
         }
         Err(InauthenticMessage)
     }
 
+    // upgrade to VerifiedMessage as well?
     pub fn assume_verified(self) -> M
     where
         M: for<'a> Deserialize<'a>,
@@ -62,5 +80,11 @@ impl<M> SignedMessage<M> {
         bincode::DefaultOptions::new()
             .deserialize(&self.inner)
             .unwrap()
+    }
+}
+
+impl<M> VerifiedMessage<M> {
+    pub fn signed_message(&self) -> &SignedMessage<M> {
+        &self.1
     }
 }
