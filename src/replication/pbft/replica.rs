@@ -14,8 +14,8 @@ use crate::{
         deserialize, serialize, ClientId, OpNumber, ReplicaId, RequestNumber, SignedMessage,
         ViewNumber,
     },
-    director::{Handle, StatefulContext, StatelessContext},
     replication::pbft::message::{self, ToReplica},
+    stage::{Handle, StatefulContext, StatelessContext},
     transport::Transport,
     transport::TxAgent,
     App,
@@ -110,10 +110,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                 self.handle_request(Some(remote), request);
                 return;
             }
-            ToReplica::RelayedRequest(request) => {
-                self.handle_request(self.route_table.get(&request.client_id).cloned(), request);
-                return;
-            }
+
             _ => warn!("receive unexpected client message"),
         }
     }
@@ -133,12 +130,18 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
         };
         let verifying_key = &shared.verifying_key[&remote];
         match to_replica {
+            ToReplica::RelayedRequest(request) => {
+                self.submit.stateful(|replica| {
+                    replica.handle_request(
+                        replica.route_table.get(&request.client_id).cloned(),
+                        request,
+                    )
+                });
+                return;
+            }
             ToReplica::PrePrepare(pre_prepare) => {
                 if let Ok(pre_prepare) = pre_prepare.verify(verifying_key) {
-                    let mut hasher = Sha256::new();
-                    hasher.update(buffer);
-                    let digest = hasher.finalize();
-                    if digest[..] == pre_prepare.digest {
+                    if Sha256::digest(buffer)[..] == pre_prepare.digest {
                         let batch: Result<Vec<message::Request>, _> = deserialize(buffer);
                         if let Ok(batch) = batch {
                             self.submit.stateful(|replica| {

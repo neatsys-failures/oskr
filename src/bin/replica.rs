@@ -2,10 +2,10 @@ use std::{ffi::c_void, sync::Arc};
 
 use oskr::{
     common::Opaque,
-    director::Handle,
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
+    stage::Handle,
     transport::Config,
     App,
 };

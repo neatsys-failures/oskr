@@ -11,9 +11,9 @@ pub mod dpdk_shim;
 pub mod simulated;
 
 #[cfg(not(test))]
-pub mod director;
+pub mod stage;
 #[cfg(test)]
-pub mod director {
+pub mod stage {
     pub use crate::simulated::{Handle, StatefulContext, StatelessContext, Submit};
 }
 

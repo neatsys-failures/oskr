@@ -17,7 +17,7 @@ use crate::{
     common::{
         deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
     },
-    director::{Handle, StatefulContext},
+    stage::{Handle, StatefulContext},
     transport::{self, Transport, TxAgent},
     App, AsyncExecutor, Invoke,
 };
