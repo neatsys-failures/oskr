@@ -24,7 +24,7 @@ pub mod stage {
 pub mod common;
 
 pub mod replication {
-    // pub mod pbft;
+    pub mod pbft;
     pub mod unreplicated;
 }
 

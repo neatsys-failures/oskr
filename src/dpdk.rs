@@ -26,6 +26,7 @@ pub struct TxAgent {
 }
 
 unsafe impl Send for TxAgent {}
+unsafe impl Sync for TxAgent {}
 
 impl transport::TxAgent for TxAgent {
     type Transport = Transport;

@@ -14,13 +14,15 @@ use crate::{
         RequestNumber, SignedMessage, ViewNumber,
     },
     replication::pbft::message::{self, ToReplica},
-    stage::{Handle, StatefulContext, StatelessContext},
+    stage::{Handle, State, StatefulContext, StatelessContext},
     transport::Transport,
-    transport::TxAgent,
+    transport::{Receiver, TxAgent},
     App,
 };
 
 pub struct Replica<T: Transport> {
+    address: T::Address,
+    transport: T::TxAgent,
     id: ReplicaId,
     batch_size: usize,
 
@@ -71,21 +73,21 @@ impl<T: Transport> Replica<T> {
     }
 
     // view number is decided by pre-prepare
-    fn prepared(&self, op_number: OpNumber, n_fault: usize) -> bool {
+    fn prepared(&self, op_number: OpNumber) -> bool {
         let quorum_key = if let Some(item) = self.log_item(op_number) {
             &item.quorum_key
         } else {
             return false;
         };
         if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= n_fault * 2
+            prepare_quorum.len() >= self.transport.config().n_fault * 2
         } else {
             false
         }
     }
 
     // committed-local, actually
-    fn committed(&self, op_number: OpNumber, n_fault: usize) -> bool {
+    fn committed(&self, op_number: OpNumber) -> bool {
         // a little bit duplicated, but I accept that
         let quorum_key = if let Some(item) = self.log_item(op_number) {
             &item.quorum_key
@@ -93,13 +95,13 @@ impl<T: Transport> Replica<T> {
             return false;
         };
         let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= n_fault * 2
+            prepare_quorum.len() >= self.transport.config().n_fault * 2
         } else {
             false
         };
         prepared
             && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
-                commit_quorum.len() >= n_fault * 2 + 1
+                commit_quorum.len() >= self.transport.config().n_fault * 2 + 1
             } else {
                 false
             }
@@ -113,9 +115,31 @@ struct LogItem {
     committed: bool,
 }
 
-struct Shared<T: Transport> {
+pub struct Shared<T: Transport> {
+    address: T::Address,
+    transport: T::TxAgent,
+
     signing_key: SigningKey,
     verifying_key: HashMap<T::Address, VerifyingKey>,
+}
+
+impl<T: Transport> Receiver<T> for Replica<T> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
+    }
+}
+
+impl<T: Transport> Receiver<T> for Shared<T> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
+    }
+}
+
+impl<T: Transport> State for Replica<T> {
+    type Shared = Arc<Shared<T>>;
+    fn shared(&self) -> Self::Shared {
+        self.shared.clone()
+    }
 }
 
 impl<T: Transport> Replica<T> {
@@ -124,43 +148,48 @@ impl<T: Transport> Replica<T> {
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
-    ) -> Handle<Self, T> {
+    ) -> Handle<Self> {
         assert!(transport.tx_agent().config().replica_address.len() > 1);
 
         let address = transport.tx_agent().config().replica_address[replica_id as usize].clone();
-        let shared = Arc::new(Shared {
-            verifying_key: transport.tx_agent().config().verifying_key(),
-            signing_key: transport.tx_agent().config().signing_key[&address].clone(),
-        });
-        let replica = Handle::new(
-            transport.tx_agent(),
-            address.clone(),
-            Self {
-                id: replica_id,
-                batch_size,
-                view_number: 0,
-                op_number: 0,
-                commit_number: 0,
-                client_table: HashMap::new(),
-                log: Vec::new(),
-                reorder_log: HashMap::new(),
-                batch: Vec::new(),
-                prepare_quorum: HashMap::new(),
-                commit_quorum: HashMap::new(),
-                app: Box::new(app),
-                route_table: HashMap::new(),
-                shared: shared.clone(),
-            },
-        );
+        let replica: Handle<_> = Self {
+            address: address.clone(),
+            transport: transport.tx_agent(),
+            id: replica_id,
+            batch_size,
+            view_number: 0,
+            op_number: 0,
+            commit_number: 0,
+            client_table: HashMap::new(),
+            log: Vec::new(),
+            reorder_log: HashMap::new(),
+            batch: Vec::new(),
+            prepare_quorum: HashMap::new(),
+            commit_quorum: HashMap::new(),
+            app: Box::new(app),
+            route_table: HashMap::new(),
+            shared: Arc::new(Shared {
+                transport: transport.tx_agent(),
+                verifying_key: transport.tx_agent().config().verifying_key(),
+                signing_key: transport.tx_agent().config().signing_key[&address].clone(),
+                address,
+            }),
+        }
+        .into();
 
-        replica.with_state(|replica| {
-            let submit = replica.submit.clone();
-            transport.register(replica, move |remote, buffer| {
-                if shared.verifying_key.contains_key(&remote) {
-                    let shared = shared.clone();
-                    submit.stateless(move |replica| replica.receive_buffer(remote, buffer, shared));
-                } else {
-                    submit.stateful(move |replica| replica.receive_buffer(remote, buffer));
+        replica.with_stateless(|replica| {
+            transport.register(&***replica, {
+                let replica = replica.clone();
+                move |remote, buffer| {
+                    if replica.verifying_key.contains_key(&remote) {
+                        replica
+                            .submit
+                            .stateless(move |replica| replica.receive_buffer(remote, buffer));
+                    } else {
+                        replica
+                            .submit
+                            .stateful(move |replica| replica.receive_buffer(remote, buffer));
+                    }
                 }
             });
         });
@@ -168,7 +197,7 @@ impl<T: Transport> Replica<T> {
     }
 }
 
-impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
+impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
         let to_replica: Result<ToReplica, _> = deserialize(buffer.as_ref());
         let to_replica = if let Ok(to_replica) = to_replica {
@@ -188,8 +217,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     }
 }
 
-impl<T: Transport> StatelessContext<Replica<T>, T> {
-    fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer, shared: Arc<Shared<T>>) {
+impl<T: Transport> StatelessContext<Replica<T>> {
+    fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         let mut buffer = buffer.as_ref();
         let to_replica: Result<ToReplica, _> = deserialize(&mut buffer);
         let to_replica = if let Ok(to_replica) = to_replica {
@@ -198,7 +227,7 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
             warn!("receive malformed replica message");
             return;
         };
-        let verifying_key = &shared.verifying_key[&remote];
+        let verifying_key = &self.verifying_key[&remote];
         match to_replica {
             ToReplica::RelayedRequest(request) => {
                 self.submit
@@ -237,7 +266,7 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
     }
 }
 
-impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
+impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn handle_request(&mut self, remote: T::Address, message: message::Request) {
         self.route_table.insert(message.client_id, remote.clone());
         self.handle_request_internal(Some(remote), message);
@@ -259,7 +288,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                         // maybe not a good idea to serialize in stateful path
                         // I don't want to store binary message in replica state
                         // and the serailization should be blazing fast
-                        self.transport.send_message(self, &remote, serialize(reply));
+                        self.transport
+                            .send_message(&**self, &remote, serialize(reply));
                     }
                     _ => {}
                 }
@@ -269,7 +299,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         let primary = self.transport.config().view_primary(self.view_number);
         if self.id != primary {
             self.transport.send_message_to_replica(
-                self,
+                &**self,
                 primary,
                 serialize(ToReplica::RelayedRequest(message)),
             );
@@ -297,7 +327,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             digest: Default::default(),
         };
 
-        let shared = self.shared.clone();
         self.submit.stateless(move |replica| {
             let mut batch_buffer = Vec::new();
             serialize(batch.clone())(&mut batch_buffer);
@@ -309,14 +338,16 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                 digest,
             };
 
-            let pre_prepare = SignedMessage::sign(pre_prepare, &shared.signing_key);
-            replica.transport.send_message_to_all(replica, |buffer| {
-                let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
-                (&mut buffer[offset as usize..])
-                    .write(&batch_buffer)
-                    .unwrap();
-                offset + batch_buffer.len() as u16
-            });
+            let pre_prepare = SignedMessage::sign(pre_prepare, &replica.signing_key);
+            replica
+                .transport
+                .send_message_to_all(&***replica, |buffer| {
+                    let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
+                    (&mut buffer[offset as usize..])
+                        .write(&batch_buffer)
+                        .unwrap();
+                    offset + batch_buffer.len() as u16
+                });
 
             replica.submit.stateful(move |replica| {
                 // TODO check view and status
@@ -381,12 +412,11 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             replica_id: self.id,
         };
 
-        let prepared = self.prepared(message.op_number, self.transport.config().n_fault);
-        let shared = self.shared.clone();
+        let prepared = self.prepared(message.op_number);
         self.submit.stateless(move |replica| {
-            let signed_prepare = SignedMessage::sign(prepare.clone(), &shared.signing_key);
+            let signed_prepare = SignedMessage::sign(prepare.clone(), &replica.signing_key);
             replica.transport.send_message_to_all(
-                replica,
+                &***replica,
                 serialize(ToReplica::Prepare(signed_prepare.clone())),
             );
 
@@ -404,7 +434,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     }
 
     fn handle_prepare(&mut self, _remote: T::Address, message: VerifiedMessage<message::Prepare>) {
-        if !self.prepared(message.op_number, self.transport.config().n_fault) {
+        if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());
         } else {
             // send commit to late prepare?
@@ -426,7 +456,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             .or_default()
             .insert(prepare.replica_id, signed_message.clone());
 
-        if self.prepared(prepare.op_number, self.transport.config().n_fault) {
+        if self.prepared(prepare.op_number) {
             debug!("prepared");
             self.send_commit(prepare.op_number, prepare.digest);
         }
@@ -442,13 +472,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
 
         {
             let commit = commit.clone();
-            let shared = self.shared.clone();
             self.submit.stateless(move |replica| {
                 replica.transport.send_message_to_all(
-                    replica,
+                    &***replica,
                     serialize(ToReplica::Commit(SignedMessage::sign(
                         commit,
-                        &shared.signing_key,
+                        &replica.signing_key,
                     ))),
                 )
             });
@@ -459,7 +488,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     }
 
     fn handle_commit(&mut self, _remote: T::Address, message: VerifiedMessage<message::Commit>) {
-        if !self.committed(message.op_number, self.transport.config().n_fault) {
+        if !self.committed(message.op_number) {
             self.insert_commit(&*message);
         }
     }
@@ -476,7 +505,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             .or_default()
             .insert(commit.replica_id);
 
-        if self.committed(commit.op_number, self.transport.config().n_fault) {
+        if self.committed(commit.op_number) {
             debug!("committed");
 
             self.log_item_mut(commit.op_number).unwrap().committed = true;
@@ -501,9 +530,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                     replica_id: self.id,
                     result,
                 };
-                let shared = self.shared.clone();
                 self.submit.stateless(move |replica| {
-                    let reply = SignedMessage::sign(reply, &shared.signing_key);
+                    let reply = SignedMessage::sign(reply, &replica.signing_key);
                     replica.submit.stateful(move |replica| {
                         replica.client_table.insert(
                             request.client_id,
@@ -512,7 +540,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                         if let Some(remote) = replica.route_table.get(&request.client_id) {
                             replica
                                 .transport
-                                .send_message(replica, remote, serialize(reply));
+                                .send_message(&**replica, remote, serialize(reply));
                         } else {
                             info!("no route record, skip reply");
                         }

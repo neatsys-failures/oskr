@@ -10,7 +10,7 @@ where
 {
     type Address: Clone + Eq + Hash + Send + Sync;
     type RxBuffer: AsRef<[u8]> + Send;
-    type TxAgent: TxAgent<Transport = Self> + Clone + Send;
+    type TxAgent: TxAgent<Transport = Self> + Clone + Send + Sync;
 
     fn tx_agent(&self) -> Self::TxAgent;
 

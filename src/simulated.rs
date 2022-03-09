@@ -267,6 +267,13 @@ impl<S: State> Handle<S> {
             submit: self.0.clone(),
         });
     }
+
+    pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
+        f(&StatelessContext {
+            shared: self.0.shared.clone(),
+            submit: self.0.clone(),
+        });
+    }
 }
 
 pub struct StatefulContext<'a, S: State> {
@@ -277,6 +284,15 @@ pub struct StatefulContext<'a, S: State> {
 pub struct StatelessContext<S: State> {
     shared: S::Shared,
     pub submit: Submit<S>,
+}
+
+impl<S: State> Clone for StatelessContext<S> {
+    fn clone(&self) -> Self {
+        Self {
+            shared: self.shared.clone(),
+            submit: self.submit.clone(),
+        }
+    }
 }
 
 impl<'a, S: State> Deref for StatefulContext<'a, S> {

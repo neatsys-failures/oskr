@@ -24,6 +24,15 @@ pub struct StatelessContext<S: State> {
     pub submit: Arc<Submit<S>>,
 }
 
+impl<S: State> Clone for StatelessContext<S> {
+    fn clone(&self) -> Self {
+        Self {
+            shared: self.shared.clone(),
+            submit: self.submit.clone(),
+        }
+    }
+}
+
 pub struct Submit<S: State> {
     stateful_list: Mutex<Vec<StatefulTask<S>>>,
     stateless_list: Mutex<Vec<StatelessTask<S>>>,
@@ -48,6 +57,13 @@ impl<S: State> Handle<S> {
     pub fn with_stateful(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
         f(&StatefulContext {
             state: self.state.lock().unwrap(),
+            submit: self.submit.clone(),
+        })
+    }
+
+    pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
+        f(&StatelessContext {
+            shared: self.shared.clone(),
             submit: self.submit.clone(),
         })
     }
