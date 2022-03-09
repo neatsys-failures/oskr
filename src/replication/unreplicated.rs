@@ -136,7 +136,7 @@ impl<T: Transport> State for Replica<T> {
     fn shared(&self) -> Self::Shared {}
 }
 
-impl<T: Transport> Receiver<T> for Replica<T> {
+impl<'a, T: Transport> Receiver<T> for StatefulContext<'a, Replica<T>> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
@@ -161,7 +161,7 @@ impl<T: Transport> Replica<T> {
 
         replica.with_stateful(|replica| {
             let submit = replica.submit.clone();
-            transport.register(&**replica, move |remote, buffer| {
+            transport.register(replica, move |remote, buffer| {
                 submit.stateful(move |replica| replica.receive_buffer(remote, buffer))
             });
         });
@@ -178,8 +178,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 return;
             }
             if reply.request_number == request.request_number {
-                self.transport
-                    .send_message(&**self, &remote, serialize(reply));
+                self.transport.send_message(self, &remote, serialize(reply));
                 return;
             }
         }
@@ -191,8 +190,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             result,
         };
         self.client_table.insert(request.client_id, reply.clone());
-        self.transport
-            .send_message(&**self, &remote, serialize(reply));
+        self.transport.send_message(self, &remote, serialize(reply));
     }
 }
 

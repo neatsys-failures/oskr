@@ -123,13 +123,13 @@ pub struct Shared<T: Transport> {
     verifying_key: HashMap<T::Address, VerifyingKey>,
 }
 
-impl<T: Transport> Receiver<T> for Replica<T> {
+impl<'a, T: Transport> Receiver<T> for StatefulContext<'a, Replica<T>> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
 }
 
-impl<T: Transport> Receiver<T> for Shared<T> {
+impl<T: Transport> Receiver<T> for StatelessContext<Replica<T>> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
@@ -178,7 +178,7 @@ impl<T: Transport> Replica<T> {
         .into();
 
         replica.with_stateless(|replica| {
-            transport.register(&***replica, {
+            transport.register(replica, {
                 let replica = replica.clone();
                 move |remote, buffer| {
                     if replica.verifying_key.contains_key(&remote) {
@@ -288,8 +288,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                         // maybe not a good idea to serialize in stateful path
                         // I don't want to store binary message in replica state
                         // and the serailization should be blazing fast
-                        self.transport
-                            .send_message(&**self, &remote, serialize(reply));
+                        self.transport.send_message(self, &remote, serialize(reply));
                     }
                     _ => {}
                 }
@@ -299,7 +298,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         let primary = self.transport.config().view_primary(self.view_number);
         if self.id != primary {
             self.transport.send_message_to_replica(
-                &**self,
+                self,
                 primary,
                 serialize(ToReplica::RelayedRequest(message)),
             );
@@ -339,15 +338,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             };
 
             let pre_prepare = SignedMessage::sign(pre_prepare, &replica.signing_key);
-            replica
-                .transport
-                .send_message_to_all(&***replica, |buffer| {
-                    let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
-                    (&mut buffer[offset as usize..])
-                        .write(&batch_buffer)
-                        .unwrap();
-                    offset + batch_buffer.len() as u16
-                });
+            replica.transport.send_message_to_all(replica, |buffer| {
+                let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
+                (&mut buffer[offset as usize..])
+                    .write(&batch_buffer)
+                    .unwrap();
+                offset + batch_buffer.len() as u16
+            });
 
             replica.submit.stateful(move |replica| {
                 // TODO check view and status
@@ -416,7 +413,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         self.submit.stateless(move |replica| {
             let signed_prepare = SignedMessage::sign(prepare.clone(), &replica.signing_key);
             replica.transport.send_message_to_all(
-                &***replica,
+                replica,
                 serialize(ToReplica::Prepare(signed_prepare.clone())),
             );
 
@@ -474,7 +471,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             let commit = commit.clone();
             self.submit.stateless(move |replica| {
                 replica.transport.send_message_to_all(
-                    &***replica,
+                    replica,
                     serialize(ToReplica::Commit(SignedMessage::sign(
                         commit,
                         &replica.signing_key,
@@ -540,7 +537,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                         if let Some(remote) = replica.route_table.get(&request.client_id) {
                             replica
                                 .transport
-                                .send_message(&**replica, remote, serialize(reply));
+                                .send_message(replica, remote, serialize(reply));
                         } else {
                             info!("no route record, skip reply");
                         }
