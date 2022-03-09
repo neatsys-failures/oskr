@@ -31,6 +31,10 @@ struct rte_mbuf *oskr_pktmbuf_alloc(struct rte_mempool *mp)
     return rte_pktmbuf_alloc(mp);
 }
 
+int oskr_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs, unsigned count) {
+    return rte_pktmbuf_alloc_bulk(pool, mbufs, count);
+}
+
 void oskr_pktmbuf_free(struct rte_mbuf *m)
 {
     rte_pktmbuf_free(m);

@@ -61,6 +61,11 @@ extern "C" {
     // by DPDK shim
     // the "rte_*" prefix is replaced to "oskr_*" to indicate symbol's owner
     pub fn oskr_pktmbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
+    pub fn oskr_pktmbuf_alloc_bulk(
+        pool: NonNull<rte_mempool>,
+        mbufs: NonNull<*mut rte_mbuf>,
+        count: c_uint,
+    ) -> c_int;
     pub fn oskr_pktmbuf_free(m: NonNull<rte_mbuf>);
     pub fn oskr_eth_rx_burst(
         port_id: u16,

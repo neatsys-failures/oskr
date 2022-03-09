@@ -2,8 +2,9 @@ use std::{
     collections::HashMap,
     env,
     ffi::CString,
+    intrinsics::copy_nonoverlapping,
     mem::MaybeUninit,
-    os::raw::{c_char, c_int},
+    os::raw::{c_char, c_int, c_uint},
     ptr::NonNull,
     sync::Arc,
 };
@@ -11,9 +12,9 @@ use std::{
 use crate::{
     dpdk_shim::{
         oskr_eth_rx_burst, oskr_eth_tx_burst, oskr_lcore_id, oskr_mbuf_default_buf_size,
-        oskr_pktmbuf_alloc, rte_eal_init, rte_eth_dev_socket_id, rte_eth_macaddr_get,
-        rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create, rte_socket_id, setup_port,
-        Address, RxBuffer,
+        oskr_pktmbuf_alloc, oskr_pktmbuf_alloc_bulk, rte_eal_init, rte_eth_dev_socket_id,
+        rte_eth_macaddr_get, rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
+        rte_socket_id, setup_port, Address, RxBuffer,
     },
     transport::{self, Config, Receiver},
 };
@@ -60,7 +61,61 @@ impl transport::TxAgent for TxAgent {
         source: &impl Receiver<Self::Transport>,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
-        todo!()
+        let dest_list: Vec<_> = self
+            .config
+            .replica_address
+            .iter()
+            .filter(|dest| *dest == source.get_address())
+            .collect();
+        if dest_list.is_empty() {
+            return;
+        }
+        assert!(dest_list.len() <= 32); // TODO
+
+        let mbuf_list = unsafe {
+            let mut mbuf_list: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
+            let ret = oskr_pktmbuf_alloc_bulk(
+                self.mbuf_pool,
+                NonNull::new(mbuf_list.as_mut_ptr() as *mut _).unwrap(),
+                dest_list.len() as c_uint,
+            );
+            assert_eq!(ret, 0);
+            &mbuf_list.assume_init()[..dest_list.len()]
+        };
+
+        let sample_mbuf = NonNull::new(mbuf_list[0]).unwrap();
+        let sample_data = unsafe { rte_mbuf::get_data(sample_mbuf) };
+        let length = message(unsafe { rte_mbuf::get_tx_buffer(sample_data) });
+
+        let mut mbuf_list: Vec<_> = mbuf_list
+            .iter()
+            .zip(dest_list)
+            .enumerate()
+            .map(|(i, (mbuf, dest))| unsafe {
+                let (mbuf, data) = if i == 0 {
+                    rte_mbuf::set_source(sample_data, source.get_address());
+                    (sample_mbuf, sample_data)
+                } else {
+                    let mbuf = NonNull::new(*mbuf).unwrap();
+                    let mut data = rte_mbuf::get_data(mbuf);
+                    copy_nonoverlapping(sample_data.as_ptr(), data.as_mut(), length as usize + 16);
+                    (mbuf, data)
+                };
+                rte_mbuf::set_dest(data, dest);
+                mbuf
+            })
+            .collect();
+
+        let queue_id = Transport::worker_id() as u16;
+        let ret = unsafe {
+            oskr_eth_tx_burst(
+                self.port_id,
+                queue_id,
+                mbuf_list.first_mut().unwrap().into(),
+                mbuf_list.len() as u16,
+            )
+        };
+        assert_eq!(ret, mbuf_list.len() as u16);
     }
 }
 
