@@ -2,12 +2,14 @@ use std::{
     collections::HashMap,
     fmt::{self, Debug, Formatter},
     future::Future,
+    io::Write,
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
 };
 
 use futures::future::BoxFuture;
+use k256::ecdsa::SigningKey;
 use rand::{thread_rng, Rng};
 use tokio::{
     select, spawn,
@@ -145,12 +147,23 @@ impl transport::Transport for Transport {
 
 impl Transport {
     pub fn new(n_replica: usize, n_fault: usize) -> Self {
-        let config = Config {
+        let mut config: Config<Self> = Config {
             replica_address: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
             multicast_address: None, // TODO
             n_fault,
-            signing_key: HashMap::new(), // TODO
+            signing_key: Default::default(),
         };
+        for address in &config.replica_address {
+            let mut signing_key = [0; 32];
+            signing_key
+                .as_mut_slice()
+                .write(address.as_bytes())
+                .unwrap();
+            config.signing_key.insert(
+                address.clone(),
+                SigningKey::from_bytes(&signing_key).unwrap(),
+            );
+        }
         let (tx, rx) = unbounded_channel();
         Self {
             rx,

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod signed;
 pub use signed::SignedMessage;
+use tracing::debug;
 
 pub type ReplicaId = u8;
 pub type ClientId = [u8; 4];
@@ -46,7 +47,10 @@ pub fn deserialize<M: for<'a> Deserialize<'a>>(reader: impl Read) -> Result<M, M
     bincode::DefaultOptions::new()
         .allow_trailing_bytes()
         .deserialize_from(reader)
-        .map_err(|_| MalformedMessage)
+        .map_err(|err| {
+            debug!("deserailize error: {}", err);
+            MalformedMessage
+        })
 }
 
 pub fn serialize<M: Serialize, T: ?Sized>(message: M) -> impl FnOnce(&mut T) -> u16

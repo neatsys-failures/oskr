@@ -246,7 +246,8 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             Ok(ToReplica::Commit(commit)) => {
                 if let Ok(commit) = commit.verify(verifying_key) {
                     self.submit
-                        .stateful(|replica| replica.handle_commit(remote, commit))
+                        .stateful(|replica| replica.handle_commit(remote, commit));
+                    return;
                 }
             }
             _ => {}
@@ -281,6 +282,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                     }
                     _ => {}
                 }
+                return;
             }
         }
 
@@ -427,7 +429,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             // TODO state transfer
             return;
         }
-        assert!(!self.is_primary());
 
         if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());

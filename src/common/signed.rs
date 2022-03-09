@@ -16,7 +16,10 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedMessage<M> {
     inner: Vec<u8>,
-    signature: Signature, // do I want to generalize signing algorithm?
+    // it seems like `Signature` has a buggy serde implementation, which cannot
+    // work well with bincode's `deserialize_from`
+    // signature: Signature, // do I want to generalize signing algorithm?
+    signature: Vec<u8>,
     _marker: PhantomData<M>,
 }
 
@@ -52,10 +55,10 @@ impl<M> SignedMessage<M> {
         M: Serialize,
     {
         let inner = bincode::DefaultOptions::new().serialize(&message).unwrap();
-        let signature = key.sign(&inner);
+        let signature: Signature = key.sign(&inner);
         Self {
             inner,
-            signature,
+            signature: signature.to_vec(),
             _marker: PhantomData,
         }
     }
@@ -64,7 +67,12 @@ impl<M> SignedMessage<M> {
     where
         M: for<'a> Deserialize<'a>,
     {
-        if key.verify(&self.inner, &self.signature).is_ok() {
+        let signature: Signature = if let Ok(signature) = self.signature[..].try_into() {
+            signature
+        } else {
+            return Err(InauthenticMessage);
+        };
+        if key.verify(&self.inner, &signature).is_ok() {
             if let Ok(message) = bincode::DefaultOptions::new().deserialize(&self.inner) {
                 return Ok(VerifiedMessage(message, self));
             }

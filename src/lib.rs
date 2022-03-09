@@ -52,7 +52,11 @@ pub trait AsyncExecutor<'a, T> {
 #[cfg(test)]
 pub mod tests {
     use lazy_static::lazy_static;
+
     lazy_static! {
-        pub static ref TRACING: () = tracing_subscriber::fmt::init();
+        pub static ref TRACING: () = {
+            tracing_subscriber::fmt::init();
+            // panic_abort();
+        };
     }
 }
