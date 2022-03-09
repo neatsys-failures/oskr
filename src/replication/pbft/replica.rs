@@ -15,8 +15,7 @@ use crate::{
     },
     replication::pbft::message::{self, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},
-    transport::Transport,
-    transport::{Receiver, TxAgent},
+    transport::{Receiver, Transport, TxAgent},
     App,
 };
 
@@ -105,6 +104,10 @@ impl<T: Transport> Replica<T> {
             } else {
                 false
             }
+    }
+
+    fn is_primary(&self) -> bool {
+        self.transport.config().view_primary(self.view_number) == self.id
     }
 }
 
@@ -199,15 +202,8 @@ impl<T: Transport> Replica<T> {
 
 impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
-        let to_replica: Result<ToReplica, _> = deserialize(buffer.as_ref());
-        let to_replica = if let Ok(to_replica) = to_replica {
-            to_replica
-        } else {
-            warn!("receive malformed client message");
-            return;
-        };
-        match to_replica {
-            ToReplica::Request(request) => {
+        match deserialize(buffer.as_ref()) {
+            Ok(ToReplica::Request(request)) => {
                 self.handle_request(remote, request);
                 return;
             }
@@ -220,21 +216,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         let mut buffer = buffer.as_ref();
-        let to_replica: Result<ToReplica, _> = deserialize(&mut buffer);
-        let to_replica = if let Ok(to_replica) = to_replica {
-            to_replica
-        } else {
-            warn!("receive malformed replica message");
-            return;
-        };
         let verifying_key = &self.verifying_key[&remote];
-        match to_replica {
-            ToReplica::RelayedRequest(request) => {
+        match deserialize(&mut buffer) {
+            Ok(ToReplica::RelayedRequest(request)) => {
                 self.submit
                     .stateful(|replica| replica.handle_relayed_request(remote, request));
                 return;
             }
-            ToReplica::PrePrepare(pre_prepare) => {
+            Ok(ToReplica::PrePrepare(pre_prepare)) => {
                 if let Ok(pre_prepare) = pre_prepare.verify(verifying_key) {
                     if Sha256::digest(buffer)[..] == pre_prepare.digest {
                         let batch: Result<Vec<message::Request>, _> = deserialize(buffer);
@@ -247,14 +236,14 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                     }
                 }
             }
-            ToReplica::Prepare(prepare) => {
+            Ok(ToReplica::Prepare(prepare)) => {
                 if let Ok(prepare) = prepare.verify(verifying_key) {
                     self.submit
                         .stateful(|replica| replica.handle_prepare(remote, prepare));
                     return;
                 }
             }
-            ToReplica::Commit(commit) => {
+            Ok(ToReplica::Commit(commit)) => {
                 if let Ok(commit) = commit.verify(verifying_key) {
                     self.submit
                         .stateful(|replica| replica.handle_commit(remote, commit))
@@ -312,7 +301,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     }
 
     fn close_batch(&mut self) {
-        assert!(self.transport.config().view_primary(self.view_number) == self.id);
+        assert!(self.is_primary());
         if self.batch_size == 0 {
             return;
         }
@@ -372,7 +361,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             // TODO state transfer
             return;
         }
-        assert!(self.transport.config().view_primary(self.view_number) != self.id);
+        assert!(!self.is_primary());
 
         if self.log.len() as OpNumber >= message.op_number
             || self.reorder_log.contains_key(&message.op_number)
@@ -431,10 +420,19 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     }
 
     fn handle_prepare(&mut self, _remote: T::Address, message: VerifiedMessage<message::Prepare>) {
+        if message.view_number < self.view_number {
+            return;
+        }
+        if message.view_number > self.view_number {
+            // TODO state transfer
+            return;
+        }
+        assert!(!self.is_primary());
+
         if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());
         } else {
-            // send commit to late prepare?
+            // send commit for late prepare?
         }
     }
 
@@ -485,6 +483,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     }
 
     fn handle_commit(&mut self, _remote: T::Address, message: VerifiedMessage<message::Commit>) {
+        if message.view_number < self.view_number {
+            return;
+        }
+        if message.view_number > self.view_number {
+            // TODO state transfer
+            return;
+        }
+
         if !self.committed(message.op_number) {
             self.insert_commit(&*message);
         }
