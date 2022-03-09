@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bincode::Options;
+use futures::future::join_all;
 use tokio::{spawn, time::timeout};
 
 use crate::{
@@ -60,4 +61,31 @@ async fn one_request() {
         .unwrap(),
         b"reply: hello".to_vec()
     );
+}
+
+#[tokio::test(start_paused = true)]
+async fn multiple_client() {
+    *TRACING;
+    let mut transport = Transport::new(4, 1);
+    for i in 0..4 {
+        Replica::register_new(&mut transport, i, App::default(), 1);
+    }
+    let client: Vec<_> = (0..3)
+        .map(|i| {
+            let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+            spawn(async move {
+                assert_eq!(
+                    client
+                        .invoke(format!("client-{}", i).as_bytes().to_vec())
+                        .await,
+                    format!("reply: client-{}", i).as_bytes().to_vec()
+                );
+            })
+        })
+        .collect();
+
+    spawn(async move { transport.deliver(Duration::from_millis(1001)).await });
+    timeout(Duration::from_millis(1001), join_all(client))
+        .await
+        .unwrap();
 }

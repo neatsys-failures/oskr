@@ -5,7 +5,7 @@ use std::{
 };
 
 use sha2::{Digest as _, Sha256};
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 use crate::{
     common::{
@@ -85,6 +85,7 @@ impl<T: Transport> Replica<T> {
     }
 
     // committed-local, actually
+    #[allow(clippy::int_plus_one)] // I want to follow PBFT paper, preceisely
     fn committed(&self, op_number: OpNumber) -> bool {
         // a little bit duplicated, but I accept that
         let quorum_key = if let Some(item) = self.log_item(op_number) {
@@ -201,14 +202,15 @@ impl<T: Transport> Replica<T> {
 
 impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
+        #[allow(clippy::single_match)]
         match deserialize(buffer.as_ref()) {
             Ok(ToReplica::Request(request)) => {
                 self.handle_request(remote, request);
                 return;
             }
-
-            _ => warn!("receive unexpected client message"),
+            _ => {}
         }
+        warn!("receive unexpected client message");
     }
 }
 
@@ -271,15 +273,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 return;
             }
             if *request_number == message.request_number {
-                match (remote, reply) {
-                    (Some(remote), Some(reply)) => {
-                        let reply = reply.clone();
-                        // maybe not a good idea to serialize in stateful path
-                        // I don't want to store binary message in replica state
-                        // and the serailization should be blazing fast
-                        self.transport.send_message(self, &remote, serialize(reply));
-                    }
-                    _ => {}
+                if let (Some(remote), Some(reply)) = (remote, reply) {
+                    let reply = reply.clone();
+                    // maybe not a good idea to serialize in stateful path
+                    // I don't want to store binary message in replica state
+                    // and the serailization should be blazing fast
+                    self.transport.send_message(self, &remote, serialize(reply));
                 }
                 return;
             }
@@ -331,7 +330,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             replica.transport.send_message_to_all(replica, |buffer| {
                 let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
                 (&mut buffer[offset as usize..])
-                    .write(&batch_buffer)
+                    .write_all(&batch_buffer)
                     .unwrap();
                 offset + batch_buffer.len() as u16
             });
@@ -545,7 +544,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                                 .transport
                                 .send_message(replica, remote, serialize(reply));
                         } else {
-                            info!("no route record, skip reply");
+                            debug!("no route record, skip reply");
                         }
                     });
                 });

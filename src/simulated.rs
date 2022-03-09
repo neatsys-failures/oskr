@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fmt::{self, Debug, Formatter},
+    fmt::Debug,
     future::Future,
     io::Write,
     ops::{Deref, DerefMut},
@@ -39,12 +39,6 @@ pub struct Transport {
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 type FilterTable =
     HashMap<u32, Box<dyn Fn(&Address, &Address, &[u8], &mut Duration) -> bool + Send>>;
-
-impl Debug for Transport {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "(simulated)")
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct RxBuffer(Message);
@@ -174,25 +168,27 @@ impl Transport {
         }
     }
 
-    pub fn client_timeout() -> BoxFuture<'static, ()> {
-        // configurable?
-        Box::pin(sleep(Duration::from_millis(1000)))
-    }
-
-    #[tracing::instrument]
     pub async fn deliver(&mut self, duration: Duration) {
-        let deadline = Instant::now() + duration;
+        let start = Instant::now();
+        let deadline = start + duration;
         loop {
             select! {
                 _ = sleep_until(deadline) => break,
                 Some((source, dest, message, filtered)) = self.rx.recv() => {
-                    self.deliver_internal(source, dest, message, filtered);
+                    self.deliver_internal(source, dest, message, filtered, start);
                }
             }
         }
     }
 
-    fn deliver_internal(&self, source: Address, dest: Address, message: Message, filtered: bool) {
+    fn deliver_internal(
+        &self,
+        source: Address,
+        dest: Address,
+        message: Message,
+        filtered: bool,
+        start: Instant,
+    ) {
         if filtered {
             (self.recv_table.get(&dest).unwrap())(source, RxBuffer(message));
             return;
@@ -207,7 +203,8 @@ impl Transport {
             }
         }
         trace!(
-            "{} -> {} [message size = {}] {}",
+            "{:?} {} -> {} [message size = {}] {}",
+            Instant::now() - start,
             source,
             dest,
             message.len(),
