@@ -86,7 +86,7 @@ impl<T: Transport> Replica<T> {
 
     // committed-local, actually
     fn committed(&self, op_number: OpNumber, n_fault: usize) -> bool {
-        // a little bit duplicated, but I accept
+        // a little bit duplicated, but I accept that
         let quorum_key = if let Some(item) = self.log_item(op_number) {
             &item.quorum_key
         } else {
@@ -179,10 +179,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         };
         match to_replica {
             ToReplica::Request(request) => {
-                self.route_table
-                    .entry(request.client_id)
-                    .or_insert(remote.clone());
-                self.handle_request(Some(remote), request);
+                self.handle_request(remote, request);
                 return;
             }
 
@@ -204,12 +201,8 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
         let verifying_key = &shared.verifying_key[&remote];
         match to_replica {
             ToReplica::RelayedRequest(request) => {
-                self.submit.stateful(|replica| {
-                    replica.handle_request(
-                        replica.route_table.get(&request.client_id).cloned(),
-                        request,
-                    )
-                });
+                self.submit
+                    .stateful(|replica| replica.handle_relayed_request(remote, request));
                 return;
             }
             ToReplica::PrePrepare(pre_prepare) => {
@@ -245,7 +238,16 @@ impl<T: Transport> StatelessContext<Replica<T>, T> {
 }
 
 impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
-    fn handle_request(&mut self, remote: Option<T::Address>, message: message::Request) {
+    fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+        self.route_table.insert(message.client_id, remote.clone());
+        self.handle_request_internal(Some(remote), message);
+    }
+
+    fn handle_relayed_request(&mut self, _remote: T::Address, message: message::Request) {
+        self.handle_request_internal(self.route_table.get(&message.client_id).cloned(), message);
+    }
+
+    fn handle_request_internal(&mut self, remote: Option<T::Address>, message: message::Request) {
         if let Some((request_number, reply)) = self.client_table.get(&message.client_id) {
             if *request_number > message.request_number {
                 return;

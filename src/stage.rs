@@ -3,87 +3,80 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
-use crate::transport::{Receiver, Transport};
-
-pub struct Handle<State, T: Transport> {
-    state: Mutex<State>,
-    transport: T::TxAgent,
-    address: T::Address,
-    submit: Arc<Submit<State, T>>,
+pub trait State {
+    type Shared: Clone + Send;
+    fn shared(&self) -> Self::Shared;
 }
 
-pub struct StatefulContext<'a, State, T: Transport> {
-    state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
-    address: T::Address,
-    pub submit: Arc<Submit<State, T>>,
+pub struct Handle<S: State> {
+    state: Mutex<S>,
+    shared: S::Shared,
+    submit: Arc<Submit<S>>,
 }
 
-pub struct StatelessContext<State, T: Transport> {
-    pub transport: T::TxAgent,
-    address: T::Address,
-    pub submit: Arc<Submit<State, T>>,
+pub struct StatefulContext<'a, S: State> {
+    state: MutexGuard<'a, S>,
+    pub submit: Arc<Submit<S>>,
 }
 
-pub struct Submit<State, T: Transport> {
-    stateful_list: Mutex<Vec<StatefulTask<State, T>>>,
-    stateless_list: Mutex<Vec<StatelessTask<State, T>>>,
+pub struct StatelessContext<S: State> {
+    shared: S::Shared,
+    pub submit: Arc<Submit<S>>,
 }
-type StatefulTask<S, T> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send>;
-type StatelessTask<S, T> = Box<dyn FnOnce(&StatelessContext<S, T>) + Send>;
 
-impl<S, T: Transport> Handle<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+pub struct Submit<S: State> {
+    stateful_list: Mutex<Vec<StatefulTask<S>>>,
+    stateless_list: Mutex<Vec<StatelessTask<S>>>,
+}
+type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
+type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
+
+impl<S: State> From<S> for Handle<S> {
+    fn from(state: S) -> Self {
         Self {
+            shared: state.shared(),
             state: Mutex::new(state),
-            transport,
-            address,
             submit: Arc::new(Submit {
                 stateful_list: Mutex::new(Vec::new()),
                 stateless_list: Mutex::new(Vec::new()),
             }),
         }
     }
+}
 
-    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
+impl<S: State> Handle<S> {
+    pub fn with_stateful(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
         f(&StatefulContext {
             state: self.state.lock().unwrap(),
-            transport: self.transport.clone(),
-            address: self.address.clone(),
             submit: self.submit.clone(),
         })
     }
 }
 
-impl<'a, S, T: Transport> Receiver<T> for StatefulContext<'a, S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.address
-    }
-}
-
-impl<S, T: Transport> Receiver<T> for StatelessContext<S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.address
-    }
-}
-
-impl<'a, S, T: Transport> Deref for StatefulContext<'a, S, T> {
+impl<'a, S: State> Deref for StatefulContext<'a, S> {
     type Target = S;
     fn deref(&self) -> &Self::Target {
         &*self.state
     }
 }
 
-impl<'a, S, T: Transport> DerefMut for StatefulContext<'a, S, T> {
+impl<'a, S: State> DerefMut for StatefulContext<'a, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.state
     }
 }
 
-impl<S, T: Transport> Submit<S, T> {
+impl<S: State> Deref for StatelessContext<S> {
+    type Target = S::Shared;
+    fn deref(&self) -> &Self::Target {
+        &self.shared
+    }
+}
+
+impl<S: State> Submit<S> {
     pub fn stateful(
         &self,
-        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
+        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static,
     ) {
         loop {
             if let Ok(stateful_list) = self.stateful_list.try_lock() {
@@ -93,7 +86,7 @@ impl<S, T: Transport> Submit<S, T> {
         .push(Box::new(task));
     }
 
-    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S, T>) + Send + 'static) {
+    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static) {
         loop {
             if let Ok(stateless_list) = self.stateless_list.try_lock() {
                 break stateless_list;
@@ -103,13 +96,13 @@ impl<S, T: Transport> Submit<S, T> {
     }
 }
 
-enum Task<'a, S, T: Transport> {
-    Stateful(StatefulTask<S, T>, StatefulContext<'a, S, T>),
-    Stateless(StatelessTask<S, T>, StatelessContext<S, T>),
+enum Task<'a, S: State> {
+    Stateful(StatefulTask<S>, StatefulContext<'a, S>),
+    Stateless(StatelessTask<S>, StatelessContext<S>),
 }
 
-impl<S, T: Transport> Handle<S, T> {
-    fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S, T>) -> Task<'_, S, T> {
+impl<S: State> Handle<S> {
+    fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S>) -> Task<'_, S> {
         loop {
             let mut stateful_list = loop {
                 if let Ok(stateful_list) = self.submit.stateful_list.try_lock() {
@@ -128,11 +121,10 @@ impl<S, T: Transport> Handle<S, T> {
             };
             if let Some(task) = stateless_list.pop() {
                 let context = StatelessContext {
-                    transport: context.transport,
-                    address: context.address,
+                    shared: self.shared.clone(),
                     submit: context.submit,
-                    // state dropped
                 };
+                // state dropped
                 return Task::Stateless(task, context);
             }
             drop(stateless_list);
@@ -141,7 +133,7 @@ impl<S, T: Transport> Handle<S, T> {
         }
     }
 
-    fn steal_without_state(&self, context: StatelessContext<S, T>) -> Task<'_, S, T> {
+    fn steal_without_state(&self, context: StatelessContext<S>) -> Task<'_, S> {
         loop {
             let mut stateless_list = loop {
                 if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
@@ -156,8 +148,6 @@ impl<S, T: Transport> Handle<S, T> {
             if let Ok(state) = self.state.try_lock() {
                 let context = StatefulContext {
                     state,
-                    transport: context.transport,
-                    address: context.address,
                     submit: context.submit,
                 };
                 return self.steal_with_state(context);
@@ -169,8 +159,7 @@ impl<S, T: Transport> Handle<S, T> {
 
     pub fn run_worker(&self) {
         let context = StatelessContext {
-            transport: self.transport.clone(),
-            address: self.address.clone(),
+            shared: self.shared.clone(),
             submit: self.submit.clone(),
         };
         let mut steal = self.steal_without_state(context);

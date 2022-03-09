@@ -5,7 +5,7 @@ use oskr::{
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
-    stage::Handle,
+    stage::{Handle, State},
     transport::Config,
     App,
 };
@@ -36,12 +36,12 @@ fn main() {
         NullApp,
     ));
 
-    struct WorkerData<Replica> {
-        replica: Arc<Handle<Replica, Transport>>,
+    struct WorkerData<Replica: State> {
+        replica: Arc<Handle<Replica>>,
         n_worker: usize,
     }
     let worker_data = WorkerData { replica, n_worker };
-    extern "C" fn worker<Replica>(arg: *mut c_void) -> i32 {
+    extern "C" fn worker<Replica: State>(arg: *mut c_void) -> i32 {
         let worker_data: &WorkerData<Replica> = unsafe { &*(arg as *mut _) };
         let replica = worker_data.replica.clone();
         let n_worker = worker_data.n_worker;
@@ -61,7 +61,7 @@ fn main() {
 
     unsafe {
         rte_eal_mp_remote_launch(
-            worker::<unreplicated::Replica>,
+            worker::<unreplicated::Replica<Transport>>,
             &worker_data as *const _ as *mut _,
             rte_rmt_call_main_t::SKIP_MAIN,
         );

@@ -17,8 +17,8 @@ use crate::{
     common::{
         deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
     },
-    stage::{Handle, StatefulContext},
-    transport::{self, Transport, TxAgent},
+    stage::{Handle, State, StatefulContext},
+    transport::{self, Receiver, Transport, TxAgent},
     App, AsyncExecutor, Invoke,
 };
 
@@ -122,32 +122,46 @@ where
     }
 }
 
-pub struct Replica {
+pub struct Replica<T: Transport> {
+    address: T::Address,
+    transport: T::TxAgent,
+
     op_number: OpNumber,
     client_table: HashMap<ClientId, ReplyMessage>,
     app: Box<dyn App + Send>,
 }
 
-impl Replica {
-    pub fn register_new<T: Transport>(
+impl<T: Transport> State for Replica<T> {
+    type Shared = ();
+    fn shared(&self) -> Self::Shared {}
+}
+
+impl<T: Transport> Receiver<T> for Replica<T> {
+    fn get_address(&self) -> &T::Address {
+        &self.address
+    }
+}
+
+impl<T: Transport> Replica<T> {
+    pub fn register_new(
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
-    ) -> Handle<Self, T> {
+    ) -> Handle<Self> {
         assert_eq!(replica_id, 0);
-        let replica = Handle::new(
-            transport.tx_agent(),
-            transport.tx_agent().config().replica_address[0].clone(),
-            Self {
-                app: Box::new(app),
-                op_number: 0,
-                client_table: HashMap::new(),
-            },
-        );
+        let replica: Handle<_> = Self {
+            address: transport.tx_agent().config().replica_address[0].clone(),
+            transport: transport.tx_agent(),
 
-        replica.with_state(|replica| {
+            app: Box::new(app),
+            op_number: 0,
+            client_table: HashMap::new(),
+        }
+        .into();
+
+        replica.with_stateful(|replica| {
             let submit = replica.submit.clone();
-            transport.register(replica, move |remote, buffer| {
+            transport.register(&**replica, move |remote, buffer| {
                 submit.stateful(move |replica| replica.receive_buffer(remote, buffer))
             });
         });
@@ -155,7 +169,8 @@ impl Replica {
     }
 }
 
-impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
+// can also impl to Replica<T> directly since no submit
+impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
         let request: RequestMessage = deserialize(buffer.as_ref()).unwrap();
         if let Some(reply) = self.client_table.get(&request.client_id) {
@@ -163,7 +178,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
                 return;
             }
             if reply.request_number == request.request_number {
-                self.transport.send_message(self, &remote, serialize(reply));
+                self.transport
+                    .send_message(&**self, &remote, serialize(reply));
                 return;
             }
         }
@@ -175,7 +191,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica, T> {
             result,
         };
         self.client_table.insert(request.client_id, reply.clone());
-        self.transport.send_message(self, &remote, serialize(reply));
+        self.transport
+            .send_message(&**self, &remote, serialize(reply));
     }
 }
 

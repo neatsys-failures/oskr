@@ -19,7 +19,10 @@ use tokio::{
 };
 use tracing::trace;
 
-use crate::transport::{self, Config, Receiver};
+use crate::{
+    stage_prod::State,
+    transport::{self, Config, Receiver},
+};
 
 type Address = String;
 type Message = Vec<u8>;
@@ -246,104 +249,93 @@ impl Transport {
 // trait, but for Executor I decide to do conditional compiling instead of
 // trait
 // really hope this would be solved
-pub struct Handle<State, T: transport::Transport>(Submit<State, T>);
+pub struct Handle<S: State>(Submit<S>);
 
-impl<S, T: transport::Transport> Handle<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+impl<S: State> From<S> for Handle<S> {
+    fn from(state: S) -> Self {
         Self(Submit {
+            shared: state.shared(),
             state: Arc::new(Mutex::new(state)),
-            transport,
-            address,
         })
     }
+}
 
-    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
+impl<S: State> Handle<S> {
+    pub fn with_stateful(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
         f(&StatefulContext {
             state: self.0.state.try_lock().unwrap(),
-            transport: self.0.transport.clone(),
             submit: self.0.clone(),
         });
     }
 }
 
-pub struct StatefulContext<'a, State, T: transport::Transport> {
-    state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
-    pub submit: Submit<State, T>,
+pub struct StatefulContext<'a, S: State> {
+    state: MutexGuard<'a, S>,
+    pub submit: Submit<S>,
 }
 
-pub struct StatelessContext<State, T: transport::Transport> {
-    pub transport: T::TxAgent,
-    pub submit: Submit<State, T>,
+pub struct StatelessContext<S: State> {
+    shared: S::Shared,
+    pub submit: Submit<S>,
 }
 
-impl<'a, S, T: transport::Transport> Receiver<T> for StatefulContext<'a, S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.submit.address
-    }
-}
-
-impl<S, T: transport::Transport> Receiver<T> for StatelessContext<S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.submit.address
-    }
-}
-
-impl<'a, S, T: transport::Transport> Deref for StatefulContext<'a, S, T> {
+impl<'a, S: State> Deref for StatefulContext<'a, S> {
     type Target = S;
     fn deref(&self) -> &Self::Target {
         &*self.state
     }
 }
 
-impl<'a, S, T: transport::Transport> DerefMut for StatefulContext<'a, S, T> {
+impl<'a, S: State> DerefMut for StatefulContext<'a, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.state
     }
 }
 
-pub struct Submit<State, T: transport::Transport> {
-    state: Arc<Mutex<State>>,
-    transport: T::TxAgent,
-    address: T::Address,
+impl<S: State> Deref for StatelessContext<S> {
+    type Target = S::Shared;
+    fn deref(&self) -> &Self::Target {
+        &self.shared
+    }
 }
 
-impl<S, T: transport::Transport> Clone for Submit<S, T> {
+pub struct Submit<S: State> {
+    state: Arc<Mutex<S>>,
+    shared: S::Shared,
+}
+
+impl<S: State> Clone for Submit<S> {
     fn clone(&self) -> Self {
         Self {
             state: self.state.clone(),
-            transport: self.transport.clone(),
-            address: self.address.clone(),
+            shared: self.shared.clone(),
         }
     }
 }
 
-impl<S, T: transport::Transport> Submit<S, T> {
-    pub fn stateful(
-        &self,
-        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
-    ) where
+impl<S: State> Submit<S> {
+    pub fn stateful(&self, task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static)
+    where
         S: Send + 'static,
     {
         let submit = self.clone();
         spawn(async move {
             task(&mut StatefulContext {
                 state: submit.state.lock().await,
-                transport: submit.transport.clone(),
                 submit: submit.clone(),
             });
         });
     }
 
-    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S, T>) + Send + 'static)
+    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static)
     where
         S: Send + 'static,
     {
         let submit = self.clone();
         spawn(async move {
             task(&StatelessContext {
-                transport: submit.transport.clone(),
                 submit: submit.clone(),
+                shared: submit.shared,
             });
         });
     }

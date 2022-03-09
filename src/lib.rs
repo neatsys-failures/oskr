@@ -13,14 +13,18 @@ pub mod simulated;
 #[cfg(not(test))]
 pub mod stage;
 #[cfg(test)]
+#[path = "stage.rs"]
+pub mod stage_prod; // for production
+#[cfg(test)]
 pub mod stage {
     pub use crate::simulated::{Handle, StatefulContext, StatelessContext, Submit};
+    pub use crate::stage_prod::State;
 }
 
 pub mod common;
 
 pub mod replication {
-    pub mod pbft;
+    // pub mod pbft;
     pub mod unreplicated;
 }
 
