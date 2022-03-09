@@ -11,7 +11,7 @@ use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
 pub mod signed;
-pub use signed::SignedMessage;
+pub use signed::{SignedMessage, SigningKey, VerifyingKey};
 use tracing::debug;
 
 pub type ReplicaId = u8;

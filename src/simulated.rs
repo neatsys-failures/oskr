@@ -9,7 +9,6 @@ use std::{
 };
 
 use futures::future::BoxFuture;
-use k256::ecdsa::SigningKey;
 use rand::{thread_rng, Rng};
 use tokio::{
     select, spawn,
@@ -22,6 +21,7 @@ use tokio::{
 use tracing::trace;
 
 use crate::{
+    common::SigningKey,
     stage_prod::State,
     transport::{self, Config, Receiver},
 };

@@ -1,8 +1,6 @@
 use std::{collections::HashMap, hash::Hash};
 
-use k256::ecdsa::{SigningKey, VerifyingKey};
-
-use crate::common::{ReplicaId, ViewNumber};
+use crate::common::{ReplicaId, SigningKey, VerifyingKey, ViewNumber};
 
 pub trait Transport
 where

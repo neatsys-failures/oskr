@@ -8,10 +8,14 @@ use std::{
 use bincode::Options;
 use k256::ecdsa::{
     signature::{Signer, Verifier},
-    Signature, SigningKey, VerifyingKey,
+    Signature,
 };
 use serde::{Deserialize, Serialize};
 use serde_derive::{Deserialize, Serialize};
+
+// should we re-type sha2 as well?
+pub type SigningKey = k256::ecdsa::SigningKey;
+pub type VerifyingKey = k256::ecdsa::VerifyingKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedMessage<M> {

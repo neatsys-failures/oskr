@@ -4,14 +4,13 @@ use std::{
     sync::Arc,
 };
 
-use k256::ecdsa::{SigningKey, VerifyingKey};
 use sha2::{Digest as _, Sha256};
 use tracing::{debug, info, warn};
 
 use crate::{
     common::{
         deserialize, serialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId,
-        RequestNumber, SignedMessage, ViewNumber,
+        RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
     },
     replication::pbft::message::{self, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},

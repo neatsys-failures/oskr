@@ -1,12 +1,11 @@
 use std::time::Duration;
 
 use bincode::Options;
-use k256::ecdsa::SigningKey;
 use tokio::{spawn, time::timeout};
 
 use crate::{
     app::mock::App,
-    common::SignedMessage,
+    common::{SignedMessage, SigningKey},
     replication::pbft::message::{self, ToReplica},
     simulated::{AsyncExecutor, Transport},
     tests::TRACING,
