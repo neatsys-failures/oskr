@@ -22,34 +22,92 @@ use crate::{
 
 pub struct Replica<T: Transport> {
     id: ReplicaId,
-    shared: Arc<Shared<T>>,
     batch_size: usize,
 
     view_number: ViewNumber,
-    op_number: OpNumber,
+    op_number: OpNumber, // one OpNumber for a batch
     commit_number: OpNumber,
 
-    // instead of OpNumber, most data structure is keyed by Digest, because of
-    // two reasons:
-    // the implementation is built with batching from beginning, where
-    // consecutive OpNumber share the same Digest
-    // under BFT condition multiple version of message with same OpNumber can
-    // be received, making OpNumber not be unique key any more
-    digest_table: HashMap<OpNumber, Digest>,
-
-    client_table: HashMap<ClientId, (RequestNumber, Option<message::Reply>)>,
-    log: HashMap<Digest, LogItem>,
+    client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
+    log: Vec<LogItem>,
+    reorder_log: HashMap<OpNumber, LogItem>,
     batch: Vec<message::Request>,
 
-    // FIX: should be keyed with prepare/commit message digest
-    prepare_quorum: HashMap<Digest, HashMap<ReplicaId, SignedMessage<message::Prepare>>>,
-    commit_quorum: HashMap<Digest, HashSet<ReplicaId>>,
+    prepare_quorum: HashMap<QuorumKey, HashMap<ReplicaId, SignedMessage<message::Prepare>>>,
+    commit_quorum: HashMap<QuorumKey, HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
     route_table: HashMap<ClientId, T::Address>,
+
+    shared: Arc<Shared<T>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+struct QuorumKey {
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    digest: Digest,
+}
+
+impl<T: Transport> Replica<T> {
+    fn log_item(&self, op_number: OpNumber) -> Option<&LogItem> {
+        if let Some(item) = self.log.get((op_number - 1) as usize) {
+            Some(item)
+        } else if let Some(item) = self.reorder_log.get(&op_number) {
+            Some(item)
+        } else {
+            None
+        }
+    }
+
+    fn log_item_mut(&mut self, op_number: OpNumber) -> Option<&mut LogItem> {
+        if let Some(item) = self.log.get_mut((op_number - 1) as usize) {
+            Some(item)
+        } else if let Some(item) = self.reorder_log.get_mut(&op_number) {
+            Some(item)
+        } else {
+            None
+        }
+    }
+
+    // view number is decided by pre-prepare
+    fn prepared(&self, op_number: OpNumber, n_fault: usize) -> bool {
+        let quorum_key = if let Some(item) = self.log_item(op_number) {
+            &item.quorum_key
+        } else {
+            return false;
+        };
+        if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
+            prepare_quorum.len() >= n_fault * 2
+        } else {
+            false
+        }
+    }
+
+    // committed-local, actually
+    fn committed(&self, op_number: OpNumber, n_fault: usize) -> bool {
+        // a little bit duplicated, but I accept
+        let quorum_key = if let Some(item) = self.log_item(op_number) {
+            &item.quorum_key
+        } else {
+            return false;
+        };
+        let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
+            prepare_quorum.len() >= n_fault * 2
+        } else {
+            false
+        };
+        prepared
+            && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
+                commit_quorum.len() >= n_fault * 2 + 1
+            } else {
+                false
+            }
+    }
 }
 
 struct LogItem {
+    quorum_key: QuorumKey,
     batch: Vec<message::Request>,
     pre_prepare: SignedMessage<message::PrePrepare>,
     committed: bool,
@@ -79,19 +137,19 @@ impl<T: Transport> Replica<T> {
             address.clone(),
             Self {
                 id: replica_id,
-                shared: shared.clone(),
                 batch_size,
                 view_number: 0,
                 op_number: 0,
                 commit_number: 0,
                 client_table: HashMap::new(),
-                log: HashMap::new(),
+                log: Vec::new(),
+                reorder_log: HashMap::new(),
                 batch: Vec::new(),
-                digest_table: HashMap::new(),
                 prepare_quorum: HashMap::new(),
                 commit_quorum: HashMap::new(),
                 app: Box::new(app),
                 route_table: HashMap::new(),
+                shared: shared.clone(),
             },
         );
 
@@ -197,13 +255,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                     (Some(remote), Some(reply)) => {
                         let reply = reply.clone();
                         let shared = self.shared.clone();
-                        self.submit.stateless(move |replica| {
-                            replica.transport.send_message(
-                                replica,
-                                &remote,
-                                serialize(SignedMessage::sign(reply, &shared.signing_key)),
-                            );
-                        });
+                        self.transport.send_message(
+                            self,
+                            &remote,
+                            // we can sign on reference? awesome
+                            serialize(SignedMessage::sign(reply, &shared.signing_key)),
+                        );
                     }
                     _ => {}
                 }
@@ -234,12 +291,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
 
         let batch: Vec<_> = self.batch.drain(..).collect();
 
+        self.op_number += 1;
         let mut pre_prepare = message::PrePrepare {
             view_number: self.view_number,
-            op_number: self.op_number + 1,
+            op_number: self.op_number,
             digest: Default::default(),
         };
-        self.op_number += batch.len() as OpNumber;
 
         let shared = self.shared.clone();
         self.submit.stateless(move |replica| {
@@ -247,10 +304,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             serialize(batch.clone())(&mut batch_buffer);
             let digest = Sha256::digest(&batch_buffer).into();
             pre_prepare.digest = digest;
+            let quorum_key = QuorumKey {
+                view_number: pre_prepare.view_number,
+                op_number: pre_prepare.op_number,
+                digest,
+            };
 
-            let op_number = pre_prepare.op_number;
             let pre_prepare = SignedMessage::sign(pre_prepare, &shared.signing_key);
-
             replica.transport.send_message_to_all(replica, |buffer| {
                 let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
                 (&mut buffer[offset as usize..])
@@ -260,15 +320,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             });
 
             replica.submit.stateful(move |replica| {
-                replica.digest_table.insert(op_number, digest);
-                replica.log.insert(
-                    digest,
-                    LogItem {
-                        batch,
-                        pre_prepare,
-                        committed: false,
-                    },
-                );
+                // TODO check view and status
+                assert_eq!(quorum_key.op_number, replica.log.len() as OpNumber + 1);
+                replica.log.push(LogItem {
+                    quorum_key,
+                    batch,
+                    pre_prepare,
+                    committed: false,
+                });
             });
         });
     }
@@ -288,19 +347,33 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         }
         assert!(self.transport.config().view_primary(self.view_number) != self.id);
 
-        if self.digest_table.contains_key(&message.op_number) {
+        if self.log.len() as OpNumber >= message.op_number
+            || self.reorder_log.contains_key(&message.op_number)
+        {
             return;
         }
 
-        self.digest_table.insert(message.op_number, message.digest);
-        self.log.insert(
-            message.digest,
-            LogItem {
-                batch,
-                pre_prepare: message.signed_message().clone(),
-                committed: false,
-            },
-        );
+        let quorum_key = QuorumKey {
+            view_number: message.view_number,
+            op_number: message.op_number,
+            digest: message.digest,
+        };
+        let item = LogItem {
+            quorum_key,
+            batch,
+            pre_prepare: message.signed_message().clone(),
+            committed: false,
+        };
+        if message.op_number != self.log.len() as OpNumber + 1 {
+            self.reorder_log.insert(message.op_number, item);
+        } else {
+            self.log.push(item);
+            let mut insert_number = self.log.len() as OpNumber + 1;
+            while let Some(item) = self.reorder_log.remove(&insert_number) {
+                self.log.push(item);
+                insert_number += 1;
+            }
+        }
 
         let prepare = message::Prepare {
             view_number: self.view_number,
@@ -331,13 +404,17 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
         prepare: &message::Prepare,
         signed_message: &SignedMessage<message::Prepare>,
     ) {
-        let prepare_quorum = self.prepare_quorum.entry(prepare.digest).or_default();
-        prepare_quorum.insert(prepare.replica_id, signed_message.clone());
+        let quorum_key = QuorumKey {
+            view_number: prepare.view_number,
+            op_number: prepare.op_number,
+            digest: prepare.digest,
+        };
+        self.prepare_quorum
+            .entry(quorum_key)
+            .or_default()
+            .insert(prepare.replica_id, signed_message.clone());
 
-        let prepare_quorum = prepare_quorum.len();
-        if self.log.contains_key(&prepare.digest)
-            && prepare_quorum == 2 * self.transport.config().n_fault
-        {
+        if self.prepared(prepare.op_number, self.transport.config().n_fault) {
             debug!("prepared");
 
             let commit = message::Commit {
@@ -370,27 +447,34 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
     }
 
     fn insert_commit(&mut self, commit: &message::Commit) {
-        let commit_quorum = self.commit_quorum.entry(commit.digest).or_default();
-        commit_quorum.insert(commit.replica_id);
+        let quorum_key = QuorumKey {
+            view_number: commit.view_number,
+            op_number: commit.op_number,
+            digest: commit.digest,
+        };
 
-        if commit_quorum.len() == 2 * self.transport.config().n_fault + 1 {
+        self.commit_quorum
+            .entry(quorum_key)
+            .or_default()
+            .insert(commit.replica_id);
+
+        if self.committed(commit.op_number, self.transport.config().n_fault) {
             debug!("committed");
 
-            self.log.get_mut(&commit.digest).unwrap().committed = true;
+            self.log_item_mut(commit.op_number).unwrap().committed = true;
             self.execute_committed();
         }
     }
 
     fn execute_committed(&mut self) {
-        while let Some(digest) = self.digest_table.get(&(self.commit_number + 1)) {
-            if !self.log[digest].committed {
+        while let Some(item) = self.log.get(self.commit_number as usize) {
+            assert_eq!(item.quorum_key.op_number, self.commit_number + 1);
+            if !item.committed {
                 break;
             }
 
-            let batch = self.log[digest].batch.clone(); // why have to clone?
-            self.commit_number += batch.len() as OpNumber;
-
-            for request in batch {
+            // why have to clone?
+            for request in item.batch.clone() {
                 let result = self.app.execute(request.op);
                 let reply = message::Reply {
                     view_number: self.view_number,
@@ -399,24 +483,27 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                     replica_id: self.id,
                     result,
                 };
-                self.client_table.insert(
-                    request.client_id,
-                    (request.request_number, Some(reply.clone())),
-                );
-                if let Some(remote) = self.route_table.get(&request.client_id) {
-                    let remote = remote.clone();
-                    let shared = self.shared.clone();
-                    self.submit.stateless(move |replica| {
-                        replica.transport.send_message(
-                            replica,
-                            &remote,
-                            serialize(SignedMessage::sign(reply, &shared.signing_key)),
-                        )
+                let shared = self.shared.clone();
+                self.submit.stateless(move |replica| {
+                    let reply = SignedMessage::sign(reply, &shared.signing_key);
+                    replica.submit.stateful(move |replica| {
+                        replica.client_table.insert(
+                            request.client_id,
+                            (request.request_number, Some(reply.clone())),
+                        );
+                        if let Some(remote) = replica.route_table.get(&request.client_id) {
+                            replica
+                                .transport
+                                // is it ok to serialize in stateful path?
+                                .send_message(replica, remote, serialize(reply));
+                        } else {
+                            info!("no route record, skip reply");
+                        }
                     });
-                } else {
-                    info!("no route record, skip reply");
-                }
+                });
             }
+
+            self.commit_number += 1;
         }
     }
 }
