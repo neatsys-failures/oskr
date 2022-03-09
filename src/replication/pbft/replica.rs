@@ -254,13 +254,10 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                 match (remote, reply) {
                     (Some(remote), Some(reply)) => {
                         let reply = reply.clone();
-                        let shared = self.shared.clone();
-                        self.transport.send_message(
-                            self,
-                            &remote,
-                            // we can sign on reference? awesome
-                            serialize(SignedMessage::sign(reply, &shared.signing_key)),
-                        );
+                        // maybe not a good idea to serialize in stateful path
+                        // I don't want to store binary message in replica state
+                        // and the serailization should be blazing fast
+                        self.transport.send_message(self, &remote, serialize(reply));
                     }
                     _ => {}
                 }
@@ -381,6 +378,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
             digest: message.digest,
             replica_id: self.id,
         };
+
+        let prepared = self.prepared(message.op_number, self.transport.config().n_fault);
         let shared = self.shared.clone();
         self.submit.stateless(move |replica| {
             let signed_prepare = SignedMessage::sign(prepare.clone(), &shared.signing_key);
@@ -389,14 +388,25 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                 serialize(ToReplica::Prepare(signed_prepare.clone())),
             );
 
-            replica.submit.stateful(move |replica| {
-                replica.insert_prepare(&prepare, &signed_prepare);
-            });
+            // shortcut here to avoid submit no-op task
+            if !prepared {
+                replica.submit.stateful(move |replica| {
+                    replica.insert_prepare(&prepare, &signed_prepare);
+                });
+            }
         });
+
+        if prepared {
+            self.send_commit(message.op_number, message.digest);
+        }
     }
 
     fn handle_prepare(&mut self, _remote: T::Address, message: VerifiedMessage<message::Prepare>) {
-        self.insert_prepare(&*message, message.signed_message());
+        if !self.prepared(message.op_number, self.transport.config().n_fault) {
+            self.insert_prepare(&*message, message.signed_message());
+        } else {
+            // send commit to late prepare?
+        }
     }
 
     fn insert_prepare(
@@ -416,34 +426,40 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
 
         if self.prepared(prepare.op_number, self.transport.config().n_fault) {
             debug!("prepared");
-
-            let commit = message::Commit {
-                view_number: self.view_number,
-                op_number: prepare.op_number,
-                digest: prepare.digest,
-                replica_id: self.id,
-            };
-
-            {
-                let commit = commit.clone();
-                let shared = self.shared.clone();
-                self.submit.stateless(move |replica| {
-                    replica.transport.send_message_to_all(
-                        replica,
-                        serialize(ToReplica::Commit(SignedMessage::sign(
-                            commit,
-                            &shared.signing_key,
-                        ))),
-                    )
-                });
-            }
-
-            self.insert_commit(&commit);
+            self.send_commit(prepare.op_number, prepare.digest);
         }
     }
 
+    fn send_commit(&mut self, op_number: OpNumber, digest: Digest) {
+        let commit = message::Commit {
+            view_number: self.view_number,
+            op_number,
+            digest,
+            replica_id: self.id,
+        };
+
+        {
+            let commit = commit.clone();
+            let shared = self.shared.clone();
+            self.submit.stateless(move |replica| {
+                replica.transport.send_message_to_all(
+                    replica,
+                    serialize(ToReplica::Commit(SignedMessage::sign(
+                        commit,
+                        &shared.signing_key,
+                    ))),
+                )
+            });
+        }
+
+        // assert not committed by now?
+        self.insert_commit(&commit);
+    }
+
     fn handle_commit(&mut self, _remote: T::Address, message: VerifiedMessage<message::Commit>) {
-        self.insert_commit(&*message);
+        if !self.committed(message.op_number, self.transport.config().n_fault) {
+            self.insert_commit(&*message);
+        }
     }
 
     fn insert_commit(&mut self, commit: &message::Commit) {
@@ -494,7 +510,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>, T> {
                         if let Some(remote) = replica.route_table.get(&request.client_id) {
                             replica
                                 .transport
-                                // is it ok to serialize in stateful path?
                                 .send_message(replica, remote, serialize(reply));
                         } else {
                             info!("no route record, skip reply");
