@@ -1,7 +1,8 @@
-use std::{ffi::c_void, sync::Arc};
+use std::{ffi::c_void, fs::File, io::Read, path::PathBuf, sync::Arc};
 
+use clap::{ArgEnum, Parser};
 use oskr::{
-    common::Opaque,
+    common::{Opaque, ReplicaId},
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     replication::unreplicated,
@@ -9,6 +10,7 @@ use oskr::{
     transport::Config,
     App,
 };
+use tracing::info;
 
 struct NullApp;
 impl App for NullApp {
@@ -18,36 +20,70 @@ impl App for NullApp {
 }
 
 fn main() {
-    let port_id = 0;
-    let n_worker = 1;
-    let replica_id = 0;
-    let config = Config {
-        replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
-        n_fault: 0,
-        multicast_address: None,
-        signing_key: Default::default(),
-    };
+    tracing_subscriber::fmt::init();
 
-    let mut transport = Transport::setup(config, port_id, 1, n_worker as u16);
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+    enum Mode {
+        Unreplicated,
+        PBFT,
+    }
+
+    #[derive(Parser, Debug)]
+    #[clap(name = "Oskr Replica", version)]
+    struct Args {
+        #[clap(short, long, arg_enum)]
+        mode: Mode,
+        #[clap(short, long, parse(from_os_str))]
+        config: PathBuf,
+        #[clap(short = 'i')]
+        replica_id: ReplicaId,
+        #[clap(long, default_value = "000000ff")]
+        mask: String,
+        #[clap(short, long, default_value_t = 0)]
+        port_id: u16,
+        #[clap(short, long = "worker-number", name = "N", default_value_t = 1)]
+        n_worker: u16,
+    }
+    let args = Args::parse();
+    let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
+    info!("initialize with {} cores", core_mask.count_ones());
+    assert!(core_mask.count_ones() > args.n_worker as u32); // strictly greater-than to preserve one rx core
+
+    let prefix = args.config.file_name().unwrap().to_str().unwrap();
+    let config = args.config.with_file_name(format!("{}.config", prefix));
+    let mut config: Config<_> = {
+        let mut buf = String::new();
+        File::open(config)
+            .unwrap()
+            .read_to_string(&mut buf)
+            .unwrap();
+        buf.parse().unwrap()
+    };
+    config.collect_signing_key(&args.config);
+
+    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
     // TODO select replica type
     let replica = Arc::new(unreplicated::Replica::register_new(
         &mut transport,
-        replica_id,
+        args.replica_id,
         NullApp,
     ));
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
-        n_worker: usize,
+        n_worker: u16,
     }
-    let worker_data = WorkerData { replica, n_worker };
+    let worker_data = WorkerData {
+        replica,
+        n_worker: args.n_worker,
+    };
     extern "C" fn worker<Replica: State>(arg: *mut c_void) -> i32 {
         let worker_data: &WorkerData<Replica> = unsafe { &*(arg as *mut _) };
         let replica = worker_data.replica.clone();
         let n_worker = worker_data.n_worker;
 
         let worker_id = Transport::worker_id();
-        if worker_id >= n_worker {
+        if worker_id >= n_worker as usize {
             return 0;
         } else if worker_id == 0 {
             // it runs slower with this optimization...

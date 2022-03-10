@@ -1,4 +1,7 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{
+    collections::HashMap, convert::Infallible, fs::File, hash::Hash, io::Read, path::Path,
+    str::FromStr,
+};
 
 use crate::common::{ReplicaId, SigningKey, VerifyingKey, ViewNumber};
 
@@ -79,6 +82,7 @@ pub trait TxAgent {
     }
 }
 
+// consider move to dedicated module if getting too long
 pub struct Config<T: Transport + ?Sized> {
     pub replica_address: Vec<T::Address>,
     pub multicast_address: Option<T::Address>,
@@ -97,5 +101,61 @@ impl<T: Transport + ?Sized> Config<T> {
 
     pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
         (view_number as usize % self.replica_address.len()) as ReplicaId
+    }
+}
+
+impl<T: Transport + ?Sized> FromStr for Config<T>
+where
+    T::Address: FromStr,
+{
+    type Err = Infallible;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut replica_address = Vec::new();
+        let mut multicast_address = None;
+        let mut n_fault = None;
+        for line in s.lines() {
+            let line = if let Some((line, _)) = line.split_once('#') {
+                line.trim()
+            } else {
+                line.trim()
+            };
+            if line.is_empty() {
+                continue;
+            }
+            let (prompt, value) = line.split_once(char::is_whitespace).unwrap();
+            let error_message = "failed to parse replica address";
+            match prompt {
+                "f" => n_fault = Some(value.parse().unwrap()),
+                "replica" => {
+                    replica_address.push(value.parse().map_err(|_| error_message).unwrap())
+                }
+                "multicast" => {
+                    multicast_address = Some(value.parse().map_err(|_| error_message).unwrap())
+                }
+                _ => panic!("unexpect prompt: {}", prompt),
+            }
+        }
+        Ok(Self {
+            replica_address,
+            multicast_address,
+            n_fault: n_fault.unwrap(),
+            signing_key: HashMap::new(), // fill later
+        })
+    }
+}
+
+impl<T: Transport + ?Sized> Config<T> {
+    pub fn collect_signing_key(&mut self, path: &Path) {
+        for (i, replica) in self.replica_address.iter().enumerate() {
+            let prefix = path.file_name().unwrap().to_str().unwrap();
+            let key = path.with_file_name(format!("{}-{}.pem", prefix, i));
+            let key = {
+                let mut buf = String::new();
+                File::open(key).unwrap().read_to_string(&mut buf).unwrap();
+                buf
+            };
+            let key = key.parse().unwrap();
+            self.signing_key.insert(replica.clone(), key);
+        }
     }
 }

@@ -16,7 +16,11 @@ because the core of this project is based on a specialized actor model.
 
 ----
 
-**Setup.** Prerequisites on Ubuntu:
+**Setup.** To run this project you must compile from source. There is a 
+published version on crate.io, but that is just a placeholder and will not work.
+The propose is to enable hosting document on doc.rs.
+
+Prerequisites on Ubuntu:
 * Up-to-date stable Rust toolchain.
 * For compiling DPDK: any working C building toolchain, `meson`, `ninja-build`,
 `python3-pyelftools`.
@@ -27,5 +31,33 @@ because the core of this project is based on a specialized actor model.
 3. To run unit tests: `cargo test --lib`.
 4. To build benchmark executables: `cargo build --release`.
 
-To run benchmark, `target/dpdk` must exist in working directory. More
-instruction work in progress.
+   The compiled executables are dynamically linked to rte shared objects, so if 
+   you transfer executables to a remote machine to run, make sure `target/dpdk` 
+   exists in remote working directory.
+
+5. Create deploy configuration. A configuration consists a description file and
+   a set of signing key files. Both files should contain same prefix in their
+   names, for example `deploy/shard0`. The description file 
+   `deploy/shard0.config` has following lines:
+
+   ```
+   f <number of fault nodes to tolerance>
+   replica <address>
+   replica <address>
+   ...
+   [multicast <address>]
+   ```
+
+   The last line of only for configuration that contains a multicast address.
+
+6. Create signing key files. Each replica presents in description file above
+   must own a secp256k1 signing key, stores in `deploy/shard0-<i>.pem`, where
+   `<i>` is replica's id starts from 0. You can generate signing key file with
+   following command:
+
+   ```
+   openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/shard0-0.pem
+   ```
+
+Now you are ready to run replica and client executables. Their command line
+options are self-contained documented, and are omitted here.

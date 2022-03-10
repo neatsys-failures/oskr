@@ -132,7 +132,7 @@ impl Address {
 impl FromStr for Address {
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut split = s.split('#');
+        let mut split = s.split('%');
         let mac = split.next().unwrap();
         let id = split.next().unwrap();
         let mac: Vec<_> = mac
@@ -150,7 +150,7 @@ impl Display for Address {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}#{}",
+            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}%{}",
             self.mac[0], self.mac[1], self.mac[2], self.mac[3], self.mac[4], self.mac[5], self.id
         )
     }

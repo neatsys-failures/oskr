@@ -10,9 +10,10 @@ license = "GPL-3.0-only"
 [dependencies]
 async-trait = "0.1.52"
 bincode = "1.3.3"
+clap = { version = "3.1.6", features = ["derive"] }
 futures = "0.3.21"
 hdrhistogram = "7.5.0"
-k256 = "0.10.2"
+k256 = { version = "0.10.2", features = ["pem"] }
 quanta = "0.9.3"
 rand = "0.8.4"
 serde = "1.0.135"

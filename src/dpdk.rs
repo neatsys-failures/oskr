@@ -183,11 +183,17 @@ impl transport::Transport for Transport {
 }
 
 impl Transport {
-    pub fn setup(config: Config<Self>, port_id: u16, n_rx: u16, n_tx: u16) -> Self {
+    pub fn setup(
+        config: Config<Self>,
+        core_mask: u128,
+        port_id: u16,
+        n_rx: u16,
+        n_tx: u16,
+    ) -> Self {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
-            "0x7ffe00007fff".to_string(), // TODO configurable
+            format!("{:x}", core_mask),
             "-d".to_string(),
             "./target/dpdk/drivers/".to_string(), // TODO any better way?
             "--no-telemetry".to_string(),

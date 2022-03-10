@@ -1,8 +1,11 @@
 use std::{
     cell::RefCell,
     ffi::c_void,
+    fs::File,
     future::Future,
+    io::Read,
     mem::take,
+    path::PathBuf,
     pin::Pin,
     process,
     sync::{
@@ -13,6 +16,7 @@ use std::{
     time::Duration,
 };
 
+use clap::{ArgEnum, Parser};
 use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::Histogram;
 use oskr::{
@@ -24,6 +28,7 @@ use oskr::{
     AsyncExecutor as _, Invoke,
 };
 use quanta::{Clock, Instant};
+use tracing::info;
 
 struct AsyncExecutor;
 impl AsyncExecutor {
@@ -81,22 +86,52 @@ fn main() {
     tracing_subscriber::fmt::init();
     panic_abort();
 
-    let port_id = 0;
-    let n_worker = 20;
-    let n_client = 20;
-    let duration_second = 10;
-    let config = Config {
-        replica_address: vec!["b8:ce:f6:2a:2f:94#0".parse().unwrap()],
-        n_fault: 0,
-        multicast_address: None,
-        signing_key: Default::default(),
-    };
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+    enum Mode {
+        Unreplicated,
+        PBFT,
+    }
 
-    let mut transport = Transport::setup(config, port_id, 1, n_worker);
-    let k = (n_client - 1) / n_worker + 1;
-    let client_list: Vec<Vec<_>> = (0..n_worker)
+    #[derive(Parser, Debug)]
+    #[clap(name = "Oskr Client", version)]
+    struct Args {
+        #[clap(short, long, arg_enum)]
+        mode: Mode,
+        #[clap(short, long, parse(from_os_str))]
+        config: PathBuf,
+        #[clap(long, default_value = "000000ff")]
+        mask: String,
+        #[clap(short, long, default_value_t = 0)]
+        port_id: u16,
+        #[clap(short, long = "worker-number", default_value_t = 1)]
+        n_worker: u16,
+        #[clap(short = 't', long = "client-number", default_value_t = 1)]
+        n_client: u16,
+        #[clap(short, long, default_value_t = 1)]
+        duration: u64,
+    }
+    let args = Args::parse();
+    let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
+    info!("initialize with {} cores", core_mask.count_ones());
+    assert!(core_mask.count_ones() > args.n_worker as u32); // strictly greater-than to preserve one rx core
+
+    let prefix = args.config.file_name().unwrap().to_str().unwrap();
+    let config = args.config.with_file_name(format!("{}.config", prefix));
+    let mut config: Config<_> = {
+        let mut buf = String::new();
+        File::open(config)
+            .unwrap()
+            .read_to_string(&mut buf)
+            .unwrap();
+        buf.parse().unwrap()
+    };
+    config.collect_signing_key(&args.config);
+
+    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
+    let k = (args.n_client - 1) / args.n_worker + 1;
+    let client_list: Vec<Vec<_>> = (0..args.n_worker)
         .map(|i| {
-            (i * k..n_client.min((i + 1) * k))
+            (i * k..args.n_client.min((i + 1) * k))
                 // TODO select client type
                 .map(|_| unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport))
                 .collect()
@@ -113,9 +148,9 @@ fn main() {
     let mut worker_data = WorkerData {
         client_list,
         count: Arc::new(AtomicU32::new(0)),
-        duration_second,
+        duration_second: args.duration,
         hist: Arc::new(Mutex::new(Histogram::new(2).unwrap())),
-        barrier: Arc::new(Barrier::new(n_worker as usize)),
+        barrier: Arc::new(Barrier::new(args.n_worker as usize)),
     };
     extern "C" fn worker<Client: Receiver<Transport> + Invoke + Send + 'static>(
         arg: *mut c_void,
