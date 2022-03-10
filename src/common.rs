@@ -8,7 +8,7 @@ use std::{
 
 use bincode::Options;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 pub mod signed;
 pub use signed::{SignedMessage, SigningKey, VerifyingKey};
@@ -43,7 +43,7 @@ impl Error for MalformedMessage {}
 
 // providing deserialize to avoid accidentially using bincode::deserialize
 // not unwrap by default for the sake of byzantine network
-pub fn deserialize<M: for<'a> Deserialize<'a>>(reader: impl Read) -> Result<M, MalformedMessage> {
+pub fn deserialize<M: DeserializeOwned>(reader: impl Read) -> Result<M, MalformedMessage> {
     bincode::DefaultOptions::new()
         .allow_trailing_bytes()
         .deserialize_from(reader)

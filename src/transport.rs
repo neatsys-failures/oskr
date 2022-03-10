@@ -8,6 +8,13 @@ where
 {
     type Address: Clone + Eq + Hash + Send + Sync;
     type RxBuffer: AsRef<[u8]> + Send;
+    // TxAgent has to be Sync for now, because it may show up in stage's shared
+    // state and be accessed concurrently from multiple threads
+    // this may be bad for two reason: it was designed as Send + !Sync in mind
+    // from beginning; if in the future we want to reimplement dpdk transport,
+    // which promise there is at most one TxAgent instance per thread, then it
+    // may cache worker id and become !Sync for real
+    // (or maybe just put it into thread local data?)
     type TxAgent: TxAgent<Transport = Self> + Clone + Send + Sync;
 
     fn tx_agent(&self) -> Self::TxAgent;

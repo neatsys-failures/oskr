@@ -10,7 +10,7 @@ use k256::ecdsa::{
     signature::{Signer, Verifier},
     Signature,
 };
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use serde_derive::{Deserialize, Serialize};
 
 // should we re-type sha2 as well?
@@ -23,7 +23,7 @@ pub struct SignedMessage<M> {
     // it seems like `Signature` has a buggy serde implementation, which cannot
     // work well with bincode's `deserialize_from`
     // signature: Signature, // do I want to generalize signing algorithm?
-    signature: Vec<u8>,
+    signature: ([u8; 32], [u8; 32]), // serde not support [u8; 64] yet
     _marker: PhantomData<M>,
 }
 
@@ -60,18 +60,23 @@ impl<M> SignedMessage<M> {
     {
         let inner = bincode::DefaultOptions::new().serialize(&message).unwrap();
         let signature: Signature = key.sign(&inner);
+        let signature = signature.to_vec();
         Self {
             inner,
-            signature: signature.to_vec(),
+            signature: (
+                signature[..32].try_into().unwrap(),
+                signature[32..].try_into().unwrap(),
+            ),
             _marker: PhantomData,
         }
     }
 
     pub fn verify(self, key: &VerifyingKey) -> Result<VerifiedMessage<M>, InauthenticMessage>
     where
-        M: for<'a> Deserialize<'a>,
+        M: DeserializeOwned,
     {
-        let signature: Signature = if let Ok(signature) = self.signature[..].try_into() {
+        let (sig_a, sig_b) = self.signature;
+        let signature: Signature = if let Ok(signature) = [sig_a, sig_b].concat()[..].try_into() {
             signature
         } else {
             return Err(InauthenticMessage);
@@ -87,7 +92,7 @@ impl<M> SignedMessage<M> {
     // upgrade to VerifiedMessage as well?
     pub fn assume_verified(self) -> M
     where
-        M: for<'a> Deserialize<'a>,
+        M: DeserializeOwned,
     {
         bincode::DefaultOptions::new()
             .deserialize(&self.inner)

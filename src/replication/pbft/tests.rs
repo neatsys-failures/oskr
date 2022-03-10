@@ -6,7 +6,7 @@ use tokio::{spawn, time::timeout};
 
 use crate::{
     app::mock::App,
-    common::{SignedMessage, SigningKey},
+    common::{Opaque, SignedMessage, SigningKey},
     replication::pbft::message::{self, ToReplica},
     simulated::{AsyncExecutor, Transport},
     tests::TRACING,
@@ -75,10 +75,8 @@ async fn multiple_client() {
             let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
             spawn(async move {
                 assert_eq!(
-                    client
-                        .invoke(format!("client-{}", i).as_bytes().to_vec())
-                        .await,
-                    format!("reply: client-{}", i).as_bytes().to_vec()
+                    client.invoke(format!("client-{}", i).into()).await,
+                    Opaque::from(format!("reply: client-{}", i))
                 );
             })
         })

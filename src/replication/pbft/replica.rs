@@ -152,7 +152,7 @@ impl<T: Transport> Replica<T> {
         app: impl App + Send + 'static,
         batch_size: usize,
     ) -> Handle<Self> {
-        assert!(transport.tx_agent().config().replica_address.len() > 1);
+        assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
 
         let address = transport.tx_agent().config().replica_address[replica_id as usize].clone();
         let replica: Handle<_> = Self {
@@ -184,6 +184,8 @@ impl<T: Transport> Replica<T> {
             transport.register(replica, {
                 let replica = replica.clone();
                 move |remote, buffer| {
+                    // shortcut: if we don't have verifying key for remote, we
+                    // cannot do verify so skip stateless task
                     if replica.verifying_key.contains_key(&remote) {
                         replica
                             .submit
@@ -202,7 +204,8 @@ impl<T: Transport> Replica<T> {
 
 impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn receive_buffer(&mut self, remote: T::Address, buffer: T::RxBuffer) {
-        #[allow(clippy::single_match)]
+        #[allow(clippy::single_match)] // although no future plan to add more branch
+        // just to keep uniform shape
         match deserialize(buffer.as_ref()) {
             Ok(ToReplica::Request(request)) => {
                 self.handle_request(remote, request);

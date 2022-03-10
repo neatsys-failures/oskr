@@ -202,6 +202,7 @@ mod tests {
 
     use crate::{
         app::mock::App,
+        common::Opaque,
         simulated::{AsyncExecutor, Transport},
         tests::TRACING,
         Invoke,
@@ -237,11 +238,11 @@ mod tests {
             assert_eq!(
                 timeout(
                     Duration::from_micros(1),
-                    client.invoke(format!("#{}", i).as_bytes().to_vec())
+                    client.invoke(format!("#{}", i).into())
                 )
                 .await
                 .unwrap(),
-                format!("reply: #{}", i).as_bytes().to_vec()
+                Opaque::from(format!("reply: #{}", i))
             );
         }
     }
