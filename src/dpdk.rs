@@ -56,6 +56,7 @@ impl transport::TxAgent for TxAgent {
             assert_eq!(ret, 1);
         }
     }
+
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
@@ -98,10 +99,12 @@ impl transport::TxAgent for TxAgent {
                 } else {
                     let mbuf = NonNull::new(*mbuf).unwrap();
                     let mut data = rte_mbuf::get_data(mbuf);
+                    // TODO hide length + 16 behide rte_mbuf abstraction
                     copy_nonoverlapping(sample_data.as_ptr(), data.as_mut(), length as usize + 16);
                     (mbuf, data)
                 };
                 rte_mbuf::set_dest(data, dest);
+                rte_mbuf::set_buffer_length(mbuf, length);
                 mbuf
             })
             .collect();

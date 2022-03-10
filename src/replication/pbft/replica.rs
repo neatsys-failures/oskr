@@ -5,7 +5,7 @@ use std::{
 };
 
 use sha2::{Digest as _, Sha256};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::{
     common::{
@@ -281,19 +281,20 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                     // maybe not a good idea to serialize in stateful path
                     // I don't want to store binary message in replica state
                     // and the serailization should be blazing fast
+                    // and after all, this is not the fast path
                     self.transport.send_message(self, &remote, serialize(reply));
                 }
                 return;
             }
         }
 
-        let primary = self.transport.config().view_primary(self.view_number);
-        if self.id != primary {
+        if !self.is_primary() {
             self.transport.send_message_to_replica(
                 self,
-                primary,
+                self.transport.config().view_primary(self.view_number),
                 serialize(ToReplica::RelayedRequest(message)),
             );
+            // TODO start view change timeout
             return;
         }
 
@@ -339,9 +340,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             });
 
             replica.submit.stateful(move |replica| {
-                // TODO check view and status
-                assert_eq!(quorum_key.op_number, replica.log.len() as OpNumber + 1);
-                replica.log.push(LogItem {
+                if replica.view_number != quorum_key.view_number {
+                    info!("discard log item from another view");
+                    return;
+                }
+
+                replica.insert_log_item(LogItem {
                     quorum_key,
                     batch,
                     pre_prepare,
@@ -349,6 +353,21 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 });
             });
         });
+    }
+
+    fn insert_log_item(&mut self, item: LogItem) {
+        assert_eq!(item.quorum_key.view_number, self.view_number);
+
+        if item.quorum_key.op_number != self.log.len() as OpNumber + 1 {
+            self.reorder_log.insert(item.quorum_key.op_number, item);
+        } else {
+            self.log.push(item);
+            let mut insert_number = self.log.len() as OpNumber + 1;
+            while let Some(item) = self.reorder_log.remove(&insert_number) {
+                self.log.push(item);
+                insert_number += 1;
+            }
+        }
     }
 
     fn handle_pre_prepare(
@@ -364,11 +383,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             // TODO state transfer
             return;
         }
-        assert!(!self.is_primary());
+        if self.is_primary() {
+            warn!("primary receive pre-prepare");
+            return;
+        }
 
-        if self.log.len() as OpNumber >= message.op_number
-            || self.reorder_log.contains_key(&message.op_number)
-        {
+        if self.log_item(message.op_number).is_some() {
             return;
         }
 
@@ -377,22 +397,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             op_number: message.op_number,
             digest: message.digest,
         };
-        let item = LogItem {
+        self.insert_log_item(LogItem {
             quorum_key,
             batch,
             pre_prepare: message.signed_message().clone(),
             committed: false,
-        };
-        if message.op_number != self.log.len() as OpNumber + 1 {
-            self.reorder_log.insert(message.op_number, item);
-        } else {
-            self.log.push(item);
-            let mut insert_number = self.log.len() as OpNumber + 1;
-            while let Some(item) = self.reorder_log.remove(&insert_number) {
-                self.log.push(item);
-                insert_number += 1;
-            }
-        }
+        });
 
         let prepare = message::Prepare {
             view_number: self.view_number,
@@ -467,9 +477,9 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             replica_id: self.id,
         };
 
-        {
+        self.submit.stateless({
             let commit = commit.clone();
-            self.submit.stateless(move |replica| {
+            move |replica| {
                 replica.transport.send_message_to_all(
                     replica,
                     serialize(ToReplica::Commit(SignedMessage::sign(
@@ -477,8 +487,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                         &replica.signing_key,
                     ))),
                 )
-            });
-        }
+            }
+        });
 
         // assert not committed by now?
         self.insert_commit(&commit);
