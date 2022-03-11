@@ -7,10 +7,9 @@ use std::{
     mem::take,
     path::PathBuf,
     pin::Pin,
-    process,
     sync::{
-        atomic::{AtomicBool, AtomicU32, Ordering},
-        Arc, Barrier, Mutex,
+        atomic::{AtomicU32, Ordering},
+        Arc, Mutex,
     },
     task::{Context, Poll},
     time::Duration,
@@ -22,7 +21,7 @@ use hdrhistogram::Histogram;
 use oskr::{
     common::{panic_abort, Opaque},
     dpdk::Transport,
-    dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
+    dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     replication::{pbft, unreplicated},
     transport::{Config, Receiver},
     AsyncExecutor as _, Invoke,
@@ -109,7 +108,7 @@ fn main() {
         n_client: u16,
         #[clap(short, long, default_value_t = 1)]
         duration: u64,
-        #[clap(short, long, default_value_t = 0)]
+        #[clap(short, long = "warm-up", default_value_t = 0)]
         warm_up_duration: u64,
     }
     let args = Args::parse();
@@ -131,12 +130,18 @@ fn main() {
 
     let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
 
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum Status {
+        WarmUp,
+        Run,
+        Shutdown,
+    }
+
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
         hist: Arc<Mutex<Histogram<u64>>>,
-        barrier: Arc<Barrier>,
-        warm_up: Arc<AtomicBool>,
+        status: Arc<AtomicU32>,
         args: Arc<Args>,
     }
     impl<C: Receiver<Transport> + Invoke + Send + 'static> WorkerData<C> {
@@ -151,9 +156,8 @@ fn main() {
                 return 0;
             };
             let count = worker_data.count.clone();
-            let barrier = worker_data.barrier.clone();
             let hist = worker_data.hist.clone();
-            let warm_up = worker_data.warm_up.clone();
+            let status = worker_data.status.clone();
             let args = worker_data.args.clone();
 
             // I want a broadcast :|
@@ -161,8 +165,10 @@ fn main() {
                 .into_iter()
                 .map(|mut client| {
                     let count = count.clone();
+                    // we send shutdown actively, for the case when system stuck
+                    // and cause client invoking never finish
                     let (shutdown_tx, mut shutdown) = oneshot::channel();
-                    let warm_up = warm_up.clone();
+                    let status = status.clone();
                     (
                         AsyncExecutor::spawn(async move {
                             debug!("{}", client.get_address());
@@ -175,7 +181,7 @@ fn main() {
                                     _ = shutdown => return hist,
                                 }
                                 let end = clock.end();
-                                if !warm_up.load(Ordering::SeqCst) {
+                                if status.load(Ordering::SeqCst) == Status::Run as _ {
                                     hist += clock.delta(start, end).as_nanos() as u64;
                                     count.fetch_add(1, Ordering::SeqCst);
                                 }
@@ -188,7 +194,7 @@ fn main() {
 
             if worker_id == 0 {
                 AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration));
-                warm_up.store(false, Ordering::SeqCst);
+                status.store(Status::Run as _, Ordering::SeqCst);
                 info!("warm up finish");
 
                 for _ in 0..args.duration {
@@ -196,6 +202,7 @@ fn main() {
                     let count = count.swap(0, Ordering::SeqCst);
                     println!("{}", count);
                 }
+                status.store(Status::Shutdown as _, Ordering::SeqCst);
             } else {
                 AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration + args.duration));
             }
@@ -217,22 +224,15 @@ fn main() {
             }
 
             *hist.lock().unwrap() += worker_hist;
-            if barrier.wait().is_leader() {
-                let hist = hist.lock().unwrap();
-                println!(
-                    "min {:?} p50 {:?} mean {:?} p99 {:?}",
-                    Duration::from_nanos(hist.min()),
-                    Duration::from_nanos(hist.value_at_quantile(0.5)),
-                    Duration::from_nanos(hist.mean() as u64),
-                    Duration::from_nanos(hist.value_at_quantile(0.99))
-                );
-                process::exit(0); // TODO more graceful
-            } else {
-                0
-            }
+            0
         }
 
-        fn launch(mut client: impl FnMut() -> C, args: Args) {
+        fn launch(
+            mut client: impl FnMut() -> C,
+            args: Args,
+            status: Arc<AtomicU32>,
+            hist: Arc<Mutex<Histogram<u64>>>,
+        ) {
             let k = (args.n_client - 1) / args.n_worker + 1;
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
                 .map(|i| {
@@ -244,9 +244,8 @@ fn main() {
             let mut worker_data = Self {
                 client_list,
                 count: Arc::new(AtomicU32::new(0)),
-                hist: Arc::new(Mutex::new(Histogram::new(2).unwrap())),
-                barrier: Arc::new(Barrier::new(args.n_worker as usize)),
-                warm_up: Arc::new(AtomicBool::new(true)),
+                hist,
+                status,
                 args: Arc::new(args),
             };
             unsafe {
@@ -259,16 +258,32 @@ fn main() {
         }
     }
 
+    let status = Arc::new(AtomicU32::new(Status::WarmUp as _));
+    let hist = Arc::new(Mutex::new(Histogram::new(2).unwrap()));
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
             || unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
+            status.clone(),
+            hist.clone(),
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
+            status.clone(),
+            hist.clone(),
         ),
     }
 
-    transport.run(0);
+    transport.run(0, || status.load(Ordering::SeqCst) == Status::Shutdown as _);
+    unsafe { rte_eal_mp_wait_lcore() };
+
+    let hist = hist.lock().unwrap();
+    println!(
+        "min {:?} p50 {:?} mean {:?} p99 {:?}",
+        Duration::from_nanos(hist.min()),
+        Duration::from_nanos(hist.value_at_quantile(0.5)),
+        Duration::from_nanos(hist.mean() as _),
+        Duration::from_nanos(hist.value_at_quantile(0.99))
+    );
 }

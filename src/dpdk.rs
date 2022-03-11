@@ -234,7 +234,12 @@ impl Transport {
         }
     }
 
-    fn run_internal(&self, queue_id: u16, dispatch: impl Fn(Address, Address, RxBuffer) -> bool) {
+    fn run_internal(
+        &self,
+        queue_id: u16,
+        mut shutdown: impl FnMut() -> bool,
+        dispatch: impl Fn(Address, Address, RxBuffer) -> bool,
+    ) {
         let (socket, dev_socket) =
             unsafe { (rte_socket_id(), rte_eth_dev_socket_id(self.port_id)) };
         if socket != dev_socket {
@@ -244,7 +249,7 @@ impl Transport {
             );
         }
 
-        loop {
+        while !shutdown() {
             let burst = unsafe {
                 let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
                 let burst_size = oskr_eth_rx_burst(
@@ -272,8 +277,8 @@ impl Transport {
         (unsafe { rte_lcore_index(oskr_lcore_id() as c_int) }) as usize - 1
     }
 
-    pub fn run(&self, queue_id: u16) {
-        self.run_internal(queue_id, |source, dest, buffer| {
+    pub fn run(&self, queue_id: u16, shutdown: impl FnMut() -> bool) {
+        self.run_internal(queue_id, shutdown, |source, dest, buffer| {
             if let Some(rx_agent) = self.recv_table.get(&dest) {
                 rx_agent(source, buffer);
                 true
@@ -286,13 +291,17 @@ impl Transport {
     pub fn run1(&self) {
         assert_eq!(self.recv_table.len(), 1);
         let (address, rx_agent) = self.recv_table.iter().next().unwrap();
-        self.run_internal(0, |source, dest, buffer| {
-            if dest == *address {
-                rx_agent(source, buffer);
-                true
-            } else {
-                false
-            }
-        });
+        self.run_internal(
+            0,
+            || false,
+            |source, dest, buffer| {
+                if dest == *address {
+                    rx_agent(source, buffer);
+                    true
+                } else {
+                    false
+                }
+            },
+        );
     }
 }

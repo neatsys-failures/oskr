@@ -44,6 +44,7 @@ extern "C" {
         arg: *mut c_void,
         call_main: rte_rmt_call_main_t,
     );
+    pub fn rte_eal_mp_wait_lcore();
     pub fn rte_socket_id() -> c_int;
     pub fn rte_lcore_index(lcore_id: c_int) -> c_int;
     pub fn rte_pktmbuf_pool_create(
