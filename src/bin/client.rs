@@ -9,7 +9,7 @@ use std::{
     pin::Pin,
     sync::{
         atomic::{AtomicU32, Ordering},
-        Arc, Mutex,
+        Arc,
     },
     task::{Context, Poll},
     time::Duration,
@@ -22,6 +22,7 @@ use oskr::{
     common::{panic_abort, Opaque},
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
+    latency::Latency,
     replication::{pbft, unreplicated},
     transport::{Config, Receiver},
     AsyncExecutor as _, Invoke,
@@ -140,7 +141,7 @@ fn main() {
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
-        hist: Arc<Mutex<Histogram<u64>>>,
+        latency: Latency,
         status: Arc<AtomicU32>,
         args: Arc<Args>,
     }
@@ -156,7 +157,6 @@ fn main() {
                 return 0;
             };
             let count = worker_data.count.clone();
-            let hist = worker_data.hist.clone();
             let status = worker_data.status.clone();
             let args = worker_data.args.clone();
 
@@ -169,20 +169,18 @@ fn main() {
                     // and cause client invoking never finish
                     let (shutdown_tx, mut shutdown) = oneshot::channel();
                     let status = status.clone();
+                    let mut latency = worker_data.latency.create_local();
                     (
                         AsyncExecutor::spawn(async move {
                             debug!("{}", client.get_address());
-                            let clock = Clock::new();
-                            let mut hist: Histogram<u64> = Histogram::new(2).unwrap();
                             loop {
-                                let start = clock.start();
+                                let measure = latency.measure();
                                 select! {
                                     _ = client.invoke(Opaque::default()).fuse() => {},
-                                    _ = shutdown => return hist,
+                                    _ = shutdown => return,
                                 }
-                                let end = clock.end();
                                 if status.load(Ordering::SeqCst) == Status::Run as _ {
-                                    hist += clock.delta(start, end).as_nanos() as u64;
+                                    latency += measure;
                                     count.fetch_add(1, Ordering::SeqCst);
                                 }
                             }
@@ -207,23 +205,17 @@ fn main() {
                 AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration + args.duration));
             }
 
+            // with new latency there is no need to join tasks
+            // save it here for debug and future use
             for shutdown in shutdown_list {
                 shutdown.send(()).unwrap();
             }
             AsyncExecutor::poll_now();
-
-            let mut worker_hist = Histogram::new(2).unwrap();
-            for mut client in client_list {
-                if let Poll::Ready(hist) =
-                    Pin::new(&mut client).poll(&mut Context::from_waker(noop_waker_ref()))
-                {
-                    worker_hist += hist;
-                } else {
-                    unreachable!();
-                }
-            }
-
-            *hist.lock().unwrap() += worker_hist;
+            client_list.into_iter().for_each(|mut client| {
+                assert!(Pin::new(&mut client)
+                    .poll(&mut Context::from_waker(noop_waker_ref()))
+                    .is_ready())
+            });
             0
         }
 
@@ -231,7 +223,7 @@ fn main() {
             mut client: impl FnMut() -> C,
             args: Args,
             status: Arc<AtomicU32>,
-            hist: Arc<Mutex<Histogram<u64>>>,
+            latency: Latency,
         ) {
             let k = (args.n_client - 1) / args.n_worker + 1;
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
@@ -244,7 +236,7 @@ fn main() {
             let mut worker_data = Self {
                 client_list,
                 count: Arc::new(AtomicU32::new(0)),
-                hist,
+                latency,
                 status,
                 args: Arc::new(args),
             };
@@ -259,29 +251,28 @@ fn main() {
     }
 
     let status = Arc::new(AtomicU32::new(Status::WarmUp as _));
-    let hist = Arc::new(Mutex::new(Histogram::new(2).unwrap()));
+    let latency = Latency::default();
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
             || unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
             status.clone(),
-            hist.clone(),
+            latency.clone(),
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
             status.clone(),
-            hist.clone(),
+            latency.clone(),
         ),
     }
 
     transport.run(0, || status.load(Ordering::SeqCst) == Status::Shutdown as _);
     unsafe { rte_eal_mp_wait_lcore() };
 
-    let hist = hist.lock().unwrap();
+    let hist: Histogram<_> = latency.into();
     println!(
-        "min {:?} p50 {:?} mean {:?} p99 {:?}",
-        Duration::from_nanos(hist.min()),
+        "p50(mean) {:?}({:?}) p99 {:?}",
         Duration::from_nanos(hist.value_at_quantile(0.5)),
         Duration::from_nanos(hist.mean() as _),
         Duration::from_nanos(hist.value_at_quantile(0.99))

@@ -32,6 +32,8 @@ pub mod app {
     pub mod mock;
 }
 
+pub mod latency;
+
 #[async_trait]
 pub trait Invoke {
     async fn invoke(&mut self, op: Opaque) -> Opaque;
