@@ -5,7 +5,12 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oskr)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oskr)
 
-**Motivation.** This is an attempt to improve based on [specpaxos].
+**Motivation.** This is an attempt to improve based on [specpaxos]. Notice that
+although the project is titled *high performance*, we don't do obscure 
+optimization on propose, especially there is no custom optimization in protocol
+implementations. The high performance mainly means that the project provides a
+stage interface for replicas, so they can efficiently utilize multi-processor
+system.
 
 **Why named Oskr?** The name is derived from the Oscars (Academy Awards), 
 because the core of this project is based on a specialized actor model.
@@ -48,7 +53,7 @@ Prerequisites on Ubuntu:
    [multicast <address>]
    ```
 
-   The last line of only for configuration that contains a multicast address.
+   The last line is only for configuration that contains a multicast address.
 
 6. Create signing key files. Each replica presents in description file above
    must own a secp256k1 signing key, stores in `deploy/shard0-<i>.pem`, where
