@@ -5,7 +5,7 @@ use oskr::{
     common::{Opaque, ReplicaId},
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
-    replication::unreplicated,
+    replication::{pbft, unreplicated},
     stage::{Handle, State},
     transport::Config,
     App,
@@ -43,6 +43,8 @@ fn main() {
         port_id: u16,
         #[clap(short, long = "worker-number", name = "N", default_value_t = 1)]
         n_worker: u16,
+        #[clap(short, long, default_value_t = 1)]
+        batch_size: usize,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -62,45 +64,54 @@ fn main() {
     config.collect_signing_key(&args.config);
 
     let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
-    // TODO select replica type
-    let replica = Arc::new(unreplicated::Replica::register_new(
-        &mut transport,
-        args.replica_id,
-        NullApp,
-    ));
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
         n_worker: u16,
     }
-    let worker_data = WorkerData {
-        replica,
-        n_worker: args.n_worker,
-    };
-    extern "C" fn worker<Replica: State>(arg: *mut c_void) -> i32 {
-        let worker_data: &WorkerData<Replica> = unsafe { &*(arg as *mut _) };
-        let replica = worker_data.replica.clone();
-        let n_worker = worker_data.n_worker;
+    impl<R: State> WorkerData<R> {
+        extern "C" fn worker(arg: *mut c_void) -> i32 {
+            let worker_data: &Self = unsafe { &*(arg as *mut _) };
+            let replica = worker_data.replica.clone();
+            let n_worker = worker_data.n_worker;
 
-        let worker_id = Transport::worker_id();
-        if worker_id >= n_worker as usize {
-            return 0;
-        } else if worker_id == 0 {
-            // it runs slower with this optimization...
-            // replica.run_stateful_worker();
-            replica.run_worker();
-        } else {
-            // run stateless worker
+            let worker_id = Transport::worker_id();
+            if worker_id >= n_worker as usize {
+                return 0;
+            } else if worker_id == 0 {
+                // it runs slower with this optimization...
+                // replica.run_stateful_worker();
+                replica.run_worker();
+            } else {
+                // run stateless worker
+            }
+            unreachable!();
         }
-        unreachable!();
+
+        fn launch(replica: Handle<R>, args: Args) {
+            let data = Self {
+                replica: Arc::new(replica),
+                n_worker: args.n_worker,
+            };
+            unsafe {
+                rte_eal_mp_remote_launch(
+                    Self::worker,
+                    &data as *const _ as *mut _,
+                    rte_rmt_call_main_t::SKIP_MAIN,
+                );
+            }
+        }
     }
 
-    unsafe {
-        rte_eal_mp_remote_launch(
-            worker::<unreplicated::Replica<Transport>>,
-            &worker_data as *const _ as *mut _,
-            rte_rmt_call_main_t::SKIP_MAIN,
-        );
+    match args.mode {
+        Mode::Unreplicated => WorkerData::launch(
+            unreplicated::Replica::register_new(&mut transport, args.replica_id, NullApp),
+            args,
+        ),
+        Mode::PBFT => WorkerData::launch(
+            pbft::Replica::register_new(&mut transport, args.replica_id, NullApp, args.batch_size),
+            args,
+        ),
     }
 
     transport.run1();
