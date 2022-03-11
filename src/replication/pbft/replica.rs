@@ -37,7 +37,7 @@ pub struct Replica<T: Transport> {
     commit_quorum: HashMap<QuorumKey, HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
-    route_table: HashMap<ClientId, T::Address>,
+    pub(super) route_table: HashMap<ClientId, T::Address>,
 
     shared: Arc<Shared<T>>,
 }

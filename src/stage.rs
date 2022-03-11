@@ -54,8 +54,8 @@ impl<S: State> From<S> for Handle<S> {
 }
 
 impl<S: State> Handle<S> {
-    pub fn with_stateful(&self, f: impl FnOnce(&StatefulContext<'_, S>)) {
-        f(&StatefulContext {
+    pub fn with_stateful(&self, f: impl FnOnce(&mut StatefulContext<'_, S>)) {
+        f(&mut StatefulContext {
             state: self.state.lock().unwrap(),
             submit: self.submit.clone(),
         })

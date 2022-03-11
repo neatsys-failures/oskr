@@ -7,7 +7,7 @@ pub mod transport;
 pub mod dpdk;
 pub mod dpdk_shim;
 
-#[cfg(test)]
+#[cfg(any(test, doc))]
 pub mod simulated;
 
 #[cfg(not(test))]

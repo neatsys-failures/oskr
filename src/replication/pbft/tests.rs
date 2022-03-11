@@ -9,7 +9,9 @@ use crate::{
     common::{Opaque, SignedMessage, SigningKey},
     replication::pbft::message::{self, ToReplica},
     simulated::{AsyncExecutor, Transport},
+    stage::Handle,
     tests::TRACING,
+    transport::Receiver,
     Invoke,
 };
 
@@ -40,25 +42,38 @@ fn send_pre_prepare_message() {
     }
 }
 
+fn generate_route(
+    replica_list: &[Handle<Replica<Transport>>],
+    client_list: &[Client<Transport, AsyncExecutor>],
+) {
+    for replica in replica_list {
+        replica.with_stateful(|replica| {
+            replica.route_table.extend(
+                client_list
+                    .iter()
+                    .map(|client| (client.id, client.get_address().clone())),
+            );
+        });
+    }
+}
+
 #[tokio::test(start_paused = true)]
 async fn one_request() {
     *TRACING;
     let mut transport = Transport::new(4, 1);
-    for i in 0..4 {
-        Replica::register_new(&mut transport, i, App::default(), 1);
-    }
-    let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+    let replica: Vec<_> = (0..4)
+        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .collect();
+    let client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+    let client = [client];
+    generate_route(&replica, &client);
+    let mut client = client.into_iter().next().unwrap();
 
-    // allow one resend for caching remote address
-
-    spawn(async move { transport.deliver(Duration::from_millis(1001)).await });
+    spawn(async move { transport.deliver(Duration::from_micros(1)).await });
     assert_eq!(
-        timeout(
-            Duration::from_millis(1001),
-            client.invoke(b"hello".to_vec())
-        )
-        .await
-        .unwrap(),
+        timeout(Duration::from_micros(1), client.invoke(b"hello".to_vec()))
+            .await
+            .unwrap(),
         b"reply: hello".to_vec()
     );
 }
@@ -67,12 +82,17 @@ async fn one_request() {
 async fn multiple_client() {
     *TRACING;
     let mut transport = Transport::new(4, 1);
-    for i in 0..4 {
-        Replica::register_new(&mut transport, i, App::default(), 1);
-    }
-    let client: Vec<_> = (0..3)
-        .map(|i| {
-            let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+    let replica: Vec<_> = (0..4)
+        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .collect();
+    let client: Vec<Client<_, AsyncExecutor>> = (0..3)
+        .map(|_| Client::register_new(&mut transport))
+        .collect();
+    generate_route(&replica, &client);
+    let client: Vec<_> = client
+        .into_iter()
+        .enumerate()
+        .map(|(i, mut client)| {
             spawn(async move {
                 assert_eq!(
                     client.invoke(format!("client-{}", i).into()).await,
@@ -82,8 +102,8 @@ async fn multiple_client() {
         })
         .collect();
 
-    spawn(async move { transport.deliver(Duration::from_millis(1001)).await });
-    timeout(Duration::from_millis(1001), join_all(client))
+    spawn(async move { transport.deliver(Duration::from_micros(1)).await });
+    timeout(Duration::from_micros(1), join_all(client))
         .await
         .unwrap();
 }
