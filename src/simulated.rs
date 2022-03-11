@@ -10,6 +10,7 @@ use std::{
 
 use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
+#[cfg(not(doc))]
 use tokio::{
     select, spawn,
     sync::{
@@ -31,7 +32,9 @@ type Address = String;
 type Message = Vec<u8>;
 
 pub struct Transport {
+    #[cfg(not(doc))]
     rx: UnboundedReceiver<(Address, Address, Message, bool)>,
+    #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     recv_table: RecvTable,
     config: Arc<Config<Self>>,
@@ -51,6 +54,7 @@ impl AsRef<[u8]> for RxBuffer {
 
 #[derive(Clone)]
 pub struct TxAgent {
+    #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     config: Arc<Config<Transport>>,
 }
@@ -173,6 +177,7 @@ impl Transport {
         let start = Instant::now();
         let deadline = start + duration;
         loop {
+            #[cfg(not(doc))]
             select! {
                 _ = sleep_until(deadline) => break,
                 Some((source, dest, message, filtered)) = self.rx.recv() => {
@@ -182,6 +187,7 @@ impl Transport {
         }
     }
 
+    #[cfg(not(doc))]
     fn deliver_internal(
         &self,
         source: Address,
