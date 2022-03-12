@@ -17,12 +17,12 @@ use std::{
 
 use clap::{ArgEnum, Parser};
 use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref, FutureExt};
-use hdrhistogram::Histogram;
+use hdrhistogram::SyncHistogram;
 use oskr::{
     common::{panic_abort, Opaque},
     dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
-    latency::Latency,
+    latency::{Latency, LocalLatency},
     replication::{pbft, unreplicated},
     transport::{Config, Receiver},
     AsyncExecutor as _, Invoke,
@@ -141,7 +141,7 @@ fn main() {
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
-        latency: Latency,
+        latency: LocalLatency,
         status: Arc<AtomicU32>,
         args: Arc<Args>,
     }
@@ -160,6 +160,7 @@ fn main() {
 
             let count = worker_data.count.clone();
             let status = worker_data.status.clone();
+            let latency = worker_data.latency.clone();
             let args = worker_data.args.clone();
 
             // I want a broadcast :|
@@ -171,7 +172,7 @@ fn main() {
                     // and cause client invoking never finish
                     let (shutdown_tx, mut shutdown) = oneshot::channel();
                     let status = status.clone();
-                    let mut latency = worker_data.latency.create_local();
+                    let mut latency = latency.clone();
                     (
                         AsyncExecutor::spawn(async move {
                             debug!("{}", client.get_address());
@@ -225,7 +226,7 @@ fn main() {
             mut client: impl FnMut() -> C,
             args: Args,
             status: Arc<AtomicU32>,
-            latency: Latency,
+            latency: LocalLatency,
         ) {
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
                 .map(|i| {
@@ -259,20 +260,20 @@ fn main() {
             || unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
             status.clone(),
-            latency.clone(),
+            latency.local(),
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncExecutor>::register_new(&mut transport),
             args,
             status.clone(),
-            latency.clone(),
+            latency.local(),
         ),
     }
 
     transport.run(0, || status.load(Ordering::SeqCst) == Status::Shutdown as _);
     unsafe { rte_eal_mp_wait_lcore() };
 
-    let hist: Histogram<_> = latency.into();
+    let hist: SyncHistogram<_> = latency.into();
     println!(
         "p50(mean) {:?}({:?}) p99 {:?}",
         Duration::from_nanos(hist.value_at_quantile(0.5)),

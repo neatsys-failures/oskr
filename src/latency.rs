@@ -1,37 +1,33 @@
-use std::{
-    mem::replace,
-    ops::AddAssign,
-    sync::{Arc, Mutex},
-};
+use std::ops::AddAssign;
 
-use hdrhistogram::Histogram;
+use hdrhistogram::{sync::Recorder, Histogram, SyncHistogram};
 use quanta::Clock;
 
+pub struct Latency(SyncHistogram<u64>);
 #[derive(Clone)]
-pub struct Latency(Arc<Mutex<Histogram<u64>>>);
 pub struct LocalLatency {
-    total: Arc<Mutex<Histogram<u64>>>,
-    latency: Histogram<u64>,
+    recorder: Recorder<u64>,
     clock: Clock,
 }
 
 impl Default for Latency {
     fn default() -> Self {
-        Self(Arc::new(Mutex::new(Histogram::new(2).unwrap())))
+        Self(Histogram::new(2).unwrap().into())
     }
 }
 
-impl Into<Histogram<u64>> for Latency {
-    fn into(self) -> Histogram<u64> {
-        Arc::try_unwrap(self.0).unwrap().into_inner().unwrap()
+impl Into<SyncHistogram<u64>> for Latency {
+    fn into(self) -> SyncHistogram<u64> {
+        let mut hist = self.0;
+        hist.refresh();
+        hist
     }
 }
 
 impl Latency {
-    pub fn create_local(&self) -> LocalLatency {
+    pub fn local(&self) -> LocalLatency {
         LocalLatency {
-            total: self.0.clone(),
-            latency: Histogram::new(2).unwrap(),
+            recorder: self.0.recorder(),
             clock: Clock::new(),
         }
     }
@@ -46,12 +42,6 @@ impl LocalLatency {
 
 impl AddAssign<Measure> for LocalLatency {
     fn add_assign(&mut self, measure: Measure) {
-        self.latency += self.clock.delta(measure.0, self.clock.end()).as_nanos() as u64;
-    }
-}
-
-impl Drop for LocalLatency {
-    fn drop(&mut self) {
-        *self.total.lock().unwrap() += replace(&mut self.latency, Histogram::new(0).unwrap());
+        self.recorder += self.clock.delta(measure.0, self.clock.end()).as_nanos() as u64;
     }
 }

@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use hdrhistogram::Histogram;
+use hdrhistogram::SyncHistogram;
 
 use crate::latency::Latency;
 
@@ -197,7 +197,7 @@ impl<S: State> Handle<S> {
             shared: self.shared.clone(),
             submit: self.submit.clone(),
         };
-        let mut latency = self.latency.create_local();
+        let mut latency = self.latency.local();
 
         let mut steal = self.steal_without_state(context, &mut shutdown);
         loop {
@@ -221,7 +221,7 @@ impl<S: State> Handle<S> {
 
 impl<S: State> Drop for Handle<S> {
     fn drop(&mut self) {
-        let hist: Histogram<_> = take(&mut self.latency).into();
+        let hist: SyncHistogram<_> = take(&mut self.latency).into();
         println!(
             "stateful: {:?}, {} samples",
             Duration::from_nanos(hist.mean() as _) * hist.len() as _,
