@@ -63,9 +63,9 @@ impl AddAssign<Measure> for LocalLatency {
 
 impl Display for Latency {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(
+        write!(
             f,
-            "{}: {:?}, {} samples",
+            "{}: {:?} in total of {} samples",
             self.name,
             Duration::from_nanos(self.hist.mean() as _) * self.hist.len() as _,
             self.hist.len(),
@@ -75,6 +75,9 @@ impl Display for Latency {
             .iter_quantiles(1)
             .skip_while(|v| v.quantile() < 0.01)
         {
+            // TODO continue
+
+            writeln!(f)?;
             write!(
                 f,
                 "{:8?} | {:40} | {:4.1}th %-ile",
@@ -88,7 +91,6 @@ impl Display for Latency {
             if v.quantile() >= 0.99 {
                 break;
             }
-            writeln!(f)?;
         }
         Ok(())
     }

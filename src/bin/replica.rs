@@ -109,10 +109,18 @@ fn main() {
             0
         }
 
-        fn launch(mut replica: Handle<R>, args: Args, shutdown: Arc<AtomicBool>) {
+        fn launch(
+            mut replica: Handle<R>,
+            args: Args,
+            shutdown: Arc<AtomicBool>,
+        ) -> Box<dyn FnOnce()>
+        where
+            R: 'static,
+        {
             replica.set_worker_count(args.n_worker as _);
+            let replica = Arc::new(replica);
             let data = Self {
-                replica: Arc::new(replica),
+                replica: replica.clone(),
                 args: Arc::new(args),
                 shutdown,
             };
@@ -123,10 +131,11 @@ fn main() {
                     rte_rmt_call_main_t::SKIP_MAIN,
                 );
             }
+            Box::new(move || replica.unpark_all())
         }
     }
 
-    match args.mode {
+    let unpark = match args.mode {
         Mode::Unreplicated => WorkerData::launch(
             unreplicated::Replica::register_new(&mut transport, args.replica_id, NullApp),
             args,
@@ -137,9 +146,10 @@ fn main() {
             args,
             shutdown.clone(),
         ),
-    }
+    };
 
     transport.run1(|| shutdown.load(Ordering::SeqCst));
+    unpark();
     unsafe { rte_eal_mp_wait_lcore() };
     info!("gracefully shutdown");
 }

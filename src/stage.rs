@@ -17,7 +17,17 @@ pub struct Handle<S: State> {
     state: Mutex<S>,
     shared: S::Shared,
     submit: Arc<Submit<S>>,
-    latency: Latency,
+    metric: Metric,
+}
+
+struct Metric {
+    stateful: Latency,
+    stateless: Latency,
+    park: Latency,
+}
+
+struct SubmitMetric {
+    //
 }
 
 pub struct StatefulContext<'a, S: State> {
@@ -44,6 +54,7 @@ pub struct Submit<S: State> {
     stateless_list: Mutex<Vec<StatelessTask<S>>>,
     n_worker: AtomicU32,
     park_token: AtomicU32,
+    metric: SubmitMetric,
 }
 type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
 type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
@@ -58,8 +69,13 @@ impl<S: State> From<S> for Handle<S> {
                 stateless_list: Mutex::new(Vec::new()),
                 n_worker: AtomicU32::new(0),
                 park_token: AtomicU32::new(0),
+                metric: SubmitMetric {},
             }),
-            latency: Latency::new("stateful"),
+            metric: Metric {
+                stateful: Latency::new("stateful"),
+                stateless: Latency::new("stateless"),
+                park: Latency::new("park"),
+            },
         }
     }
 }
@@ -181,8 +197,7 @@ impl<S: State> Handle<S> {
             }
             drop(stateless_list);
 
-            // park here or in worker loop?
-            self.submit.park();
+            // park
         }
         Task::Shutdown
     }
@@ -210,8 +225,6 @@ impl<S: State> Handle<S> {
                 };
                 return self.steal_with_state(context, shutdown);
             }
-
-            self.submit.park();
         }
         Task::Shutdown
     }
@@ -225,20 +238,23 @@ impl<S: State> Handle<S> {
             shared: self.shared.clone(),
             submit: self.submit.clone(),
         };
-        let mut latency = self.latency.local();
+
+        let mut stateful_latency = self.metric.stateful.local();
+        let mut stateless_latency = self.metric.stateless.local();
 
         let mut steal = self.steal_without_state(context, &mut shutdown);
         loop {
             match steal {
                 Task::Stateful(task, mut context) => {
-                    let measure = latency.measure();
+                    let measure = stateful_latency.measure();
                     task(&mut context);
-                    latency += measure;
+                    stateful_latency += measure;
                     steal = self.steal_with_state(context, &mut shutdown);
                 }
                 Task::Stateless(task, context) => {
-                    // TODO measure latency
+                    let measure = stateless_latency.measure();
                     task(&context);
+                    stateless_latency += measure;
                     steal = self.steal_without_state(context, &mut shutdown);
                 }
                 Task::Shutdown => return,
@@ -255,7 +271,11 @@ impl<S: State> Handle<S> {
 
 impl<S: State> Drop for Handle<S> {
     fn drop(&mut self) {
-        self.latency.refresh();
-        println!("{}", self.latency);
+        self.metric.stateful.refresh();
+        println!("{}", self.metric.stateful);
+        self.metric.stateless.refresh();
+        println!("{}", self.metric.stateless);
+        self.metric.park.refresh();
+        println!("{}", self.metric.park);
     }
 }
