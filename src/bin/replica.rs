@@ -109,7 +109,8 @@ fn main() {
             0
         }
 
-        fn launch(replica: Handle<R>, args: Args, shutdown: Arc<AtomicBool>) {
+        fn launch(mut replica: Handle<R>, args: Args, shutdown: Arc<AtomicBool>) {
+            replica.set_worker_count(args.n_worker as _);
             let data = Self {
                 replica: Arc::new(replica),
                 args: Arc::new(args),

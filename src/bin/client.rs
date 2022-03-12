@@ -254,7 +254,7 @@ fn main() {
     }
 
     let status = Arc::new(AtomicU32::new(Status::WarmUp as _));
-    let latency = Latency::default();
+    let mut latency = Latency::new("latency");
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
             || unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport),
@@ -273,6 +273,8 @@ fn main() {
     transport.run(0, || status.load(Ordering::SeqCst) == Status::Shutdown as _);
     unsafe { rte_eal_mp_wait_lcore() };
 
+    latency.refresh();
+    println!("{}", latency);
     let hist: SyncHistogram<_> = latency.into();
     println!(
         "p50(mean) {:?}({:?}) p99 {:?}",

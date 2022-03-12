@@ -1,33 +1,48 @@
-use std::ops::AddAssign;
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::AddAssign,
+    time::Duration,
+};
 
 use hdrhistogram::{sync::Recorder, Histogram, SyncHistogram};
 use quanta::Clock;
 
-pub struct Latency(SyncHistogram<u64>);
+pub struct Latency {
+    name: String,
+    hist: SyncHistogram<u32>,
+}
 #[derive(Clone)]
 pub struct LocalLatency {
-    recorder: Recorder<u64>,
+    recorder: Recorder<u32>,
     clock: Clock,
 }
 
-impl Default for Latency {
-    fn default() -> Self {
-        Self(Histogram::new(2).unwrap().into())
+impl Latency {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            hist: Histogram::new(2).unwrap().into(),
+        }
     }
 }
 
-impl Into<SyncHistogram<u64>> for Latency {
-    fn into(self) -> SyncHistogram<u64> {
-        let mut hist = self.0;
-        hist.refresh();
-        hist
+impl Latency {
+    pub fn refresh(&mut self) {
+        self.hist.refresh();
+    }
+}
+
+impl Into<SyncHistogram<u32>> for Latency {
+    fn into(mut self) -> SyncHistogram<u32> {
+        self.refresh();
+        self.hist
     }
 }
 
 impl Latency {
     pub fn local(&self) -> LocalLatency {
         LocalLatency {
-            recorder: self.0.recorder(),
+            recorder: self.hist.recorder(),
             clock: Clock::new(),
         }
     }
@@ -43,5 +58,38 @@ impl LocalLatency {
 impl AddAssign<Measure> for LocalLatency {
     fn add_assign(&mut self, measure: Measure) {
         self.recorder += self.clock.delta(measure.0, self.clock.end()).as_nanos() as u64;
+    }
+}
+
+impl Display for Latency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(
+            f,
+            "{}: {:?}, {} samples",
+            self.name,
+            Duration::from_nanos(self.hist.mean() as _) * self.hist.len() as _,
+            self.hist.len(),
+        )?;
+        for v in self
+            .hist
+            .iter_quantiles(1)
+            .skip_while(|v| v.quantile() < 0.01)
+        {
+            write!(
+                f,
+                "{:8?} | {:40} | {:4.1}th %-ile",
+                Duration::from_nanos(v.value_iterated_to() as _),
+                "*".repeat(
+                    (v.count_since_last_iteration() as f64 * 40.0 / self.hist.len() as f64).ceil()
+                        as usize
+                ),
+                v.quantile_iterated_to() * 100.0
+            )?;
+            if v.quantile() >= 0.99 {
+                break;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }

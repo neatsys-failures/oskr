@@ -1,11 +1,10 @@
 use std::{
-    mem::take,
     ops::{Deref, DerefMut},
-    sync::{Arc, Mutex, MutexGuard},
-    time::Duration,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc, Mutex, MutexGuard,
+    },
 };
-
-use hdrhistogram::SyncHistogram;
 
 use crate::latency::Latency;
 
@@ -43,6 +42,8 @@ impl<S: State> Clone for StatelessContext<S> {
 pub struct Submit<S: State> {
     stateful_list: Mutex<Vec<StatefulTask<S>>>,
     stateless_list: Mutex<Vec<StatelessTask<S>>>,
+    n_worker: AtomicU32,
+    park_token: AtomicU32,
 }
 type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
 type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
@@ -55,8 +56,10 @@ impl<S: State> From<S> for Handle<S> {
             submit: Arc::new(Submit {
                 stateful_list: Mutex::new(Vec::new()),
                 stateless_list: Mutex::new(Vec::new()),
+                n_worker: AtomicU32::new(0),
+                park_token: AtomicU32::new(0),
             }),
-            latency: Latency::default(),
+            latency: Latency::new("stateful"),
         }
     }
 }
@@ -108,6 +111,7 @@ impl<S: State> Submit<S> {
             }
         }
         .push(Box::new(task));
+        self.unpark_one();
     }
 
     pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static) {
@@ -117,6 +121,25 @@ impl<S: State> Submit<S> {
             }
         }
         .push(Box::new(task));
+        self.unpark_one();
+    }
+
+    fn park(&self) {
+        let token = self.park_token.fetch_sub(1, Ordering::SeqCst);
+        if token > 0 {
+            return;
+        }
+        while self.park_token.load(Ordering::SeqCst) < token {}
+    }
+
+    fn unpark_one(&self) {
+        let n_worker = self.n_worker.load(Ordering::SeqCst);
+        assert_ne!(n_worker, 0);
+        self.park_token
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |t| {
+                Some((t + 1).min(n_worker))
+            })
+            .unwrap();
     }
 }
 
@@ -158,7 +181,8 @@ impl<S: State> Handle<S> {
             }
             drop(stateless_list);
 
-            // park when stealed nothing?
+            // park here or in worker loop?
+            self.submit.park();
         }
         Task::Shutdown
     }
@@ -187,9 +211,13 @@ impl<S: State> Handle<S> {
                 return self.steal_with_state(context, shutdown);
             }
 
-            // park when nothing to steal?
+            self.submit.park();
         }
         Task::Shutdown
+    }
+
+    pub fn set_worker_count(&mut self, n_worker: u32) {
+        self.submit.n_worker.store(n_worker, Ordering::SeqCst);
     }
 
     pub fn run_worker(&self, mut shutdown: impl FnMut() -> bool) {
@@ -217,15 +245,17 @@ impl<S: State> Handle<S> {
             }
         }
     }
+
+    pub fn unpark_all(&self) {
+        for _ in 0..self.submit.n_worker.load(Ordering::SeqCst) {
+            self.submit.unpark_one();
+        }
+    }
 }
 
 impl<S: State> Drop for Handle<S> {
     fn drop(&mut self) {
-        let hist: SyncHistogram<_> = take(&mut self.latency).into();
-        println!(
-            "stateful: {:?}, {} samples",
-            Duration::from_nanos(hist.mean() as _) * hist.len() as _,
-            hist.len(),
-        );
+        self.latency.refresh();
+        println!("{}", self.latency);
     }
 }
