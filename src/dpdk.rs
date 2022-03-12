@@ -288,20 +288,16 @@ impl Transport {
         });
     }
 
-    pub fn run1(&self) {
+    pub fn run1(&self, shutdown: impl FnMut() -> bool) {
         assert_eq!(self.recv_table.len(), 1);
         let (address, rx_agent) = self.recv_table.iter().next().unwrap();
-        self.run_internal(
-            0,
-            || false,
-            |source, dest, buffer| {
-                if dest == *address {
-                    rx_agent(source, buffer);
-                    true
-                } else {
-                    false
-                }
-            },
-        );
+        self.run_internal(0, shutdown, |source, dest, buffer| {
+            if dest == *address {
+                rx_agent(source, buffer);
+                true
+            } else {
+                false
+            }
+        });
     }
 }

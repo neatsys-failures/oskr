@@ -1,6 +1,7 @@
 ## High Performance Distributed Protocols Collection
-![GitHub repo size](https://img.shields.io/github/repo-size/sgdxbc/oskr)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sgdxbc/oskr)
+![Crates.io](https://img.shields.io/crates/v/oskr)
+![Crates.io](https://img.shields.io/crates/l/oskr)
+![docs.rs](https://img.shields.io/docsrs/oskr)
 ![Lines of code](https://img.shields.io/tokei/lines/github/sgdxbc/oskr)
 ![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oskr)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oskr)

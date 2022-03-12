@@ -1,7 +1,13 @@
 use std::{
+    mem::take,
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex, MutexGuard},
+    time::Duration,
 };
+
+use hdrhistogram::Histogram;
+
+use crate::latency::Latency;
 
 pub trait State {
     type Shared: Clone + Send;
@@ -12,6 +18,7 @@ pub struct Handle<S: State> {
     state: Mutex<S>,
     shared: S::Shared,
     submit: Arc<Submit<S>>,
+    latency: Latency,
 }
 
 pub struct StatefulContext<'a, S: State> {
@@ -49,6 +56,7 @@ impl<S: State> From<S> for Handle<S> {
                 stateful_list: Mutex::new(Vec::new()),
                 stateless_list: Mutex::new(Vec::new()),
             }),
+            latency: Latency::default(),
         }
     }
 }
@@ -115,11 +123,16 @@ impl<S: State> Submit<S> {
 enum Task<'a, S: State> {
     Stateful(StatefulTask<S>, StatefulContext<'a, S>),
     Stateless(StatelessTask<S>, StatelessContext<S>),
+    Shutdown,
 }
 
 impl<S: State> Handle<S> {
-    fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S>) -> Task<'_, S> {
-        loop {
+    fn steal_with_state<'a>(
+        &'a self,
+        context: StatefulContext<'a, S>,
+        shutdown: &mut impl FnMut() -> bool,
+    ) -> Task<'_, S> {
+        while !shutdown() {
             let mut stateful_list = loop {
                 if let Ok(stateful_list) = self.submit.stateful_list.try_lock() {
                     break stateful_list;
@@ -147,10 +160,15 @@ impl<S: State> Handle<S> {
 
             // park when stealed nothing?
         }
+        Task::Shutdown
     }
 
-    fn steal_without_state(&self, context: StatelessContext<S>) -> Task<'_, S> {
-        loop {
+    fn steal_without_state(
+        &self,
+        context: StatelessContext<S>,
+        shutdown: &mut impl FnMut() -> bool,
+    ) -> Task<'_, S> {
+        while !shutdown() {
             let mut stateless_list = loop {
                 if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
                     break stateless_list;
@@ -166,30 +184,48 @@ impl<S: State> Handle<S> {
                     state,
                     submit: context.submit,
                 };
-                return self.steal_with_state(context);
+                return self.steal_with_state(context, shutdown);
             }
 
             // park when nothing to steal?
         }
+        Task::Shutdown
     }
 
-    pub fn run_worker(&self) {
+    pub fn run_worker(&self, mut shutdown: impl FnMut() -> bool) {
         let context = StatelessContext {
             shared: self.shared.clone(),
             submit: self.submit.clone(),
         };
-        let mut steal = self.steal_without_state(context);
+        let mut latency = self.latency.create_local();
+
+        let mut steal = self.steal_without_state(context, &mut shutdown);
         loop {
             match steal {
                 Task::Stateful(task, mut context) => {
+                    let measure = latency.measure();
                     task(&mut context);
-                    steal = self.steal_with_state(context);
+                    latency += measure;
+                    steal = self.steal_with_state(context, &mut shutdown);
                 }
                 Task::Stateless(task, context) => {
+                    // TODO measure latency
                     task(&context);
-                    steal = self.steal_without_state(context);
+                    steal = self.steal_without_state(context, &mut shutdown);
                 }
+                Task::Shutdown => return,
             }
         }
+    }
+}
+
+impl<S: State> Drop for Handle<S> {
+    fn drop(&mut self) {
+        let hist: Histogram<_> = take(&mut self.latency).into();
+        println!(
+            "stateful: {:?}, {} samples",
+            Duration::from_nanos(hist.mean() as _) * hist.len() as _,
+            hist.len(),
+        );
     }
 }

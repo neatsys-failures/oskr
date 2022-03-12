@@ -9,7 +9,7 @@ use quanta::Clock;
 
 #[derive(Clone)]
 pub struct Latency(Arc<Mutex<Histogram<u64>>>);
-pub struct SubLatency {
+pub struct LocalLatency {
     total: Arc<Mutex<Histogram<u64>>>,
     latency: Histogram<u64>,
     clock: Clock,
@@ -28,8 +28,8 @@ impl Into<Histogram<u64>> for Latency {
 }
 
 impl Latency {
-    pub fn create_local(&self) -> SubLatency {
-        SubLatency {
+    pub fn create_local(&self) -> LocalLatency {
+        LocalLatency {
             total: self.0.clone(),
             latency: Histogram::new(2).unwrap(),
             clock: Clock::new(),
@@ -38,19 +38,19 @@ impl Latency {
 }
 
 pub struct Measure(u64);
-impl SubLatency {
+impl LocalLatency {
     pub fn measure(&self) -> Measure {
         Measure(self.clock.start())
     }
 }
 
-impl AddAssign<Measure> for SubLatency {
+impl AddAssign<Measure> for LocalLatency {
     fn add_assign(&mut self, measure: Measure) {
         self.latency += self.clock.delta(measure.0, self.clock.end()).as_nanos() as u64;
     }
 }
 
-impl Drop for SubLatency {
+impl Drop for LocalLatency {
     fn drop(&mut self) {
         *self.total.lock().unwrap() += replace(&mut self.latency, Histogram::new(0).unwrap());
     }

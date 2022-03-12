@@ -1,16 +1,26 @@
-use std::{ffi::c_void, fs::File, io::Read, path::PathBuf, sync::Arc};
+use std::{
+    ffi::c_void,
+    fs::File,
+    io::Read,
+    path::PathBuf,
+    process,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use clap::{ArgEnum, Parser};
 use oskr::{
     common::{Opaque, ReplicaId},
     dpdk::Transport,
-    dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
+    dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     replication::{pbft, unreplicated},
     stage::{Handle, State},
     transport::Config,
     App,
 };
-use tracing::info;
+use tracing::{info, warn};
 
 struct NullApp;
 impl App for NullApp {
@@ -63,35 +73,47 @@ fn main() {
     };
     config.collect_signing_key(&args.config);
 
+    let shutdown = Arc::new(AtomicBool::new(false));
+    ctrlc::set_handler({
+        let shutdown = shutdown.clone();
+        move || {
+            println!();
+            if !shutdown.load(Ordering::SeqCst) {
+                shutdown.store(true, Ordering::SeqCst);
+            } else {
+                warn!("double ctrl-c, quit ungracefully");
+                process::abort();
+            }
+        }
+    })
+    .unwrap();
+
     let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
-        n_worker: u16,
+        args: Arc<Args>,
+        shutdown: Arc<AtomicBool>,
     }
     impl<R: State> WorkerData<R> {
         extern "C" fn worker(arg: *mut c_void) -> i32 {
             let worker_data: &Self = unsafe { &*(arg as *mut _) };
             let replica = worker_data.replica.clone();
-            let n_worker = worker_data.n_worker;
+            let args = worker_data.args.clone();
+            let shutdown = worker_data.shutdown.clone();
 
             let worker_id = Transport::worker_id();
-            if worker_id >= n_worker as usize {
-                return 0;
-            } else if worker_id == 0 {
-                // it runs slower with this optimization...
-                // replica.run_stateful_worker();
-                replica.run_worker();
-            } else {
-                // run stateless worker
+            if worker_id < args.n_worker as usize {
+                replica.run_worker(|| shutdown.load(Ordering::SeqCst));
             }
-            unreachable!();
+            0
         }
 
-        fn launch(replica: Handle<R>, args: Args) {
+        fn launch(replica: Handle<R>, args: Args, shutdown: Arc<AtomicBool>) {
             let data = Self {
                 replica: Arc::new(replica),
-                n_worker: args.n_worker,
+                args: Arc::new(args),
+                shutdown,
             };
             unsafe {
                 rte_eal_mp_remote_launch(
@@ -107,12 +129,16 @@ fn main() {
         Mode::Unreplicated => WorkerData::launch(
             unreplicated::Replica::register_new(&mut transport, args.replica_id, NullApp),
             args,
+            shutdown.clone(),
         ),
         Mode::PBFT => WorkerData::launch(
             pbft::Replica::register_new(&mut transport, args.replica_id, NullApp, args.batch_size),
             args,
+            shutdown.clone(),
         ),
     }
 
-    transport.run1();
+    transport.run1(|| shutdown.load(Ordering::SeqCst));
+    unsafe { rte_eal_mp_wait_lcore() };
+    info!("gracefully shutdown");
 }

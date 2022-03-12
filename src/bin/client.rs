@@ -156,6 +156,8 @@ fn main() {
             } else {
                 return 0;
             };
+            info!("worker {} poll {} clients", worker_id, client_list.len());
+
             let count = worker_data.count.clone();
             let status = worker_data.status.clone();
             let args = worker_data.args.clone();
@@ -225,10 +227,10 @@ fn main() {
             status: Arc<AtomicU32>,
             latency: Latency,
         ) {
-            let k = (args.n_client - 1) / args.n_worker + 1;
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
                 .map(|i| {
-                    (i * k..args.n_client.min((i + 1) * k))
+                    (i..args.n_client)
+                        .step_by(args.n_worker as usize)
                         .map(|_| client())
                         .collect()
                 })
