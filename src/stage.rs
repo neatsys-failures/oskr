@@ -6,10 +6,7 @@ use std::{
     },
 };
 
-use crossbeam::{
-    deque::{Injector, Steal},
-    utils::Backoff,
-};
+use crossbeam::{queue::SegQueue, utils::Backoff};
 
 use crate::latency::Latency;
 
@@ -50,8 +47,8 @@ impl<S: State> Clone for StatelessContext<S> {
 }
 
 pub struct Submit<S: State> {
-    stateful_list: Injector<StatefulTask<S>>,
-    stateless_list: Injector<StatelessTask<S>>,
+    stateful_list: SegQueue<StatefulTask<S>>,
+    stateless_list: SegQueue<StatelessTask<S>>,
     n_worker: AtomicU32,
     park_token: AtomicU32,
 }
@@ -64,8 +61,8 @@ impl<S: State> From<S> for Handle<S> {
             shared: state.shared(),
             state: Mutex::new(state),
             submit: Arc::new(Submit {
-                stateful_list: Injector::new(),
-                stateless_list: Injector::new(),
+                stateful_list: SegQueue::new(),
+                stateless_list: SegQueue::new(),
                 n_worker: AtomicU32::new(0),
                 park_token: AtomicU32::new(0),
             }),
@@ -163,32 +160,20 @@ impl<S: State> Handle<S> {
     ) -> Task<'_, S> {
         let backoff = Backoff::new();
         while !shutdown() {
-            loop {
-                match self.submit.stateful_list.steal() {
-                    Steal::Retry => {}
-                    Steal::Empty => break,
-                    Steal::Success(task) => return Task::Stateful(task, context),
-                }
-                backoff.spin();
+            if let Some(task) = self.submit.stateful_list.pop() {
+                return Task::Stateful(task, context);
             }
 
-            loop {
-                match self.submit.stateless_list.steal() {
-                    Steal::Retry => {}
-                    Steal::Empty => break,
-                    Steal::Success(task) => {
-                        let context = StatelessContext {
-                            shared: self.shared.clone(),
-                            submit: context.submit,
-                        };
-                        // state dropped
-                        return Task::Stateless(task, context);
-                    }
-                }
-                backoff.spin();
+            if let Some(task) = self.submit.stateless_list.pop() {
+                let context = StatelessContext {
+                    shared: self.shared.clone(),
+                    submit: context.submit,
+                };
+                // state dropped
+                return Task::Stateless(task, context);
             }
 
-            // backoff.snooze();
+            backoff.snooze();
         }
         Task::Shutdown
     }
@@ -200,13 +185,8 @@ impl<S: State> Handle<S> {
     ) -> Task<'_, S> {
         let backoff = Backoff::new();
         while !shutdown() {
-            loop {
-                match self.submit.stateless_list.steal() {
-                    Steal::Retry => {}
-                    Steal::Empty => break,
-                    Steal::Success(task) => return Task::Stateless(task, context),
-                }
-                backoff.spin();
+            if let Some(task) = self.submit.stateless_list.pop() {
+                return Task::Stateless(task, context);
             }
 
             if let Ok(state) = self.state.try_lock() {
@@ -217,7 +197,7 @@ impl<S: State> Handle<S> {
                 return self.steal_with_state(context, shutdown);
             }
 
-            // backoff.snooze();
+            backoff.snooze();
         }
         Task::Shutdown
     }

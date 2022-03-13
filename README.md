@@ -17,7 +17,14 @@ because the core of this project is based on a specialized actor model.
 
 [specpaxos]: https://github.com/UWSysLab/specpaxos
 
-**Benchmark result.** Work in progress.
+**Benchmark result.** Detailed explaination work in progress.
+
+|Protocol      |Worker number|Batch size|Maximum throughput (K ops/sec)|Minimum medium latency (us)|
+|--------------|-----|-----|-----------|-----------|
+|Unreplicated  |1    |1    |1901.157   |12.031     |
+|PBFT          |14   |1    |14.686     |716.799    |
+|PBFT          |14   |100  |100.2*     |1449.983   |
+|HotStuff      |
 
 ----
 
