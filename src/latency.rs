@@ -80,7 +80,7 @@ impl Display for Latency {
             writeln!(f)?;
             write!(
                 f,
-                "{:8?} | {:40} | {:4.1}th %-ile",
+                "{:9?} | {:40} | {:4.1}th %-ile",
                 Duration::from_nanos(v.value_iterated_to() as _),
                 "*".repeat(
                     (v.count_since_last_iteration() as f64 * 40.0 / self.hist.len() as f64).ceil()

@@ -51,7 +51,7 @@ fn main() {
         mask: String,
         #[clap(short, long, default_value_t = 0)]
         port_id: u16,
-        #[clap(short, long = "worker-number", name = "N", default_value_t = 1)]
+        #[clap(short, long = "worker-number", default_value_t = 1)]
         n_worker: u16,
         #[clap(short, long, default_value_t = 1)]
         batch_size: usize,

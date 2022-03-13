@@ -6,6 +6,8 @@ use std::{
     },
 };
 
+use crossbeam::deque::{Injector, Steal};
+
 use crate::latency::Latency;
 
 pub trait State {
@@ -24,10 +26,6 @@ struct Metric {
     stateful: Latency,
     stateless: Latency,
     park: Latency,
-}
-
-struct SubmitMetric {
-    //
 }
 
 pub struct StatefulContext<'a, S: State> {
@@ -50,11 +48,10 @@ impl<S: State> Clone for StatelessContext<S> {
 }
 
 pub struct Submit<S: State> {
-    stateful_list: Mutex<Vec<StatefulTask<S>>>,
-    stateless_list: Mutex<Vec<StatelessTask<S>>>,
+    stateful_list: Injector<StatefulTask<S>>,
+    stateless_list: Injector<StatelessTask<S>>,
     n_worker: AtomicU32,
     park_token: AtomicU32,
-    metric: SubmitMetric,
 }
 type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
 type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
@@ -65,11 +62,10 @@ impl<S: State> From<S> for Handle<S> {
             shared: state.shared(),
             state: Mutex::new(state),
             submit: Arc::new(Submit {
-                stateful_list: Mutex::new(Vec::new()),
-                stateless_list: Mutex::new(Vec::new()),
+                stateful_list: Injector::new(),
+                stateless_list: Injector::new(),
                 n_worker: AtomicU32::new(0),
                 park_token: AtomicU32::new(0),
-                metric: SubmitMetric {},
             }),
             metric: Metric {
                 stateful: Latency::new("stateful"),
@@ -121,22 +117,12 @@ impl<S: State> Submit<S> {
         &self,
         task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static,
     ) {
-        loop {
-            if let Ok(stateful_list) = self.stateful_list.try_lock() {
-                break stateful_list;
-            }
-        }
-        .push(Box::new(task));
+        self.stateful_list.push(Box::new(task));
         self.unpark_one();
     }
 
     pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static) {
-        loop {
-            if let Ok(stateless_list) = self.stateless_list.try_lock() {
-                break stateless_list;
-            }
-        }
-        .push(Box::new(task));
+        self.stateless_list.push(Box::new(task));
         self.unpark_one();
     }
 
@@ -149,6 +135,7 @@ impl<S: State> Submit<S> {
     }
 
     fn unpark_one(&self) {
+        // is it really necessary to SeqCst load every time?
         let n_worker = self.n_worker.load(Ordering::SeqCst);
         assert_ne!(n_worker, 0);
         self.park_token
@@ -172,30 +159,28 @@ impl<S: State> Handle<S> {
         shutdown: &mut impl FnMut() -> bool,
     ) -> Task<'_, S> {
         while !shutdown() {
-            let mut stateful_list = loop {
-                if let Ok(stateful_list) = self.submit.stateful_list.try_lock() {
-                    break stateful_list;
+            loop {
+                match self.submit.stateful_list.steal() {
+                    Steal::Retry => continue,
+                    Steal::Empty => break,
+                    Steal::Success(task) => return Task::Stateful(task, context),
                 }
-            };
-            if let Some(task) = stateful_list.pop() {
-                return Task::Stateful(task, context);
             }
-            drop(stateful_list);
 
-            let mut stateless_list = loop {
-                if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
-                    break stateless_list;
+            loop {
+                match self.submit.stateless_list.steal() {
+                    Steal::Retry => continue,
+                    Steal::Empty => break,
+                    Steal::Success(task) => {
+                        let context = StatelessContext {
+                            shared: self.shared.clone(),
+                            submit: context.submit,
+                        };
+                        // state dropped
+                        return Task::Stateless(task, context);
+                    }
                 }
-            };
-            if let Some(task) = stateless_list.pop() {
-                let context = StatelessContext {
-                    shared: self.shared.clone(),
-                    submit: context.submit,
-                };
-                // state dropped
-                return Task::Stateless(task, context);
             }
-            drop(stateless_list);
 
             // park
         }
@@ -208,15 +193,13 @@ impl<S: State> Handle<S> {
         shutdown: &mut impl FnMut() -> bool,
     ) -> Task<'_, S> {
         while !shutdown() {
-            let mut stateless_list = loop {
-                if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
-                    break stateless_list;
+            loop {
+                match self.submit.stateless_list.steal() {
+                    Steal::Retry => continue,
+                    Steal::Empty => break,
+                    Steal::Success(task) => return Task::Stateless(task, context),
                 }
-            };
-            if let Some(task) = stateless_list.pop() {
-                return Task::Stateless(task, context);
             }
-            drop(stateless_list);
 
             if let Ok(state) = self.state.try_lock() {
                 let context = StatefulContext {
@@ -225,6 +208,8 @@ impl<S: State> Handle<S> {
                 };
                 return self.steal_with_state(context, shutdown);
             }
+
+            // park
         }
         Task::Shutdown
     }
