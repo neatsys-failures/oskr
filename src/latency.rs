@@ -70,17 +70,15 @@ impl Display for Latency {
             Duration::from_nanos(self.hist.mean() as _) * self.hist.len() as _,
             self.hist.len(),
         )?;
-        for v in self
-            .hist
-            .iter_quantiles(1)
-            .skip_while(|v| v.quantile() < 0.01)
-        {
-            // TODO continue
+        for v in self.hist.iter_quantiles(1).skip(1) {
+            if v.count_since_last_iteration() == 0 {
+                continue;
+            }
 
             writeln!(f)?;
             write!(
                 f,
-                "{:9?} | {:40} | {:4.1}th %-ile",
+                "{:10?} | {:40} | {:4.1}th %-ile",
                 Duration::from_nanos(v.value_iterated_to() as _),
                 "*".repeat(
                     (v.count_since_last_iteration() as f64 * 40.0 / self.hist.len() as f64).ceil()

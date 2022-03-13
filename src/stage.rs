@@ -28,7 +28,6 @@ pub struct Handle<S: State> {
 struct Metric {
     stateful: Latency,
     stateless: Latency,
-    park: Latency,
 }
 
 pub struct StatefulContext<'a, S: State> {
@@ -73,7 +72,6 @@ impl<S: State> From<S> for Handle<S> {
             metric: Metric {
                 stateful: Latency::new("stateful"),
                 stateless: Latency::new("stateless"),
-                park: Latency::new("park"),
             },
         }
     }
@@ -190,7 +188,7 @@ impl<S: State> Handle<S> {
                 backoff.spin();
             }
 
-            backoff.snooze();
+            // backoff.snooze();
         }
         Task::Shutdown
     }
@@ -219,7 +217,7 @@ impl<S: State> Handle<S> {
                 return self.steal_with_state(context, shutdown);
             }
 
-            backoff.snooze();
+            // backoff.snooze();
         }
         Task::Shutdown
     }
@@ -270,7 +268,5 @@ impl<S: State> Drop for Handle<S> {
         println!("{}", self.metric.stateful);
         self.metric.stateless.refresh();
         println!("{}", self.metric.stateless);
-        self.metric.park.refresh();
-        println!("{}", self.metric.park);
     }
 }

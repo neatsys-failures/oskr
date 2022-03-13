@@ -66,7 +66,7 @@ impl transport::TxAgent for TxAgent {
             .config
             .replica_address
             .iter()
-            .filter(|dest| *dest == source.get_address())
+            .filter(|dest| *dest != source.get_address())
             .collect();
         if dest_list.is_empty() {
             return;
