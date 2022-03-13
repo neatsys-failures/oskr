@@ -44,6 +44,7 @@ extern "C" {
         arg: *mut c_void,
         call_main: rte_rmt_call_main_t,
     );
+    pub fn rte_eal_mp_wait_lcore();
     pub fn rte_socket_id() -> c_int;
     pub fn rte_lcore_index(lcore_id: c_int) -> c_int;
     pub fn rte_pktmbuf_pool_create(
@@ -61,6 +62,11 @@ extern "C" {
     // by DPDK shim
     // the "rte_*" prefix is replaced to "oskr_*" to indicate symbol's owner
     pub fn oskr_pktmbuf_alloc(mp: NonNull<rte_mempool>) -> *mut rte_mbuf;
+    pub fn oskr_pktmbuf_alloc_bulk(
+        pool: NonNull<rte_mempool>,
+        mbufs: NonNull<*mut rte_mbuf>,
+        count: c_uint,
+    ) -> c_int;
     pub fn oskr_pktmbuf_free(m: NonNull<rte_mbuf>);
     pub fn oskr_eth_rx_burst(
         port_id: u16,
@@ -127,7 +133,7 @@ impl Address {
 impl FromStr for Address {
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut split = s.split('#');
+        let mut split = s.split('%');
         let mac = split.next().unwrap();
         let id = split.next().unwrap();
         let mac: Vec<_> = mac
@@ -145,7 +151,7 @@ impl Display for Address {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}#{}",
+            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}%{}",
             self.mac[0], self.mac[1], self.mac[2], self.mac[3], self.mac[4], self.mac[5], self.id
         )
     }

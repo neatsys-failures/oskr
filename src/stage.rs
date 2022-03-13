@@ -1,190 +1,252 @@
 use std::{
     ops::{Deref, DerefMut},
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc, Mutex, MutexGuard,
+    },
 };
 
-use crate::transport::{Receiver, Transport};
+use crossbeam::{queue::SegQueue, utils::Backoff};
 
-pub struct Handle<State, T: Transport> {
-    state: Mutex<State>,
-    transport: T::TxAgent,
-    address: T::Address,
-    submit: Arc<Submit<State, T>>,
+use crate::latency::Latency;
+
+pub trait State {
+    type Shared: Clone + Send;
+    fn shared(&self) -> Self::Shared;
 }
 
-pub struct StatefulContext<'a, State, T: Transport> {
-    state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
-    address: T::Address,
-    pub submit: Arc<Submit<State, T>>,
+pub struct Handle<S: State> {
+    state: Mutex<S>,
+    shared: S::Shared,
+    submit: Arc<Submit<S>>,
+    metric: Metric,
 }
 
-pub struct StatelessContext<State, T: Transport> {
-    pub transport: T::TxAgent,
-    address: T::Address,
-    pub submit: Arc<Submit<State, T>>,
+struct Metric {
+    stateful: Latency,
+    stateless: Latency,
 }
 
-pub struct Submit<State, T: Transport> {
-    stateful_list: Mutex<Vec<StatefulTask<State, T>>>,
-    stateless_list: Mutex<Vec<StatelessTask<State, T>>>,
+pub struct StatefulContext<'a, S: State> {
+    state: MutexGuard<'a, S>,
+    pub submit: Arc<Submit<S>>,
 }
-type StatefulTask<S, T> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send>;
-type StatelessTask<S, T> = Box<dyn FnOnce(&StatelessContext<S, T>) + Send>;
 
-impl<S, T: Transport> Handle<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
+pub struct StatelessContext<S: State> {
+    shared: S::Shared,
+    pub submit: Arc<Submit<S>>,
+}
+
+impl<S: State> Clone for StatelessContext<S> {
+    fn clone(&self) -> Self {
         Self {
-            state: Mutex::new(state),
-            transport,
-            address,
-            submit: Arc::new(Submit {
-                stateful_list: Mutex::new(Vec::new()),
-                stateless_list: Mutex::new(Vec::new()),
-            }),
+            shared: self.shared.clone(),
+            submit: self.submit.clone(),
         }
     }
+}
 
-    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
-        f(&StatefulContext {
+pub struct Submit<S: State> {
+    stateful_list: SegQueue<StatefulTask<S>>,
+    stateless_list: SegQueue<StatelessTask<S>>,
+    n_worker: AtomicU32,
+    park_token: AtomicU32,
+}
+type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
+type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
+
+impl<S: State> From<S> for Handle<S> {
+    fn from(state: S) -> Self {
+        Self {
+            shared: state.shared(),
+            state: Mutex::new(state),
+            submit: Arc::new(Submit {
+                stateful_list: SegQueue::new(),
+                stateless_list: SegQueue::new(),
+                n_worker: AtomicU32::new(0),
+                park_token: AtomicU32::new(0),
+            }),
+            metric: Metric {
+                stateful: Latency::new("stateful"),
+                stateless: Latency::new("stateless"),
+            },
+        }
+    }
+}
+
+impl<S: State> Handle<S> {
+    pub fn with_stateful(&self, f: impl FnOnce(&mut StatefulContext<'_, S>)) {
+        f(&mut StatefulContext {
             state: self.state.lock().unwrap(),
-            transport: self.transport.clone(),
-            address: self.address.clone(),
+            submit: self.submit.clone(),
+        })
+    }
+
+    pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
+        f(&StatelessContext {
+            shared: self.shared.clone(),
             submit: self.submit.clone(),
         })
     }
 }
 
-impl<'a, S, T: Transport> Receiver<T> for StatefulContext<'a, S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.address
-    }
-}
-
-impl<S, T: Transport> Receiver<T> for StatelessContext<S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.address
-    }
-}
-
-impl<'a, S, T: Transport> Deref for StatefulContext<'a, S, T> {
+impl<'a, S: State> Deref for StatefulContext<'a, S> {
     type Target = S;
     fn deref(&self) -> &Self::Target {
         &*self.state
     }
 }
 
-impl<'a, S, T: Transport> DerefMut for StatefulContext<'a, S, T> {
+impl<'a, S: State> DerefMut for StatefulContext<'a, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.state
     }
 }
 
-impl<S, T: Transport> Submit<S, T> {
+impl<S: State> Deref for StatelessContext<S> {
+    type Target = S::Shared;
+    fn deref(&self) -> &Self::Target {
+        &self.shared
+    }
+}
+
+impl<S: State> Submit<S> {
     pub fn stateful(
         &self,
-        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
+        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static,
     ) {
-        loop {
-            if let Ok(stateful_list) = self.stateful_list.try_lock() {
-                break stateful_list;
-            }
-        }
-        .push(Box::new(task));
+        self.stateful_list.push(Box::new(task));
+        self.unpark_one();
     }
 
-    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S, T>) + Send + 'static) {
-        loop {
-            if let Ok(stateless_list) = self.stateless_list.try_lock() {
-                break stateless_list;
-            }
+    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static) {
+        self.stateless_list.push(Box::new(task));
+        self.unpark_one();
+    }
+
+    #[allow(dead_code)] // currently no plan to park, use Backoff instead
+                        // however it is good to save it for the future
+    fn park(&self) {
+        let token = self.park_token.fetch_sub(1, Ordering::SeqCst);
+        if token > 0 {
+            return;
         }
-        .push(Box::new(task));
+        while self.park_token.load(Ordering::SeqCst) < token {}
+    }
+
+    fn unpark_one(&self) {
+        // is it really necessary to SeqCst load every time?
+        let n_worker = self.n_worker.load(Ordering::SeqCst);
+        assert_ne!(n_worker, 0);
+        self.park_token
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |t| {
+                Some((t + 1).min(n_worker))
+            })
+            .unwrap();
     }
 }
 
-enum Task<'a, S, T: Transport> {
-    Stateful(StatefulTask<S, T>, StatefulContext<'a, S, T>),
-    Stateless(StatelessTask<S, T>, StatelessContext<S, T>),
+enum Task<'a, S: State> {
+    Stateful(StatefulTask<S>, StatefulContext<'a, S>),
+    Stateless(StatelessTask<S>, StatelessContext<S>),
+    Shutdown,
 }
 
-impl<S, T: Transport> Handle<S, T> {
-    fn steal_with_state<'a>(&'a self, context: StatefulContext<'a, S, T>) -> Task<'_, S, T> {
-        loop {
-            let mut stateful_list = loop {
-                if let Ok(stateful_list) = self.submit.stateful_list.try_lock() {
-                    break stateful_list;
-                }
-            };
-            if let Some(task) = stateful_list.pop() {
+impl<S: State> Handle<S> {
+    fn steal_with_state<'a>(
+        &'a self,
+        context: StatefulContext<'a, S>,
+        shutdown: &mut impl FnMut() -> bool,
+    ) -> Task<'_, S> {
+        let backoff = Backoff::new();
+        while !shutdown() {
+            if let Some(task) = self.submit.stateful_list.pop() {
                 return Task::Stateful(task, context);
             }
-            drop(stateful_list);
 
-            let mut stateless_list = loop {
-                if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
-                    break stateless_list;
-                }
-            };
-            if let Some(task) = stateless_list.pop() {
+            if let Some(task) = self.submit.stateless_list.pop() {
                 let context = StatelessContext {
-                    transport: context.transport,
-                    address: context.address,
+                    shared: self.shared.clone(),
                     submit: context.submit,
-                    // state dropped
                 };
+                // state dropped
                 return Task::Stateless(task, context);
             }
-            drop(stateless_list);
 
-            // park when stealed nothing?
+            backoff.snooze();
         }
+        Task::Shutdown
     }
 
-    fn steal_without_state(&self, context: StatelessContext<S, T>) -> Task<'_, S, T> {
-        loop {
-            let mut stateless_list = loop {
-                if let Ok(stateless_list) = self.submit.stateless_list.try_lock() {
-                    break stateless_list;
-                }
-            };
-            if let Some(task) = stateless_list.pop() {
+    fn steal_without_state(
+        &self,
+        context: StatelessContext<S>,
+        shutdown: &mut impl FnMut() -> bool,
+    ) -> Task<'_, S> {
+        let backoff = Backoff::new();
+        while !shutdown() {
+            if let Some(task) = self.submit.stateless_list.pop() {
                 return Task::Stateless(task, context);
             }
-            drop(stateless_list);
 
             if let Ok(state) = self.state.try_lock() {
                 let context = StatefulContext {
                     state,
-                    transport: context.transport,
-                    address: context.address,
                     submit: context.submit,
                 };
-                return self.steal_with_state(context);
+                return self.steal_with_state(context, shutdown);
             }
 
-            // park when nothing to steal?
+            backoff.snooze();
         }
+        Task::Shutdown
     }
 
-    pub fn run_worker(&self) {
+    pub fn set_worker_count(&mut self, n_worker: u32) {
+        self.submit.n_worker.store(n_worker, Ordering::SeqCst);
+    }
+
+    pub fn run_worker(&self, mut shutdown: impl FnMut() -> bool) {
         let context = StatelessContext {
-            transport: self.transport.clone(),
-            address: self.address.clone(),
+            shared: self.shared.clone(),
             submit: self.submit.clone(),
         };
-        let mut steal = self.steal_without_state(context);
+
+        let mut stateful_latency = self.metric.stateful.local();
+        let mut stateless_latency = self.metric.stateless.local();
+
+        let mut steal = self.steal_without_state(context, &mut shutdown);
         loop {
             match steal {
                 Task::Stateful(task, mut context) => {
+                    let measure = stateful_latency.measure();
                     task(&mut context);
-                    steal = self.steal_with_state(context);
+                    stateful_latency += measure;
+                    steal = self.steal_with_state(context, &mut shutdown);
                 }
                 Task::Stateless(task, context) => {
+                    let measure = stateless_latency.measure();
                     task(&context);
-                    steal = self.steal_without_state(context);
+                    stateless_latency += measure;
+                    steal = self.steal_without_state(context, &mut shutdown);
                 }
+                Task::Shutdown => return,
             }
         }
+    }
+
+    pub fn unpark_all(&self) {
+        for _ in 0..self.submit.n_worker.load(Ordering::SeqCst) {
+            self.submit.unpark_one();
+        }
+    }
+}
+
+impl<S: State> Drop for Handle<S> {
+    fn drop(&mut self) {
+        self.metric.stateful.refresh();
+        println!("{}", self.metric.stateful);
+        self.metric.stateless.refresh();
+        println!("{}", self.metric.stateless);
     }
 }

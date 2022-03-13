@@ -1,7 +1,8 @@
 use std::{
     collections::HashMap,
-    fmt::{self, Debug, Formatter},
+    fmt::Debug,
     future::Future,
+    io::Write,
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
@@ -9,6 +10,7 @@ use std::{
 
 use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
+#[cfg(not(doc))]
 use tokio::{
     select, spawn,
     sync::{
@@ -19,13 +21,20 @@ use tokio::{
 };
 use tracing::trace;
 
-use crate::transport::{self, Config, Receiver};
+#[cfg(not(doc))]
+use crate::stage_prod::State;
+use crate::{
+    common::SigningKey,
+    transport::{self, Config, Receiver},
+};
 
 type Address = String;
 type Message = Vec<u8>;
 
 pub struct Transport {
+    #[cfg(not(doc))]
     rx: UnboundedReceiver<(Address, Address, Message, bool)>,
+    #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     recv_table: RecvTable,
     config: Arc<Config<Self>>,
@@ -34,12 +43,6 @@ pub struct Transport {
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 type FilterTable =
     HashMap<u32, Box<dyn Fn(&Address, &Address, &[u8], &mut Duration) -> bool + Send>>;
-
-impl Debug for Transport {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "(simulated)")
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct RxBuffer(Message);
@@ -51,6 +54,7 @@ impl AsRef<[u8]> for RxBuffer {
 
 #[derive(Clone)]
 pub struct TxAgent {
+    #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     config: Arc<Config<Transport>>,
 }
@@ -142,12 +146,23 @@ impl transport::Transport for Transport {
 
 impl Transport {
     pub fn new(n_replica: usize, n_fault: usize) -> Self {
-        let config = Config {
+        let mut config: Config<Self> = Config {
             replica_address: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
             multicast_address: None, // TODO
             n_fault,
-            signing_key: HashMap::new(), // TODO
+            signing_key: Default::default(),
         };
+        for address in &config.replica_address {
+            let mut signing_key = [0; 32];
+            signing_key
+                .as_mut_slice()
+                .write(address.as_bytes())
+                .unwrap();
+            config.signing_key.insert(
+                address.clone(),
+                SigningKey::from_bytes(&signing_key).unwrap(),
+            );
+        }
         let (tx, rx) = unbounded_channel();
         Self {
             rx,
@@ -158,25 +173,29 @@ impl Transport {
         }
     }
 
-    pub fn client_timeout() -> BoxFuture<'static, ()> {
-        // configurable?
-        Box::pin(sleep(Duration::from_millis(1000)))
-    }
-
-    #[tracing::instrument]
     pub async fn deliver(&mut self, duration: Duration) {
-        let deadline = Instant::now() + duration;
+        let start = Instant::now();
+        let deadline = start + duration;
         loop {
+            #[cfg(not(doc))]
             select! {
                 _ = sleep_until(deadline) => break,
                 Some((source, dest, message, filtered)) = self.rx.recv() => {
-                    self.deliver_internal(source, dest, message, filtered);
+                    self.deliver_internal(source, dest, message, filtered, start);
                }
             }
         }
     }
 
-    fn deliver_internal(&self, source: Address, dest: Address, message: Message, filtered: bool) {
+    #[cfg(not(doc))]
+    fn deliver_internal(
+        &self,
+        source: Address,
+        dest: Address,
+        message: Message,
+        filtered: bool,
+        start: Instant,
+    ) {
         if filtered {
             (self.recv_table.get(&dest).unwrap())(source, RxBuffer(message));
             return;
@@ -191,7 +210,8 @@ impl Transport {
             }
         }
         trace!(
-            "{} -> {} [message size = {}] {}",
+            "{:?} {} -> {} [message size = {}] {}",
+            Instant::now() - start,
             source,
             dest,
             message.len(),
@@ -238,128 +258,142 @@ impl Transport {
     }
 }
 
-// actually what I want is a Executor which can only pair with
-// simulated::Transport, only T: transport::Transport
-// but Rust does not have specialization, and the corresponding RFC seems
-// stalled
-// then the only approach I can think of is to add constrait when implementing
-// trait, but for Executor I decide to do conditional compiling instead of
-// trait
-// really hope this would be solved
-pub struct Handle<State, T: transport::Transport>(Submit<State, T>);
+#[cfg(not(doc))]
+pub use undoc::*;
+#[cfg(not(doc))]
+mod undoc {
+    use super::*;
 
-impl<S, T: transport::Transport> Handle<S, T> {
-    pub fn new(transport: T::TxAgent, address: T::Address, state: S) -> Self {
-        Self(Submit {
-            state: Arc::new(Mutex::new(state)),
-            transport,
-            address,
-        })
-    }
+    // actually what I want is a Executor which can only pair with
+    // simulated::Transport, only T: transport::Transport
+    // but Rust does not have specialization, and the corresponding RFC seems
+    // stalled
+    // then the only approach I can think of is to add constrait when implementing
+    // trait, but for Executor I decide to do conditional compiling instead of
+    // trait
+    // really hope this would be solved
+    pub struct Handle<S: State>(Submit<S>);
 
-    pub fn with_state(&self, f: impl FnOnce(&StatefulContext<'_, S, T>)) {
-        f(&StatefulContext {
-            state: self.0.state.try_lock().unwrap(),
-            transport: self.0.transport.clone(),
-            submit: self.0.clone(),
-        });
-    }
-}
-
-pub struct StatefulContext<'a, State, T: transport::Transport> {
-    state: MutexGuard<'a, State>,
-    pub transport: T::TxAgent,
-    pub submit: Submit<State, T>,
-}
-
-pub struct StatelessContext<State, T: transport::Transport> {
-    pub transport: T::TxAgent,
-    pub submit: Submit<State, T>,
-}
-
-impl<'a, S, T: transport::Transport> Receiver<T> for StatefulContext<'a, S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.submit.address
-    }
-}
-
-impl<S, T: transport::Transport> Receiver<T> for StatelessContext<S, T> {
-    fn get_address(&self) -> &T::Address {
-        &self.submit.address
-    }
-}
-
-impl<'a, S, T: transport::Transport> Deref for StatefulContext<'a, S, T> {
-    type Target = S;
-    fn deref(&self) -> &Self::Target {
-        &*self.state
-    }
-}
-
-impl<'a, S, T: transport::Transport> DerefMut for StatefulContext<'a, S, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.state
-    }
-}
-
-pub struct Submit<State, T: transport::Transport> {
-    state: Arc<Mutex<State>>,
-    transport: T::TxAgent,
-    address: T::Address,
-}
-
-impl<S, T: transport::Transport> Clone for Submit<S, T> {
-    fn clone(&self) -> Self {
-        Self {
-            state: self.state.clone(),
-            transport: self.transport.clone(),
-            address: self.address.clone(),
+    impl<S: State> From<S> for Handle<S> {
+        fn from(state: S) -> Self {
+            Self(Submit {
+                shared: state.shared(),
+                state: Arc::new(Mutex::new(state)),
+            })
         }
     }
-}
 
-impl<S, T: transport::Transport> Submit<S, T> {
-    pub fn stateful(
-        &self,
-        task: impl for<'a> FnOnce(&mut StatefulContext<'a, S, T>) + Send + 'static,
-    ) where
-        S: Send + 'static,
-    {
-        let submit = self.clone();
-        spawn(async move {
-            task(&mut StatefulContext {
-                state: submit.state.lock().await,
-                transport: submit.transport.clone(),
-                submit: submit.clone(),
+    impl<S: State> Handle<S> {
+        pub fn with_stateful(&self, f: impl FnOnce(&mut StatefulContext<'_, S>)) {
+            f(&mut StatefulContext {
+                state: self.0.state.try_lock().unwrap(),
+                submit: self.0.clone(),
             });
-        });
-    }
+        }
 
-    pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S, T>) + Send + 'static)
-    where
-        S: Send + 'static,
-    {
-        let submit = self.clone();
-        spawn(async move {
-            task(&StatelessContext {
-                transport: submit.transport.clone(),
-                submit: submit.clone(),
+        pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
+            f(&StatelessContext {
+                shared: self.0.shared.clone(),
+                submit: self.0.clone(),
             });
-        });
-    }
-}
-
-pub struct AsyncExecutor;
-impl<'a, T: Send + 'static> crate::AsyncExecutor<'a, T> for AsyncExecutor {
-    type JoinHandle = BoxFuture<'static, T>;
-    type Timeout = Timeout<BoxFuture<'a, T>>;
-    type Elapsed = Elapsed;
-
-    fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-        Box::pin(async move { spawn(task).await.unwrap() })
+        }
     }
 
-    fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-        timeout(duration, Box::pin(task))
+    pub struct StatefulContext<'a, S: State> {
+        state: MutexGuard<'a, S>,
+        pub submit: Submit<S>,
+    }
+
+    pub struct StatelessContext<S: State> {
+        shared: S::Shared,
+        pub submit: Submit<S>,
+    }
+
+    impl<S: State> Clone for StatelessContext<S> {
+        fn clone(&self) -> Self {
+            Self {
+                shared: self.shared.clone(),
+                submit: self.submit.clone(),
+            }
+        }
+    }
+
+    impl<'a, S: State> Deref for StatefulContext<'a, S> {
+        type Target = S;
+        fn deref(&self) -> &Self::Target {
+            &*self.state
+        }
+    }
+
+    impl<'a, S: State> DerefMut for StatefulContext<'a, S> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut *self.state
+        }
+    }
+
+    impl<S: State> Deref for StatelessContext<S> {
+        type Target = S::Shared;
+        fn deref(&self) -> &Self::Target {
+            &self.shared
+        }
+    }
+
+    pub struct Submit<S: State> {
+        state: Arc<Mutex<S>>,
+        shared: S::Shared,
+    }
+
+    impl<S: State> Clone for Submit<S> {
+        fn clone(&self) -> Self {
+            Self {
+                state: self.state.clone(),
+                shared: self.shared.clone(),
+            }
+        }
+    }
+
+    impl<S: State> Submit<S> {
+        pub fn stateful(
+            &self,
+            task: impl for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send + 'static,
+        ) where
+            S: Send + 'static,
+        {
+            let submit = self.clone();
+            spawn(async move {
+                task(&mut StatefulContext {
+                    state: submit.state.lock().await,
+                    submit: submit.clone(),
+                });
+            });
+        }
+
+        pub fn stateless(&self, task: impl FnOnce(&StatelessContext<S>) + Send + 'static)
+        where
+            S: Send + 'static,
+        {
+            let submit = self.clone();
+            spawn(async move {
+                task(&StatelessContext {
+                    submit: submit.clone(),
+                    shared: submit.shared,
+                });
+            });
+        }
+    }
+
+    pub struct AsyncExecutor;
+    impl<'a, T: Send + 'static> crate::AsyncExecutor<'a, T> for AsyncExecutor {
+        type JoinHandle = BoxFuture<'static, T>;
+        type Timeout = Timeout<BoxFuture<'a, T>>;
+        type Elapsed = Elapsed;
+
+        fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
+            Box::pin(async move { spawn(task).await.unwrap() })
+        }
+
+        fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
+            timeout(duration, Box::pin(task))
+        }
     }
 }

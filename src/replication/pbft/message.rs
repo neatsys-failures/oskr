@@ -1,7 +1,7 @@
 use serde_derive::{Deserialize, Serialize};
 
 use crate::common::{
-    signed::SignedMessage, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber, ViewNumber,
+    signed::SignedMessage, ClientId, Digest, OpNumber, Opaque, ReplicaId, RequestNumber, ViewNumber,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,7 +28,7 @@ pub struct Request {
 pub struct Reply {
     pub view_number: ViewNumber,
     pub request_number: RequestNumber,
-    pub client_id: ClientId,
+    pub client_id: ClientId, // following pbft paper, but why we need this?
     pub replica_id: ReplicaId,
     pub result: Opaque,
 }
@@ -37,14 +37,14 @@ pub struct Reply {
 pub struct PrePrepare {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
-    pub digest: [u8; 32],
+    pub digest: Digest,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Prepare {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
-    pub digest: [u8; 32],
+    pub digest: Digest,
     pub replica_id: ReplicaId,
 }
 
@@ -52,6 +52,6 @@ pub struct Prepare {
 pub struct Commit {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
-    pub digest: [u8; 32],
+    pub digest: Digest,
     pub replica_id: ReplicaId,
 }

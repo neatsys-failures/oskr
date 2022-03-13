@@ -19,7 +19,7 @@ use crate::{
 
 pub struct Client<T: Transport, E> {
     address: T::Address,
-    id: ClientId,
+    pub(super) id: ClientId,
     transport: T::TxAgent,
     rx: UnboundedReceiver<(T::Address, T::RxBuffer)>,
     _executor: PhantomData<E>,

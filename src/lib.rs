@@ -7,14 +7,18 @@ pub mod transport;
 pub mod dpdk;
 pub mod dpdk_shim;
 
-#[cfg(test)]
+#[cfg(any(test, doc))]
 pub mod simulated;
 
 #[cfg(not(test))]
 pub mod stage;
 #[cfg(test)]
+#[path = "stage.rs"]
+pub mod stage_prod; // for production
+#[cfg(test)]
 pub mod stage {
     pub use crate::simulated::{Handle, StatefulContext, StatelessContext, Submit};
+    pub use crate::stage_prod::State;
 }
 
 pub mod common;
@@ -27,6 +31,8 @@ pub mod replication {
 pub mod app {
     pub mod mock;
 }
+
+pub mod latency;
 
 #[async_trait]
 pub trait Invoke {
@@ -48,7 +54,11 @@ pub trait AsyncExecutor<'a, T> {
 #[cfg(test)]
 pub mod tests {
     use lazy_static::lazy_static;
+
     lazy_static! {
-        pub static ref TRACING: () = tracing_subscriber::fmt::init();
+        pub static ref TRACING: () = {
+            tracing_subscriber::fmt::init();
+            // panic_abort();
+        };
     }
 }

@@ -5,3 +5,6 @@ pub use client::Client;
 
 pub mod replica;
 pub use replica::Replica;
+
+#[cfg(test)]
+mod tests;
