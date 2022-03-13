@@ -6,7 +6,10 @@ use std::{
     },
 };
 
-use crossbeam::deque::{Injector, Steal};
+use crossbeam::{
+    deque::{Injector, Steal},
+    utils::Backoff,
+};
 
 use crate::latency::Latency;
 
@@ -126,6 +129,8 @@ impl<S: State> Submit<S> {
         self.unpark_one();
     }
 
+    #[allow(dead_code)] // currently no plan to park, use Backoff instead
+                        // however it is good to save it for the future
     fn park(&self) {
         let token = self.park_token.fetch_sub(1, Ordering::SeqCst);
         if token > 0 {
@@ -158,18 +163,20 @@ impl<S: State> Handle<S> {
         context: StatefulContext<'a, S>,
         shutdown: &mut impl FnMut() -> bool,
     ) -> Task<'_, S> {
+        let backoff = Backoff::new();
         while !shutdown() {
             loop {
                 match self.submit.stateful_list.steal() {
-                    Steal::Retry => continue,
+                    Steal::Retry => {}
                     Steal::Empty => break,
                     Steal::Success(task) => return Task::Stateful(task, context),
                 }
+                backoff.spin();
             }
 
             loop {
                 match self.submit.stateless_list.steal() {
-                    Steal::Retry => continue,
+                    Steal::Retry => {}
                     Steal::Empty => break,
                     Steal::Success(task) => {
                         let context = StatelessContext {
@@ -180,9 +187,10 @@ impl<S: State> Handle<S> {
                         return Task::Stateless(task, context);
                     }
                 }
+                backoff.spin();
             }
 
-            // park
+            backoff.snooze();
         }
         Task::Shutdown
     }
@@ -192,13 +200,15 @@ impl<S: State> Handle<S> {
         context: StatelessContext<S>,
         shutdown: &mut impl FnMut() -> bool,
     ) -> Task<'_, S> {
+        let backoff = Backoff::new();
         while !shutdown() {
             loop {
                 match self.submit.stateless_list.steal() {
-                    Steal::Retry => continue,
+                    Steal::Retry => {}
                     Steal::Empty => break,
                     Steal::Success(task) => return Task::Stateless(task, context),
                 }
+                backoff.spin();
             }
 
             if let Ok(state) = self.state.try_lock() {
@@ -209,7 +219,7 @@ impl<S: State> Handle<S> {
                 return self.steal_with_state(context, shutdown);
             }
 
-            // park
+            backoff.snooze();
         }
         Task::Shutdown
     }
