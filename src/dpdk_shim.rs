@@ -118,11 +118,11 @@ impl Drop for RxBuffer {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Address {
     pub mac: [u8; 6],
-    pub id: u8,
+    pub id: u16,
 }
 
 impl Address {
-    pub fn new_local(port_id: u16, id: u8) -> Self {
+    pub fn new_local(port_id: u16, id: u16) -> Self {
         let mut mac_addr = MaybeUninit::uninit();
         unsafe { rte_eth_macaddr_get(port_id, NonNull::new(mac_addr.as_mut_ptr()).unwrap()) };
         let mac = unsafe { mac_addr.assume_init() }.addr_bytes;
@@ -167,15 +167,15 @@ impl rte_mbuf {
     /// # Safety
     /// `mbuf` points to a valid `rte_mbuf` struct.
     pub unsafe fn set_buffer_length(mbuf: NonNull<Self>, length: u16) {
-        mbuf_set_packet_length(mbuf, length + 16);
+        mbuf_set_packet_length(mbuf, length + 18);
     }
 
     /// # Safety
     /// `mbuf` points to a valid `rte_mbuf` struct, `data` is from `get_data(mbuf)`.
     // this method instead of Into<RxBuffer> because I want it keep unsafe
     pub unsafe fn into_rx_buffer(mbuf: NonNull<Self>, data: NonNull<u8>) -> RxBuffer {
-        let buffer = NonNull::new(data.as_ptr().offset(16)).unwrap();
-        let length = mbuf_get_packet_length(mbuf) - 16;
+        let buffer = NonNull::new(data.as_ptr().offset(18)).unwrap();
+        let length = mbuf_get_packet_length(mbuf) - 18;
         RxBuffer {
             mbuf,
             buffer,
@@ -187,7 +187,11 @@ impl rte_mbuf {
     /// `data` is a valid `mbuf`'s data pointer.
     pub unsafe fn get_tx_buffer<'a>(data: NonNull<u8>) -> &'a mut [u8] {
         // TODO decide maximum length with reason
-        slice::from_raw_parts_mut(data.as_ptr().offset(16), 1480)
+        slice::from_raw_parts_mut(data.as_ptr().offset(18), 1480)
+    }
+
+    pub unsafe fn copy_data(source: NonNull<u8>, mut dest: NonNull<u8>, length: u16) {
+        copy_nonoverlapping(source.as_ptr(), dest.as_mut(), length as usize + 18);
     }
 
     /// # Safety
@@ -196,7 +200,7 @@ impl rte_mbuf {
         let data = data.as_ptr();
         let mut address = Address::default();
         copy_nonoverlapping(data.offset(6), &mut address.mac as *mut _, 6);
-        address.id = *data.offset(15);
+        address.id = *(data.offset(16) as *const _);
         address
     }
 
@@ -205,7 +209,7 @@ impl rte_mbuf {
     pub unsafe fn set_source(data: NonNull<u8>, address: &Address) {
         let data = data.as_ptr();
         copy_nonoverlapping(&address.mac as *const _, data.offset(6), 6);
-        *data.offset(15) = address.id;
+        *(data.offset(16) as *mut _) = address.id;
         // ethernet type
         copy_nonoverlapping(&0x88d5u16.to_be_bytes() as *const _, data.offset(12), 2);
     }
@@ -216,7 +220,7 @@ impl rte_mbuf {
         let data = data.as_ptr();
         let mut address = Address::default();
         copy_nonoverlapping(data.offset(0), &mut address.mac as *mut _, 6);
-        address.id = *data.offset(14);
+        address.id = *(data.offset(14) as *const _);
         address
     }
 
@@ -225,6 +229,6 @@ impl rte_mbuf {
     pub unsafe fn set_dest(data: NonNull<u8>, address: &Address) {
         let data = data.as_ptr();
         copy_nonoverlapping(&address.mac as *const _, data.offset(0), 6);
-        *data.offset(14) = address.id;
+        *(data.offset(14) as *mut _) = address.id;
     }
 }

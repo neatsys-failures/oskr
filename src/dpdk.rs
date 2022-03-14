@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     env,
     ffi::CString,
-    intrinsics::copy_nonoverlapping,
     mem::MaybeUninit,
     os::raw::{c_char, c_int, c_uint},
     ptr::NonNull,
@@ -11,6 +10,8 @@ use std::{
         Arc,
     },
 };
+
+use crossbeam::utils::Backoff;
 
 use crate::{
     dpdk_shim::{
@@ -52,7 +53,10 @@ impl RoundRobin {
     fn acquire(&self) -> u32 {
         let sequence = self.sequence.fetch_add(1, Ordering::SeqCst);
         let (i, c) = (sequence % self.n, sequence / self.n);
-        while self.counter[i as usize].load(Ordering::SeqCst) != c {}
+        let backoff = Backoff::new();
+        while self.counter[i as usize].load(Ordering::SeqCst) != c {
+            backoff.snooze();
+        }
         i
     }
 
@@ -133,9 +137,9 @@ impl transport::TxAgent for TxAgent {
                     (sample_mbuf, sample_data)
                 } else {
                     let mbuf = NonNull::new(*mbuf).unwrap();
-                    let mut data = rte_mbuf::get_data(mbuf);
+                    let data = rte_mbuf::get_data(mbuf);
                     // TODO hide length + 16 behide rte_mbuf abstraction
-                    copy_nonoverlapping(sample_data.as_ptr(), data.as_mut(), length as usize + 16);
+                    rte_mbuf::copy_data(sample_data, data, length);
                     (mbuf, data)
                 };
                 rte_mbuf::set_dest(data, dest);
@@ -210,7 +214,7 @@ impl transport::Transport for Transport {
     }
 
     fn ephemeral_address(&self) -> Self::Address {
-        for id in (0..=254).rev() {
+        for id in (0..=65535).rev() {
             let address = Address::new_local(self.port_id, id);
             if !self.recv_table.contains_key(&address) {
                 return address;
