@@ -6,7 +6,10 @@ use std::{
     mem::MaybeUninit,
     os::raw::{c_char, c_int, c_uint},
     ptr::NonNull,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
 };
 
 use crate::{
@@ -24,6 +27,38 @@ pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
     config: Arc<Config<Transport>>,
+    rr: Arc<RoundRobin>,
+}
+
+struct RoundRobin {
+    sequence: AtomicU32,
+    counter: [AtomicU32; 32], // 32 tx queue should be maximum expectation right?
+    n: u32,
+}
+
+impl RoundRobin {
+    fn new(n: u32) -> Self {
+        Self {
+            sequence: AtomicU32::new(0),
+            counter: (0..32)
+                .map(|_| AtomicU32::new(0))
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap(),
+            n,
+        }
+    }
+
+    fn acquire(&self) -> u32 {
+        let sequence = self.sequence.fetch_add(1, Ordering::SeqCst);
+        let (i, c) = (sequence % self.n, sequence / self.n);
+        while self.counter[i as usize].load(Ordering::SeqCst) != c {}
+        i
+    }
+
+    fn release(&self, i: u32) {
+        self.counter[i as usize].fetch_add(1, Ordering::SeqCst);
+    }
 }
 
 unsafe impl Send for TxAgent {}
@@ -50,10 +85,10 @@ impl transport::TxAgent for TxAgent {
             let length = message(rte_mbuf::get_tx_buffer(data));
             rte_mbuf::set_buffer_length(mbuf, length);
 
-            // should be cache-able, but that will make TxAgent !Send
-            let queue_id = Transport::worker_id() as u16;
-            let ret = oskr_eth_tx_burst(self.port_id, queue_id, (&mut mbuf).into(), 1);
+            let queue_id = self.rr.acquire();
+            let ret = oskr_eth_tx_burst(self.port_id, queue_id as u16, (&mut mbuf).into(), 1);
             assert_eq!(ret, 1);
+            self.rr.release(queue_id);
         }
     }
 
@@ -109,16 +144,17 @@ impl transport::TxAgent for TxAgent {
             })
             .collect();
 
-        let queue_id = Transport::worker_id() as u16;
+        let queue_id = self.rr.acquire();
         let ret = unsafe {
             oskr_eth_tx_burst(
                 self.port_id,
-                queue_id,
+                queue_id as u16,
                 mbuf_list.first_mut().unwrap().into(),
                 mbuf_list.len() as u16,
             )
         };
         assert_eq!(ret, mbuf_list.len() as u16);
+        self.rr.release(queue_id);
     }
 }
 
@@ -127,6 +163,7 @@ pub struct Transport {
     port_id: u16,
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
+    rr: Arc<RoundRobin>,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 
@@ -142,6 +179,7 @@ impl transport::Transport for Transport {
             mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
             config: self.config.clone(),
+            rr: self.rr.clone(),
         }
     }
 
@@ -230,6 +268,7 @@ impl Transport {
                 mbuf_pool,
                 config: Arc::new(config),
                 recv_table: HashMap::new(),
+                rr: Arc::new(RoundRobin::new(n_tx as u32)),
             }
         }
     }

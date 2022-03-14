@@ -29,8 +29,8 @@ because the core of this project is based on a specialized actor model.
 ----
 
 **Setup.** To run this project you must compile from source. There is a 
-published version on crate.io, but that is just a placeholder and will not work.
-The propose is to enable hosting document on doc.rs.
+published version on crates.io, but that is just a placeholder and will not 
+work. The propose is to enable hosting document on doc.rs.
 
 Prerequisites on Ubuntu:
 * Up-to-date stable Rust toolchain.

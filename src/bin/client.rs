@@ -104,9 +104,11 @@ fn main() {
         #[clap(short, long, default_value_t = 0)]
         port_id: u16,
         #[clap(short, long = "worker-number", default_value_t = 1)]
-        n_worker: u16,
+        n_worker: usize,
+        #[clap(long = "tx", default_value_t = 1)]
+        n_tx: u16,
         #[clap(short = 't', long = "client-number", default_value_t = 1)]
-        n_client: u16,
+        n_client: usize,
         #[clap(short, long, default_value_t = 1)]
         duration: u64,
         #[clap(short, long = "warm-up", default_value_t = 0)]
@@ -129,7 +131,7 @@ fn main() {
     };
     config.collect_signing_key(&args.config);
 
-    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
+    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_tx);
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum Status {

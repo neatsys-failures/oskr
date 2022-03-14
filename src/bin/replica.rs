@@ -52,7 +52,9 @@ fn main() {
         #[clap(short, long, default_value_t = 0)]
         port_id: u16,
         #[clap(short, long = "worker-number", default_value_t = 1)]
-        n_worker: u16,
+        n_worker: usize,
+        #[clap(long = "tx", default_value_t = 1)]
+        n_tx: u16,
         #[clap(short, long, default_value_t = 1)]
         batch_size: usize,
     }
@@ -88,7 +90,7 @@ fn main() {
     })
     .unwrap();
 
-    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_worker);
+    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_tx);
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
@@ -102,8 +104,7 @@ fn main() {
             let args = worker_data.args.clone();
             let shutdown = worker_data.shutdown.clone();
 
-            let worker_id = Transport::worker_id();
-            if worker_id < args.n_worker as usize {
+            if Transport::worker_id() < args.n_worker {
                 replica.run_worker(|| shutdown.load(Ordering::SeqCst));
             }
             0
