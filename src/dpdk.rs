@@ -214,7 +214,7 @@ impl transport::Transport for Transport {
     }
 
     fn ephemeral_address(&self) -> Self::Address {
-        for id in (0..=65535).rev() {
+        for id in 200..=u16::MAX {
             let address = Address::new_local(self.port_id, id);
             if !self.recv_table.contains_key(&address) {
                 return address;
@@ -256,7 +256,8 @@ impl Transport {
             let name = CString::new("MBUF_POOL").unwrap();
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
-                8191,
+                // is it necessary to scale mbuf number according to worker number as well?
+                8191 + 2047 * ((n_tx + n_rx) as u32),
                 250,
                 0,
                 oskr_mbuf_default_buf_size(),

@@ -14,7 +14,7 @@ pub mod signed;
 pub use signed::{SignedMessage, SigningKey, VerifyingKey};
 use tracing::debug;
 
-pub type ReplicaId = u8;
+pub type ReplicaId = i8;
 pub type ClientId = [u8; 4];
 
 pub fn generate_id() -> ClientId {
