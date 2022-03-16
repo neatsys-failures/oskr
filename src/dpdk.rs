@@ -257,8 +257,8 @@ impl Transport {
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
                 // is it necessary to scale mbuf number according to worker number as well?
-                8191 + 2047 * ((n_tx + n_rx) as u32),
-                250,
+                8192 + 2048 * ((n_tx + n_rx) as u32),
+                256,
                 0,
                 oskr_mbuf_default_buf_size(),
                 rte_eth_dev_socket_id(port_id),
