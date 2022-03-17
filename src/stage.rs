@@ -1,12 +1,13 @@
 use std::{
     ops::{Deref, DerefMut},
-    sync::{
-        atomic::{AtomicU32, Ordering},
-        Arc, Mutex, MutexGuard,
-    },
+    sync::{Arc, Mutex, MutexGuard},
+    thread::{self, Thread},
 };
 
-use crossbeam::{queue::SegQueue, utils::Backoff};
+use crossbeam::{
+    queue::{ArrayQueue, SegQueue},
+    utils::Backoff,
+};
 
 use crate::latency::Latency;
 
@@ -49,8 +50,7 @@ impl<S: State> Clone for StatelessContext<S> {
 pub struct Submit<S: State> {
     stateful_list: SegQueue<StatefulTask<S>>,
     stateless_list: SegQueue<StatelessTask<S>>,
-    n_worker: AtomicU32,
-    park_token: AtomicU32,
+    will_park_list: ArrayQueue<Thread>,
 }
 type StatefulTask<S> = Box<dyn for<'a> FnOnce(&mut StatefulContext<'a, S>) + Send>;
 type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
@@ -63,8 +63,7 @@ impl<S: State> From<S> for Handle<S> {
             submit: Arc::new(Submit {
                 stateful_list: SegQueue::new(),
                 stateless_list: SegQueue::new(),
-                n_worker: AtomicU32::new(0),
-                park_token: AtomicU32::new(0),
+                will_park_list: ArrayQueue::new(64), // configurable?
             }),
             metric: Metric {
                 stateful: Latency::new("stateful"),
@@ -127,22 +126,14 @@ impl<S: State> Submit<S> {
     #[allow(dead_code)] // currently no plan to park, use Backoff instead
                         // however it is good to save it for the future
     fn park(&self) {
-        let token = self.park_token.fetch_sub(1, Ordering::SeqCst);
-        if token > 0 {
-            return;
-        }
-        while self.park_token.load(Ordering::SeqCst) < token {}
+        thread::park();
+        self.will_park_list.push(thread::current()).unwrap();
     }
 
     fn unpark_one(&self) {
-        // is it really necessary to SeqCst load every time?
-        let n_worker = self.n_worker.load(Ordering::SeqCst);
-        assert_ne!(n_worker, 0);
-        self.park_token
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |t| {
-                Some((t + 1).min(n_worker))
-            })
-            .unwrap();
+        if let Some(thread) = self.will_park_list.pop() {
+            thread.unpark();
+        }
     }
 }
 
@@ -202,10 +193,6 @@ impl<S: State> Handle<S> {
         Task::Shutdown
     }
 
-    pub fn set_worker_count(&mut self, n_worker: u32) {
-        self.submit.n_worker.store(n_worker, Ordering::SeqCst);
-    }
-
     pub fn run_worker(&self, mut shutdown: impl FnMut() -> bool) {
         let context = StatelessContext {
             shared: self.shared.clone(),
@@ -236,8 +223,8 @@ impl<S: State> Handle<S> {
     }
 
     pub fn unpark_all(&self) {
-        for _ in 0..self.submit.n_worker.load(Ordering::SeqCst) {
-            self.submit.unpark_one();
+        while let Some(thread) = self.submit.will_park_list.pop() {
+            thread.unpark();
         }
     }
 }

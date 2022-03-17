@@ -110,15 +110,10 @@ fn main() {
             0
         }
 
-        fn launch(
-            mut replica: Handle<R>,
-            args: Args,
-            shutdown: Arc<AtomicBool>,
-        ) -> Box<dyn FnOnce()>
+        fn launch(replica: Handle<R>, args: Args, shutdown: Arc<AtomicBool>) -> Box<dyn FnOnce()>
         where
             R: 'static,
         {
-            replica.set_worker_count(args.n_worker as _);
             let replica = Arc::new(replica);
             let data = Self {
                 replica: replica.clone(),
