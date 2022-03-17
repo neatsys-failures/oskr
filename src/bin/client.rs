@@ -28,57 +28,25 @@ use oskr::{
     AsyncExecutor as _, Invoke,
 };
 use quanta::{Clock, Instant};
+use tokio::{
+    runtime::{self, Runtime},
+    spawn,
+    time::{error::Elapsed, sleep, timeout, Timeout},
+};
 use tracing::{debug, info};
 
-struct AsyncExecutor;
-impl AsyncExecutor {
-    thread_local! {
-        static TASK_LIST: RefCell<Vec<BoxFuture<'static, ()>>> = RefCell::new(Vec::new());
-    }
-    fn poll_now() {
-        Self::TASK_LIST.with(|task_list| {
-            for task in &mut *task_list.borrow_mut() {
-                let _ = Pin::new(task).poll(&mut Context::from_waker(noop_waker_ref()));
-            }
-        });
-    }
-    fn poll(duration: Duration) {
-        let clock = Clock::new();
-        let start = clock.start();
-        while clock.delta(start, clock.end()) < duration {
-            Self::poll_now();
-        }
-    }
-}
-
-struct Timeout<'a, T>(BoxFuture<'a, T>, Instant);
-struct Elapsed;
-impl<'a, T> Future for Timeout<'a, T> {
-    type Output = Result<T, Elapsed>;
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if Instant::now() > self.1 {
-            Poll::Ready(Err(Elapsed))
-        } else {
-            Pin::new(&mut self.0).poll(cx).map(Result::Ok)
-        }
-    }
-}
-
+pub struct AsyncExecutor;
 impl<'a, T: Send + 'static> oskr::AsyncExecutor<'a, T> for AsyncExecutor {
-    type JoinHandle = BoxFuture<'static, T>; // too lazy to invent new type
-    type Timeout = BoxFuture<'a, Result<T, Self::Elapsed>>;
+    type JoinHandle = BoxFuture<'static, T>;
+    type Timeout = Timeout<BoxFuture<'a, T>>;
     type Elapsed = Elapsed;
+
     fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-        let (tx, rx) = oneshot::channel();
-        Self::TASK_LIST.with(|task_list| {
-            task_list.borrow_mut().push(Box::pin(async move {
-                tx.send(task.await).map_err(|_| "send fail").unwrap();
-            }))
-        });
-        Box::pin(async move { rx.await.unwrap() })
+        Box::pin(async move { spawn(task).await.unwrap() })
     }
+
     fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-        Box::pin(Timeout(Box::pin(task), Instant::now() + duration))
+        timeout(duration, Box::pin(task))
     }
 }
 
@@ -165,62 +133,67 @@ fn main() {
             let latency = worker_data.latency.clone();
             let args = worker_data.args.clone();
 
-            // I want a broadcast :|
-            let (client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
-                .into_iter()
-                .map(|mut client| {
-                    let count = count.clone();
-                    // we send shutdown actively, for the case when system stuck
-                    // and cause client invoking never finish
-                    let (shutdown_tx, mut shutdown) = oneshot::channel();
-                    let status = status.clone();
-                    let mut latency = latency.clone();
-                    (
-                        AsyncExecutor::spawn(async move {
-                            debug!("{}", client.get_address());
-                            loop {
-                                let measure = latency.measure();
-                                select! {
-                                    _ = client.invoke(Opaque::default()).fuse() => {},
-                                    _ = shutdown => return,
-                                }
-                                if status.load(Ordering::SeqCst) == Status::Run as _ {
-                                    latency += measure;
-                                    count.fetch_add(1, Ordering::SeqCst);
-                                }
-                            }
-                        }),
-                        shutdown_tx,
-                    )
-                })
-                .unzip();
+            runtime::Builder::new_multi_thread()
+                .enable_time()
+                .build()
+                .unwrap()
+                .block_on(async move {
+                    //
 
-            if worker_id == 0 {
-                AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration));
-                status.store(Status::Run as _, Ordering::SeqCst);
-                info!("warm up finish");
+                    // I want a broadcast :|
+                    let (client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
+                        .into_iter()
+                        .map(|mut client| {
+                            let count = count.clone();
+                            // we send shutdown actively, for the case when system stuck
+                            // and cause client invoking never finish
+                            let (shutdown_tx, mut shutdown) = oneshot::channel();
+                            let status = status.clone();
+                            let mut latency = latency.clone();
+                            (
+                                spawn(async move {
+                                    debug!("{}", client.get_address());
+                                    loop {
+                                        let measure = latency.measure();
+                                        select! {
+                                            _ = client.invoke(Opaque::default()).fuse() => {},
+                                            _ = shutdown => return,
+                                        }
+                                        if status.load(Ordering::SeqCst) == Status::Run as _ {
+                                            latency += measure;
+                                            count.fetch_add(1, Ordering::SeqCst);
+                                        }
+                                    }
+                                }),
+                                shutdown_tx,
+                            )
+                        })
+                        .unzip();
 
-                for _ in 0..args.duration {
-                    AsyncExecutor::poll(Duration::from_secs(1));
-                    let count = count.swap(0, Ordering::SeqCst);
-                    println!("{}", count);
-                }
-                status.store(Status::Shutdown as _, Ordering::SeqCst);
-            } else {
-                AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration + args.duration));
-            }
+                    if worker_id == 0 {
+                        sleep(Duration::from_secs(args.warm_up_duration)).await;
+                        status.store(Status::Run as _, Ordering::SeqCst);
+                        info!("warm up finish");
 
-            // with new latency there is no need to join tasks
-            // save it here for debug and future use
-            for shutdown in shutdown_list {
-                shutdown.send(()).unwrap();
-            }
-            AsyncExecutor::poll_now();
-            client_list.into_iter().for_each(|mut client| {
-                assert!(Pin::new(&mut client)
-                    .poll(&mut Context::from_waker(noop_waker_ref()))
-                    .is_ready())
-            });
+                        for _ in 0..args.duration {
+                            sleep(Duration::from_secs(1)).await;
+                            let count = count.swap(0, Ordering::SeqCst);
+                            println!("{}", count);
+                        }
+                        status.store(Status::Shutdown as _, Ordering::SeqCst);
+                    } else {
+                        sleep(Duration::from_secs(args.warm_up_duration + args.duration)).await;
+                    }
+
+                    // with new latency there is no need to join tasks
+                    // save it here for debug and future use
+                    for shutdown in shutdown_list {
+                        shutdown.send(()).unwrap();
+                    }
+                    for client in client_list {
+                        client.await.unwrap();
+                    }
+                });
             0
         }
 
