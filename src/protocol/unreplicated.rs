@@ -201,11 +201,8 @@ mod tests {
     use tokio::{spawn, time::timeout};
 
     use crate::{
-        app::mock::App,
-        common::Opaque,
-        simulated::{AsyncExecutor, Transport},
-        tests::TRACING,
-        Invoke,
+        app::mock::App, common::Opaque, runtime::tokio::AsyncExecutor, simulated::Transport,
+        tests::TRACING, Invoke,
     };
 
     use super::{Client, Replica};

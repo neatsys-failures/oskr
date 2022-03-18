@@ -12,7 +12,7 @@ use crate::{
         deserialize, serialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId,
         RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
     },
-    replication::pbft::message::{self, ToReplica},
+    protocol::pbft::message::{self, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},
     transport::{Receiver, Transport, TxAgent},
     App,

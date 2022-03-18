@@ -12,7 +12,7 @@ use crate::{
         deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage,
         ViewNumber,
     },
-    replication::pbft::message::{self, ToReplica},
+    protocol::pbft::message::{self, ToReplica},
     transport::{Receiver, Transport, TxAgent},
     AsyncExecutor, Invoke,
 };

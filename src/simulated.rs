@@ -1,14 +1,12 @@
 use std::{
     collections::HashMap,
     fmt::Debug,
-    future::Future,
     io::Write,
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
 };
 
-use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
 #[cfg(not(doc))]
 use tokio::{
@@ -17,7 +15,7 @@ use tokio::{
         mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
         Mutex, MutexGuard,
     },
-    time::{error::Elapsed, sleep, sleep_until, timeout, Instant, Timeout},
+    time::{sleep, sleep_until, Instant},
 };
 use tracing::trace;
 
@@ -269,7 +267,7 @@ mod undoc {
     // but Rust does not have specialization, and the corresponding RFC seems
     // stalled
     // then the only approach I can think of is to add constrait when implementing
-    // trait, but for Executor I decide to do conditional compiling instead of
+    // trait, but for stage I decide to do conditional compiling instead of
     // trait
     // really hope this would be solved
     pub struct Handle<S: State>(Submit<S>);
@@ -379,21 +377,6 @@ mod undoc {
                     shared: submit.shared,
                 });
             });
-        }
-    }
-
-    pub struct AsyncExecutor;
-    impl<'a, T: Send + 'static> crate::AsyncExecutor<'a, T> for AsyncExecutor {
-        type JoinHandle = BoxFuture<'static, T>;
-        type Timeout = Timeout<BoxFuture<'a, T>>;
-        type Elapsed = Elapsed;
-
-        fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-            Box::pin(async move { spawn(task).await.unwrap() })
-        }
-
-        fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-            timeout(duration, Box::pin(task))
         }
     }
 }

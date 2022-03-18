@@ -4,7 +4,6 @@ use std::{future::Future, time::Duration};
 
 pub mod transport;
 
-pub mod dpdk;
 pub mod dpdk_shim;
 
 #[cfg(any(test, doc))]
@@ -23,7 +22,7 @@ pub mod stage {
 
 pub mod common;
 
-pub mod replication {
+pub mod protocol {
     pub mod pbft;
     pub mod unreplicated;
 }
@@ -33,6 +32,12 @@ pub mod app {
 }
 
 pub mod latency;
+
+pub mod runtime {
+    pub mod dpdk;
+    #[cfg(any(feature = "tokio", test))]
+    pub mod tokio;
+}
 
 #[async_trait]
 pub trait Invoke {

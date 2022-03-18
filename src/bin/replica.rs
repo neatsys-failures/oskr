@@ -13,9 +13,9 @@ use std::{
 use clap::{ArgEnum, Parser};
 use oskr::{
     common::{Opaque, ReplicaId},
-    dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
-    replication::{pbft, unreplicated},
+    protocol::{pbft, unreplicated},
+    runtime::dpdk::Transport,
     stage::{Handle, State},
     transport::Config,
     App,

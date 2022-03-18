@@ -20,10 +20,10 @@ use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref,
 use hdrhistogram::SyncHistogram;
 use oskr::{
     common::{panic_abort, Opaque},
-    dpdk::Transport,
+    runtime::dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     latency::{Latency, LocalLatency},
-    replication::{pbft, unreplicated},
+    protocol::{pbft, unreplicated},
     transport::{Config, Receiver},
     AsyncExecutor as _, Invoke,
 };
