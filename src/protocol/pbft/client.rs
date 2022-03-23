@@ -1,9 +1,13 @@
-use std::{collections::HashMap, marker::PhantomData, time::Duration};
+use std::{
+    collections::HashMap,
+    marker::PhantomData,
+    time::{Duration, Instant},
+};
 
 use async_trait::async_trait;
 use futures::{
-    channel::mpsc::{self, unbounded, UnboundedReceiver},
-    select, SinkExt, StreamExt,
+    channel::mpsc::{unbounded, UnboundedReceiver},
+    select, FutureExt, StreamExt,
 };
 use tracing::{debug, warn};
 
@@ -76,14 +80,6 @@ where
             serialize(ToReplica::Request(request.clone())),
         );
 
-        let (mut resend_tx, mut resend_rx) = mpsc::channel(1);
-        let resend = E::spawn(async move {
-            loop {
-                E::sleep(Duration::from_millis(1000)).await;
-                resend_tx.send(()).await.unwrap();
-            }
-        });
-
         let mut result_table = HashMap::new();
         let mut receive_buffer =
             move |client: &mut Self, _remote: T::Address, buffer: T::RxBuffer| {
@@ -110,19 +106,20 @@ where
                 }
             };
 
+        let mut timeout = Instant::now() + Duration::from_millis(1000);
         loop {
             select! {
                 recv = self.rx.next() => {
                     let (remote, buffer) = recv.unwrap();
                     if let Some(result) = receive_buffer(self, remote, buffer) {
-                        E::cancel(resend);
                         return result;
                     }
                 }
-                _ = resend_rx.next() => {
+                _ = E::sleep_until(timeout).fuse() => {
                     warn!("resend for request number {}", self.request_number);
                     self.transport
                         .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
+                    timeout = Instant::now() + Duration::from_millis(1000);
                 }
             }
         }

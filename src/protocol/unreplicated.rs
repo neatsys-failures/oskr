@@ -1,9 +1,13 @@
-use std::{collections::HashMap, marker::PhantomData, time::Duration};
+use std::{
+    collections::HashMap,
+    marker::PhantomData,
+    time::{Duration, Instant},
+};
 
 use async_trait::async_trait;
 use futures::{
-    channel::mpsc::{self, unbounded, UnboundedReceiver},
-    select, SinkExt, StreamExt,
+    channel::mpsc::{unbounded, UnboundedReceiver},
+    select, FutureExt, StreamExt,
 };
 use serde_derive::{Deserialize, Serialize};
 use tracing::{debug, warn};
@@ -80,27 +84,22 @@ where
             op,
         };
 
-        let (mut send_tx, mut send_rx) = mpsc::channel(1);
-        let request_number = self.request_number;
-        let send = E::spawn(async move {
-            loop {
-                send_tx.send(()).await.unwrap();
-                E::sleep(Duration::from_millis(1000)).await;
-                warn!("resend for request number {}", request_number);
-            }
-        });
+        self.transport
+            .send_message_to_replica(self, 0, serialize(request.clone()));
+        let mut timeout = Instant::now() + Duration::from_millis(1000);
 
         loop {
             select! {
-                _ = send_rx.next() => {
+                _ = E::sleep_until(timeout).fuse() => {
+                    warn!("resend for request number {}", self.request_number);
                     self.transport
                         .send_message_to_replica(self, 0, serialize(request.clone()));
+                    timeout = Instant::now() + Duration::from_millis(1000);
                 }
                 recv = self.rx.next() => {
                     let (_remote, buffer) = recv.unwrap();
                     let reply: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
                     if reply.request_number == self.request_number {
-                        E::cancel(send);
                         return reply.result;
                     }
                 }

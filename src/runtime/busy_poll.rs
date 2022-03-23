@@ -4,11 +4,11 @@ use std::{
     pin::Pin,
     sync::atomic::{AtomicU32, Ordering},
     task::{Context, Poll},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use futures::{channel::oneshot, future::BoxFuture, task::noop_waker_ref, Future};
-use quanta::{Clock, Instant};
+use quanta::Clock;
 
 use crate::async_ecosystem;
 
@@ -54,11 +54,11 @@ impl AsyncEcosystem {
     }
 }
 
-pub struct Sleep(Instant);
+pub struct Sleep(quanta::Instant);
 impl Future for Sleep {
     type Output = ();
     fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if Instant::now() >= self.0 {
+        if quanta::Instant::now() >= self.0 {
             Poll::Ready(())
         } else {
             Poll::Pending
@@ -99,7 +99,8 @@ impl<T: Send + 'static> async_ecosystem::AsyncEcosystem<T> for AsyncEcosystem {
         drop(handle);
     }
 
-    fn sleep(duration: Duration) -> Self::Sleep {
-        Sleep(Instant::now() + duration)
+    fn sleep_until(instant: Instant) -> Self::Sleep {
+        // so shit...
+        Sleep(quanta::Instant::now() + (instant - Instant::now()))
     }
 }

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::Instant;
 
 use futures::Future;
 
@@ -9,5 +9,5 @@ pub trait AsyncEcosystem<T> {
 
     fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle;
     fn cancel(handle: Self::JoinHandle);
-    fn sleep(duration: Duration) -> Self::Sleep;
+    fn sleep_until(instant: Instant) -> Self::Sleep;
 }

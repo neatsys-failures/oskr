@@ -1,32 +1,17 @@
 use std::{
     pin::Pin,
     task::{Context, Poll},
-    time::Duration,
+    time::Instant,
 };
 
-use futures::{future::BoxFuture, Future};
+use futures::Future;
 use tokio::{
     spawn,
     task::JoinHandle as TokioHandle,
-    time::{error::Elapsed, sleep, timeout, Sleep, Timeout},
+    time::{sleep_until, Sleep},
 };
 
 use crate::async_ecosystem;
-
-pub struct AsyncExecutor;
-impl<'a, T: Send + 'static> crate::AsyncExecutor<'a, T> for AsyncExecutor {
-    type JoinHandle = BoxFuture<'static, T>;
-    type Timeout = Timeout<BoxFuture<'a, T>>;
-    type Elapsed = Elapsed;
-
-    fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-        Box::pin(async move { spawn(task).await.unwrap() })
-    }
-
-    fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-        timeout(duration, Box::pin(task))
-    }
-}
 
 pub struct JoinHandle<T>(TokioHandle<T>);
 
@@ -43,8 +28,8 @@ impl<T: Send + 'static> async_ecosystem::AsyncEcosystem<T> for AsyncEcosystem {
         handle.0.abort();
     }
 
-    fn sleep(duration: Duration) -> Self::Sleep {
-        sleep(duration)
+    fn sleep_until(instant: Instant) -> Self::Sleep {
+        sleep_until(instant.into())
     }
 }
 
