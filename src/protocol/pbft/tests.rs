@@ -8,7 +8,7 @@ use crate::{
     app::mock::App,
     common::{Opaque, SignedMessage, SigningKey},
     protocol::pbft::message::{self, ToReplica},
-    runtime::tokio::AsyncExecutor,
+    runtime::tokio::AsyncEcosystem,
     simulated::Transport,
     stage::Handle,
     tests::TRACING,
@@ -45,7 +45,7 @@ fn send_pre_prepare_message() {
 
 fn generate_route(
     replica_list: &[Handle<Replica<Transport>>],
-    client_list: &[Client<Transport, AsyncExecutor>],
+    client_list: &[Client<Transport, AsyncEcosystem>],
 ) {
     for replica in replica_list {
         replica.with_stateful(|replica| {
@@ -65,7 +65,7 @@ async fn one_request() {
     let replica: Vec<_> = (0..4)
         .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
         .collect();
-    let client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+    let client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
     let client = [client];
     generate_route(&replica, &client);
     let mut client = client.into_iter().next().unwrap();
@@ -86,7 +86,7 @@ async fn multiple_client() {
     let replica: Vec<_> = (0..4)
         .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
         .collect();
-    let client: Vec<Client<_, AsyncExecutor>> = (0..3)
+    let client: Vec<Client<_, AsyncEcosystem>> = (0..3)
         .map(|_| Client::register_new(&mut transport))
         .collect();
     generate_route(&replica, &client);

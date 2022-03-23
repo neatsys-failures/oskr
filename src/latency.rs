@@ -71,11 +71,11 @@ impl Display for Latency {
             self.hist.len(),
         )?;
         for v in self.hist.iter_quantiles(1).skip(1) {
+            writeln!(f)?;
             if v.count_since_last_iteration() == 0 {
+                write!(f, "...")?;
                 continue;
             }
-
-            writeln!(f)?;
             write!(
                 f,
                 "{:10?} | {:40} | {:4.1}th %-ile",

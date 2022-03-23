@@ -2,19 +2,20 @@ use std::{collections::HashMap, marker::PhantomData, time::Duration};
 
 use async_trait::async_trait;
 use futures::{
-    channel::mpsc::{unbounded, UnboundedReceiver},
-    StreamExt,
+    channel::mpsc::{self, unbounded, UnboundedReceiver},
+    select, SinkExt, StreamExt,
 };
 use tracing::{debug, warn};
 
 use crate::{
+    async_ecosystem::AsyncEcosystem,
     common::{
         deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage,
         ViewNumber,
     },
     protocol::pbft::message::{self, ToReplica},
     transport::{Receiver, Transport, TxAgent},
-    AsyncExecutor, Invoke,
+    Invoke,
 };
 
 pub struct Client<T: Transport, E> {
@@ -56,7 +57,7 @@ impl<T: Transport, E> Client<T, E> {
 }
 
 #[async_trait]
-impl<T: Transport, E: for<'a> AsyncExecutor<'a, Opaque>> Invoke for Client<T, E>
+impl<T: Transport, E: AsyncEcosystem<Opaque>> Invoke for Client<T, E>
 where
     Self: Send + Sync,
     E: Send + Sync,
@@ -74,6 +75,14 @@ where
             replica,
             serialize(ToReplica::Request(request.clone())),
         );
+
+        let (mut resend_tx, mut resend_rx) = mpsc::channel(1);
+        let resend = E::spawn(async move {
+            loop {
+                E::sleep(Duration::from_millis(1000)).await;
+                resend_tx.send(()).await.unwrap();
+            }
+        });
 
         let mut result_table = HashMap::new();
         let mut receive_buffer =
@@ -102,21 +111,20 @@ where
             };
 
         loop {
-            let receive_loop = async {
-                loop {
-                    let (remote, buffer) = self.rx.next().await.unwrap();
+            select! {
+                recv = self.rx.next() => {
+                    let (remote, buffer) = recv.unwrap();
                     if let Some(result) = receive_buffer(self, remote, buffer) {
-                        break result;
+                        E::cancel(resend);
+                        return result;
                     }
                 }
-            };
-            if let Ok(result) = E::timeout(Duration::from_millis(1000), receive_loop).await {
-                return result;
+                _ = resend_rx.next() => {
+                    warn!("resend for request number {}", self.request_number);
+                    self.transport
+                        .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
+                }
             }
-
-            warn!("resend for request number {}", self.request_number);
-            self.transport
-                .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
         }
     }
 }

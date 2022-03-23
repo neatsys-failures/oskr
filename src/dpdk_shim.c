@@ -70,7 +70,7 @@ int setup_port(uint16_t port_id, uint16_t n_rx, uint16_t n_tx, struct rte_mempoo
     uint16_t n_rx_desc = 2048, n_tx_desc = 2048;
     if (rte_eth_dev_adjust_nb_rx_tx_desc(port_id, &n_rx_desc, &n_tx_desc) != 0)
         return -1;
-    printf("setup_port: %u rx desc, %u tx desc\n", n_rx_desc, n_tx_desc);
+    printf("setup_port: %u desc per rx queue, %u desc per tx queue\n", n_rx_desc, n_tx_desc);
 
     struct rte_eth_rxconf rxconf = dev_info.default_rxconf;
     rxconf.offloads = port_conf.rxmode.offloads;

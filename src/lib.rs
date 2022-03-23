@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use common::Opaque;
 use std::{future::Future, time::Duration};
 
+pub mod async_ecosystem;
 pub mod transport;
 
 pub mod dpdk_shim;
@@ -34,6 +35,7 @@ pub mod app {
 pub mod latency;
 
 pub mod runtime {
+    pub mod busy_poll;
     pub mod dpdk;
     #[cfg(any(feature = "tokio", test))]
     pub mod tokio;

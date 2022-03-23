@@ -12,7 +12,7 @@ use std::{
 
 use clap::{ArgEnum, Parser};
 use oskr::{
-    common::{Opaque, ReplicaId},
+    common::{panic_abort, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     protocol::{pbft, unreplicated},
     runtime::dpdk::Transport,
@@ -31,6 +31,7 @@ impl App for NullApp {
 
 fn main() {
     tracing_subscriber::fmt::init();
+    panic_abort();
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
     enum Mode {

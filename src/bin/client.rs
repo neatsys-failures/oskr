@@ -1,5 +1,4 @@
 use std::{
-    cell::RefCell,
     ffi::c_void,
     fs::File,
     future::Future,
@@ -11,76 +10,24 @@ use std::{
         atomic::{AtomicU32, Ordering},
         Arc,
     },
-    task::{Context, Poll},
+    task::Context,
     time::Duration,
 };
 
 use clap::{ArgEnum, Parser};
-use futures::{channel::oneshot, future::BoxFuture, select, task::noop_waker_ref, FutureExt};
+use futures::{channel::oneshot, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::SyncHistogram;
 use oskr::{
+    async_ecosystem::AsyncEcosystem as _,
     common::{panic_abort, Opaque},
-    runtime::dpdk::Transport,
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     latency::{Latency, LocalLatency},
     protocol::{pbft, unreplicated},
+    runtime::{busy_poll::AsyncEcosystem, dpdk::Transport},
     transport::{Config, Receiver},
-    AsyncExecutor as _, Invoke,
+    Invoke,
 };
-use quanta::{Clock, Instant};
 use tracing::{debug, info};
-
-struct AsyncExecutor;
-impl AsyncExecutor {
-    thread_local! {
-        static TASK_LIST: RefCell<Vec<BoxFuture<'static, ()>>> = RefCell::new(Vec::new());
-    }
-    fn poll_now() {
-        Self::TASK_LIST.with(|task_list| {
-            for task in &mut *task_list.borrow_mut() {
-                let _ = Pin::new(task).poll(&mut Context::from_waker(noop_waker_ref()));
-            }
-        });
-    }
-    fn poll(duration: Duration) {
-        let clock = Clock::new();
-        let start = clock.start();
-        while clock.delta(start, clock.end()) < duration {
-            Self::poll_now();
-        }
-    }
-}
-
-struct Timeout<'a, T>(BoxFuture<'a, T>, Instant);
-struct Elapsed;
-impl<'a, T> Future for Timeout<'a, T> {
-    type Output = Result<T, Elapsed>;
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if Instant::now() > self.1 {
-            Poll::Ready(Err(Elapsed))
-        } else {
-            Pin::new(&mut self.0).poll(cx).map(Result::Ok)
-        }
-    }
-}
-
-impl<'a, T: Send + 'static> oskr::AsyncExecutor<'a, T> for AsyncExecutor {
-    type JoinHandle = BoxFuture<'static, T>; // too lazy to invent new type
-    type Timeout = BoxFuture<'a, Result<T, Self::Elapsed>>;
-    type Elapsed = Elapsed;
-    fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-        let (tx, rx) = oneshot::channel();
-        Self::TASK_LIST.with(|task_list| {
-            task_list.borrow_mut().push(Box::pin(async move {
-                tx.send(task.await).map_err(|_| "send fail").unwrap();
-            }))
-        });
-        Box::pin(async move { rx.await.unwrap() })
-    }
-    fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-        Box::pin(Timeout(Box::pin(task), Instant::now() + duration))
-    }
-}
 
 fn main() {
     tracing_subscriber::fmt::init();
@@ -176,7 +123,7 @@ fn main() {
                     let status = status.clone();
                     let mut latency = latency.clone();
                     (
-                        AsyncExecutor::spawn(async move {
+                        AsyncEcosystem::spawn(async move {
                             debug!("{}", client.get_address());
                             loop {
                                 let measure = latency.measure();
@@ -196,18 +143,18 @@ fn main() {
                 .unzip();
 
             if worker_id == 0 {
-                AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration));
+                AsyncEcosystem::poll(Duration::from_secs(args.warm_up_duration));
                 status.store(Status::Run as _, Ordering::SeqCst);
                 info!("warm up finish");
 
                 for _ in 0..args.duration {
-                    AsyncExecutor::poll(Duration::from_secs(1));
+                    AsyncEcosystem::poll(Duration::from_secs(1));
                     let count = count.swap(0, Ordering::SeqCst);
                     println!("{}", count);
                 }
                 status.store(Status::Shutdown as _, Ordering::SeqCst);
             } else {
-                AsyncExecutor::poll(Duration::from_secs(args.warm_up_duration + args.duration));
+                AsyncEcosystem::poll(Duration::from_secs(args.warm_up_duration + args.duration));
             }
 
             // with new latency there is no need to join tasks
@@ -215,7 +162,7 @@ fn main() {
             for shutdown in shutdown_list {
                 shutdown.send(()).unwrap();
             }
-            AsyncExecutor::poll_now();
+            AsyncEcosystem::poll_all();
             client_list.into_iter().for_each(|mut client| {
                 assert!(Pin::new(&mut client)
                     .poll(&mut Context::from_waker(noop_waker_ref()))
@@ -259,13 +206,13 @@ fn main() {
     let mut latency = Latency::new("latency");
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
-            || unreplicated::Client::<_, AsyncExecutor>::register_new(&mut transport),
+            || unreplicated::Client::<_, AsyncEcosystem>::register_new(&mut transport),
             args,
             status.clone(),
             latency.local(),
         ),
         Mode::PBFT => WorkerData::launch(
-            || pbft::Client::<_, AsyncExecutor>::register_new(&mut transport),
+            || pbft::Client::<_, AsyncEcosystem>::register_new(&mut transport),
             args,
             status.clone(),
             latency.local(),
