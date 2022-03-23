@@ -12,14 +12,12 @@ use futures::{
 use tracing::{debug, warn};
 
 use crate::{
-    async_ecosystem::AsyncEcosystem,
     common::{
         deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage,
         ViewNumber,
     },
+    facade::{AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     protocol::pbft::message::{self, ToReplica},
-    transport::{Receiver, Transport, TxAgent},
-    Invoke,
 };
 
 pub struct Client<T: Transport, E> {

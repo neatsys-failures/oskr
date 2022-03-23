@@ -7,13 +7,12 @@ use tokio::{spawn, time::timeout};
 use crate::{
     app::mock::App,
     common::{Opaque, SignedMessage, SigningKey},
+    facade::{Invoke, Receiver},
     protocol::pbft::message::{self, ToReplica},
     runtime::tokio::AsyncEcosystem,
     simulated::Transport,
     stage::Handle,
     tests::TRACING,
-    transport::Receiver,
-    Invoke,
 };
 
 use super::{Client, Replica};

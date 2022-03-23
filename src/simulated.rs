@@ -23,7 +23,7 @@ use tracing::trace;
 use crate::stage_prod::State;
 use crate::{
     common::SigningKey,
-    transport::{self, Config, Receiver},
+    facade::{self, Config, Receiver},
 };
 
 type Address = String;
@@ -57,7 +57,7 @@ pub struct TxAgent {
     config: Arc<Config<Transport>>,
 }
 
-impl transport::TxAgent for TxAgent {
+impl facade::TxAgent for TxAgent {
     type Transport = Transport;
 
     fn config(&self) -> &Config<Self::Transport> {
@@ -67,7 +67,7 @@ impl transport::TxAgent for TxAgent {
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
-        dest: &<Self::Transport as transport::Transport>::Address,
+        dest: &<Self::Transport as facade::Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         let mut buffer = [0; 9000];
@@ -100,7 +100,7 @@ impl transport::TxAgent for TxAgent {
     }
 }
 
-impl transport::Transport for Transport {
+impl facade::Transport for Transport {
     type Address = Address;
     type RxBuffer = RxBuffer;
     type TxAgent = TxAgent;

@@ -20,7 +20,7 @@ use crate::{
         rte_eth_macaddr_get, rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
         rte_socket_id, setup_port, Address, RxBuffer,
     },
-    transport::{self, Config, Receiver},
+    facade::{self, Config, Receiver},
 };
 
 #[derive(Clone)]
@@ -68,7 +68,7 @@ impl RoundRobin {
 unsafe impl Send for TxAgent {}
 unsafe impl Sync for TxAgent {}
 
-impl transport::TxAgent for TxAgent {
+impl facade::TxAgent for TxAgent {
     type Transport = Transport;
 
     fn config(&self) -> &Config<Self::Transport> {
@@ -78,7 +78,7 @@ impl transport::TxAgent for TxAgent {
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
-        dest: &<Self::Transport as transport::Transport>::Address,
+        dest: &<Self::Transport as facade::Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         unsafe {
@@ -173,7 +173,7 @@ type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 
 unsafe impl Send for Transport {}
 
-impl transport::Transport for Transport {
+impl facade::Transport for Transport {
     type Address = Address;
     type RxBuffer = RxBuffer;
     type TxAgent = TxAgent;

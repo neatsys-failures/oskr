@@ -10,7 +10,7 @@ use std::{
 use futures::{channel::oneshot, future::BoxFuture, task::noop_waker_ref, Future};
 use quanta::Clock;
 
-use crate::async_ecosystem;
+use crate::facade;
 
 pub struct AsyncEcosystem;
 impl AsyncEcosystem {
@@ -80,7 +80,7 @@ impl<T> Future for JoinHandle<T> {
     }
 }
 
-impl<T: Send + 'static> async_ecosystem::AsyncEcosystem<T> for AsyncEcosystem {
+impl<T: Send + 'static> facade::AsyncEcosystem<T> for AsyncEcosystem {
     type JoinHandle = JoinHandle<T>;
     type Sleep = Sleep;
 

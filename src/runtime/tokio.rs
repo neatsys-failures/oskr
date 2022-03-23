@@ -11,12 +11,12 @@ use tokio::{
     time::{sleep_until, Sleep},
 };
 
-use crate::async_ecosystem;
+use crate::facade;
 
 pub struct JoinHandle<T>(TokioHandle<T>);
 
 pub struct AsyncEcosystem;
-impl<T: Send + 'static> async_ecosystem::AsyncEcosystem<T> for AsyncEcosystem {
+impl<T: Send + 'static> facade::AsyncEcosystem<T> for AsyncEcosystem {
     type JoinHandle = JoinHandle<T>;
     type Sleep = Sleep;
 

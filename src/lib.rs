@@ -1,8 +1,4 @@
-use async_trait::async_trait;
-use common::Opaque;
-
-pub mod async_ecosystem;
-pub mod transport;
+pub mod facade;
 
 pub mod dpdk_shim;
 
@@ -38,15 +34,6 @@ pub mod runtime {
     pub mod dpdk;
     #[cfg(any(feature = "tokio", test))]
     pub mod tokio;
-}
-
-#[async_trait]
-pub trait Invoke {
-    async fn invoke(&mut self, op: Opaque) -> Opaque;
-}
-
-pub trait App {
-    fn execute(&mut self, op: Opaque) -> Opaque;
 }
 
 #[cfg(test)]

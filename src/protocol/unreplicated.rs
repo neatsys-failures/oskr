@@ -13,13 +13,11 @@ use serde_derive::{Deserialize, Serialize};
 use tracing::{debug, warn};
 
 use crate::{
-    async_ecosystem::AsyncEcosystem,
     common::{
         deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
     },
+    facade::{self, App, AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     stage::{Handle, State, StatefulContext},
-    transport::{self, Receiver, Transport, TxAgent},
-    App, Invoke,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +43,7 @@ pub struct Client<T: Transport, E> {
     request_number: RequestNumber,
 }
 
-impl<T: Transport, E> transport::Receiver<T> for Client<T, E> {
+impl<T: Transport, E> facade::Receiver<T> for Client<T, E> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
@@ -187,8 +185,8 @@ mod tests {
     use tokio::{spawn, time::timeout};
 
     use crate::{
-        app::mock::App, common::Opaque, runtime::tokio::AsyncEcosystem, simulated::Transport,
-        tests::TRACING, Invoke,
+        app::mock::App, common::Opaque, facade::Invoke, runtime::tokio::AsyncEcosystem,
+        simulated::Transport, tests::TRACING,
     };
 
     use super::{Client, Replica};

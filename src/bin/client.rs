@@ -18,14 +18,12 @@ use clap::{ArgEnum, Parser};
 use futures::{channel::oneshot, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::SyncHistogram;
 use oskr::{
-    async_ecosystem::AsyncEcosystem as _,
     common::{panic_abort, Opaque},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
+    facade::{AsyncEcosystem as _, Config, Invoke, Receiver},
     latency::{Latency, LocalLatency},
     protocol::{pbft, unreplicated},
     runtime::{busy_poll::AsyncEcosystem, dpdk::Transport},
-    transport::{Config, Receiver},
-    Invoke,
 };
 use tracing::{debug, info};
 
