@@ -49,6 +49,13 @@ pub trait App {
 /// the receivers work with any ecosystem, as long as there is an implementation
 /// of `AsyncEcosystem` for it.
 ///
+/// **About reusing standard abstraction.** Currently I cannot found any
+/// community attemption on defining a standard async ecosystem abstraction. The
+/// author of async-std stands against the idea, which may imply the motivation
+/// cannot be satisfied. It also seems like several projects, which also do not
+/// prefer conditional compiling solution, are building their own abstractions
+/// as well, so I probably has to do the same, sadly.
+///
 /// The trait is kept minimal, and only essential interfaces are picked. Notice
 /// that interfaces are free-function style, which may only be valid in certain
 /// context. It is user's responsiblity to provide proper context, e.g. set up

@@ -94,6 +94,7 @@ pub mod common;
 pub mod protocol {
     pub mod pbft;
     pub mod unreplicated;
+    pub mod hotstuff;
 }
 
 /// Application implementations.
