@@ -100,6 +100,9 @@ impl<T: Send + 'static> facade::AsyncEcosystem<T> for AsyncEcosystem {
     }
 
     fn sleep_until(instant: Instant) -> Self::Sleep {
+        if Instant::now() >= instant {
+            return Sleep(quanta::Instant::now());
+        }
         // so shit...
         Sleep(quanta::Instant::now() + (instant - Instant::now()))
     }

@@ -71,24 +71,57 @@ pub mod stage {
     pub use crate::stage_prod::State;
 }
 
-/// Common configuration. Extract them so future refactor can be easier.
+/// Common definitions. Extract them so future refactor can be easier.
 pub mod common;
 
 /// Protocol implementations.
+///
+/// This module exports implementations of [`Receiver`](facade::Receiver) and
+/// [`Invoke`](facade::Invoke).
+///
+/// # Implementation convension
+///
+/// `Receiver`s provide a `register_new(&mut transport, ...)` function, which
+/// constructs a receiver instance and register it to `transport`. This mimics
+/// the behavior of specpaxos `TransportReceiver` constructor.
+///
+/// The `Invoke`able receivers should not depend on specific asynchronous
+/// facility. Instead, they should access to asynchronous functionality through
+/// [`AsyncEcosystem`](facade::AsyncEcosystem) trait.
+///
+/// The non-`Invoke`able receivers, i.e. server nodes should be built upon
+/// [`stage`], even for the single-threaded ones.
 pub mod protocol {
     pub mod pbft;
     pub mod unreplicated;
 }
 
 /// Application implementations.
+///
+/// This module exports implementation of [`App`](facade::App). The simplest
+/// application may be "client-free". They don't require complicated message
+/// encoding or client-side behavior. One example of these applications is
+/// timestamp server.
+///
+/// For other applications, e.g. client-coordinated transactional store, they
+/// provide customized client along with the `App`. These clients has various
+/// interfaces, but they probably leverage `Invoke`able, i.e. protocol client
+/// to proceed communication.
 pub mod app {
     pub mod mock;
 }
 
 /// Convenient library for latency measurement.
+///
+/// This module is a thin wrapper around [quanta] and [hdrhistogram]. It
+/// provides a similar but more user-friendly interface to specpaxos's latency
+/// library, especially for multithreaded usage.
 pub mod latency;
 
 /// Various runtime facilities that supports protocol implementations.
+///
+/// This module exports implementations of `Transport` and `AsyncEcosystem`.
+/// The submodules are named after implementation base.
 pub mod runtime {
     pub mod busy_poll;
     pub mod dpdk;

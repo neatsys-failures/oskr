@@ -8,6 +8,25 @@ use futures::Future;
 
 use crate::common::{Opaque, ReplicaId, SigningKey, VerifyingKey, ViewNumber};
 
+/// Asynchronized invoking interface.
+///
+/// Currently the trait is polyfilled with [mod@async_trait], which makes the
+/// signature in document looks weird.
+///
+/// A minimal example to implement `Invoke` that never completes:
+///
+/// ```
+/// # use async_trait::async_trait;
+/// # use futures::future::pending;
+/// # use oskr::{common::Opaque, facade::Invoke};
+/// struct NeverComplete;
+/// #[async_trait]
+/// impl Invoke for NeverComplete {
+///     async fn invoke(&mut self, op: Opaque) -> Opaque {
+///         pending().await
+///     }
+/// }
+/// ```
 #[async_trait]
 pub trait Invoke {
     async fn invoke(&mut self, op: Opaque) -> Opaque;
@@ -17,8 +36,38 @@ pub trait App {
     fn execute(&mut self, op: Opaque) -> Opaque;
 }
 
+/// Abstraction for async ecosystem.
+///
+/// The concept of async ecosystem comes from [the async book][1]. It refers to
+/// a bundle of async executor and reactors.
+///
+/// [1]: https://rust-lang.github.io/async-book/08_ecosystem/00_chapter.html
+///
+/// The asynchronized receiver in this codebase usually requires timers,
+/// concurrent tasks, etc. As the result they cannot be ecosystem dependent. The
+/// `AsyncEcosystem` trait abstract specific ecosystem implementations to make
+/// the receivers work with any ecosystem, as long as there is an implementation
+/// of `AsyncEcosystem` for it.
+///
+/// The trait is kept minimal, and only essential interfaces are picked. Notice
+/// that interfaces are free-function style, which may only be valid in certain
+/// context. It is user's responsiblity to provide proper context, e.g. set up
+/// a tokio runtime and create receivers that depend on
+/// [`runtime::tokio::AsyncEcosystem`](crate::runtime::tokio::AsyncEcosystem) in
+/// it, or the receiver will probably fail at runtime.
+
 // wait for GAT to remove trait generic parameter
 pub trait AsyncEcosystem<T> {
+    /// Handle for a spawned task, can be use to either await on or cancel.
+    ///
+    /// The lack of interface to detach a task is intentional. An
+    /// `AsyncEcosystem` implementation is not required to be able to do detach,
+    /// and it is encouraged to explicitly hold task handle until it is
+    /// discontinued.
+    ///
+    /// The dropping behavior of a handle is not specified. Do not drop any
+    /// handle out of `AsyncEcosystem`. Instead, either await on it or consume
+    /// it by calling `cancel`.
     type JoinHandle: Future<Output = T> + Send;
     type Sleep: Future<Output = ()> + Send;
 
