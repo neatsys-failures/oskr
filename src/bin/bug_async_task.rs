@@ -45,7 +45,7 @@ fn main() {
     });
 
     let start = Instant::now();
-    while Instant::now() - start < Duration::from_millis(1 * 1000) {
+    while Instant::now() - start < Duration::from_millis(1000) {
         // assert_eq!(poll_once(), 1);
         poll_once();
     }

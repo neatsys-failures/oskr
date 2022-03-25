@@ -32,10 +32,10 @@ impl Latency {
     }
 }
 
-impl Into<SyncHistogram<u32>> for Latency {
-    fn into(mut self) -> SyncHistogram<u32> {
-        self.refresh();
-        self.hist
+impl From<Latency> for SyncHistogram<u32> {
+    fn from(mut latency: Latency) -> Self {
+        latency.hist.refresh();
+        latency.hist
     }
 }
 

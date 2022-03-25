@@ -1,8 +1,10 @@
+use bincode::Options;
 use serde_derive::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 
 use crate::common::{
     signed::InauthenticMessage, ClientId, Digest, OpNumber, Opaque, ReplicaId, RequestNumber,
-    SignedMessage, VerifyingKey,
+    SignedMessage, VerifyingKey, ViewNumber,
 };
 
 // HotStuff paper omit much implementation details, maybe too much.
@@ -16,7 +18,9 @@ use crate::common::{
 //   represented as node's digest, because we assume the receiver probably get
 //   the node content already.
 // * Add replica id field to VoteGeneric so we can count the number of
-//   deduplicated votes. (I don't want to deduplicate base on remote address.)
+//   deduplicated votes. (I don't want to deduplicate base on remote address,
+//   and I don't want to follow the paper to deduplicate on partial signature,
+//   which must rely on hashable signature.)
 // * Define QC as a vector of signed message and simulate threshold signature
 //   by verifying them in sequence.
 //
@@ -27,8 +31,6 @@ use crate::common::{
 //
 //   Additionally, libhotstuff do the simulation as well, so it is ok to
 //   evaluate with this.
-// * The view number field is removed, because according to the paper, event-
-//   driven HotStuff does not even store current view number.
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ToReplica {
@@ -50,12 +52,14 @@ pub struct Request {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Generic {
+    pub view_number: ViewNumber,
     pub node: Option<GenericNode>,
     pub justify: Option<QuorumCertification>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VoteGeneric {
+    pub view_number: ViewNumber,
     pub node: Digest,
     pub replica_id: ReplicaId,
 }
@@ -75,8 +79,32 @@ pub struct GenericNode {
     pub height: OpNumber,
 }
 
+impl GenericNode {
+    pub fn create_leaf(
+        parent: &Digest,
+        command: Vec<Request>,
+        qc: QuorumCertification,
+        height: OpNumber,
+    ) -> Self {
+        Self {
+            parent: *parent,
+            command,
+            justify: qc,
+            height,
+        }
+    }
+
+    pub fn digest(&self) -> Digest {
+        Sha256::digest(bincode::options().serialize(self).unwrap()).into()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct QuorumCertification(Vec<(ReplicaId, SignedMessage<VoteGeneric>)>);
+pub struct QuorumCertification {
+    pub view_number: ViewNumber,
+    pub node: Digest,
+    pub signature: Vec<(ReplicaId, SignedMessage<VoteGeneric>)>,
+}
 
 impl QuorumCertification {
     pub fn verify<'a>(
@@ -85,28 +113,21 @@ impl QuorumCertification {
         // is deployed
         verifying_key: impl Fn(ReplicaId) -> &'a VerifyingKey,
         threshold: usize,
-    ) -> Result<Digest, InauthenticMessage> {
+    ) -> Result<(), InauthenticMessage> {
         assert!(threshold > 0);
-        if self.0.len() < threshold {
+        if self.signature.len() < threshold {
             return Err(InauthenticMessage);
         }
 
-        let (replica0, vote0) = self.0[0].clone();
-        let node = if let Ok(verified) = vote0.verify(verifying_key(replica0)) {
-            verified.node
-        } else {
-            return Err(InauthenticMessage);
-        };
-
-        for (replica, vote) in self.0[1..].iter().cloned() {
+        for (replica, vote) in self.signature.iter().cloned() {
             if let Ok(verified) = vote.verify(verifying_key(replica)) {
-                if verified.node != node {
+                if verified.view_number != self.view_number || verified.node != self.node {
                     return Err(InauthenticMessage); // more strict than necessary, but simpler
                 }
             } else {
                 return Err(InauthenticMessage);
             }
         }
-        Ok(node)
+        Ok(())
     }
 }

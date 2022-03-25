@@ -33,6 +33,7 @@ fn main() {
     panic_abort();
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+    #[allow(clippy::upper_case_acronyms)]
     enum Mode {
         Unreplicated,
         PBFT,
