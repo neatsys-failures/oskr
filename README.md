@@ -19,18 +19,18 @@ because the core of this project is based on a specialized actor model.
 
 **Benchmark result.** Detailed explaination work in progress.
 
-|Protocol      |Worker number|Batch size|Maximum throughput (K ops/sec)|Minimum medium latency (us)|
+|Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
 |--------------|-----|-----|-----------|-----------|
-|Unreplicated  |1    |1    |1901.157   |12.031     |
-|PBFT          |14   |1    |14.686     |716.799    |
-|PBFT          |14   |100  |100.2*     |1449.983   |
+|Unreplicated  |1    |1    |2011.256   |10.751     |
+|PBFT          |14   |1    |14.686     |789.614    |
+|PBFT          |14   |100  |127.109    |1596.052   |
 |HotStuff      |
 
 ----
 
 **Setup.** To run this project you must compile from source. There is a 
-published version on crate.io, but that is just a placeholder and will not work.
-The propose is to enable hosting document on doc.rs.
+published version on crates.io, but that is just a placeholder and will not 
+work. The propose is to enable hosting document on doc.rs.
 
 Prerequisites on Ubuntu:
 * Up-to-date stable Rust toolchain.

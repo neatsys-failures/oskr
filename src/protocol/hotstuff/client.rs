@@ -1,20 +1,20 @@
-use std::{collections::HashMap, marker::PhantomData, time::Duration};
+use std::{
+    collections::HashMap,
+    marker::PhantomData,
+    time::{Duration, Instant},
+};
 
 use async_trait::async_trait;
 use futures::{
     channel::mpsc::{unbounded, UnboundedReceiver},
-    StreamExt,
+    select, FutureExt, StreamExt,
 };
 use tracing::{debug, warn};
 
 use crate::{
-    common::{
-        deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage,
-        ViewNumber,
-    },
-    replication::pbft::message::{self, ToReplica},
-    transport::{Receiver, Transport, TxAgent},
-    AsyncExecutor, Invoke,
+    common::{deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage},
+    facade::{AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
+    protocol::hotstuff::message::{self, ToReplica},
 };
 
 pub struct Client<T: Transport, E> {
@@ -25,7 +25,6 @@ pub struct Client<T: Transport, E> {
     _executor: PhantomData<E>,
 
     request_number: RequestNumber,
-    view_number: ViewNumber,
 }
 
 impl<T: Transport, E> Receiver<T> for Client<T, E> {
@@ -43,7 +42,6 @@ impl<T: Transport, E> Client<T, E> {
             transport: transport.tx_agent(),
             rx,
             request_number: 0,
-            view_number: 0,
             _executor: PhantomData,
         };
         transport.register(&client, move |remote, buffer| {
@@ -56,7 +54,7 @@ impl<T: Transport, E> Client<T, E> {
 }
 
 #[async_trait]
-impl<T: Transport, E: for<'a> AsyncExecutor<'a, Opaque>> Invoke for Client<T, E>
+impl<T: Transport, E: AsyncEcosystem<Opaque>> Invoke for Client<T, E>
 where
     Self: Send + Sync,
     E: Send + Sync,
@@ -68,12 +66,8 @@ where
             request_number: self.request_number,
             client_id: self.id,
         };
-        let replica = self.transport.config().view_primary(self.view_number);
-        self.transport.send_message_to_replica(
-            self,
-            replica,
-            serialize(ToReplica::Request(request.clone())),
-        );
+        self.transport
+            .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
 
         let mut result_table = HashMap::new();
         let mut receive_buffer =
@@ -85,9 +79,6 @@ where
                 }
 
                 result_table.insert(reply.replica_id, reply.result.clone());
-                if reply.view_number > client.view_number {
-                    client.view_number = reply.view_number;
-                }
 
                 if result_table
                     .values()
@@ -101,22 +92,22 @@ where
                 }
             };
 
+        let mut timeout = Instant::now() + Duration::from_millis(1000);
         loop {
-            let receive_loop = async {
-                loop {
-                    let (remote, buffer) = self.rx.next().await.unwrap();
+            select! {
+                recv = self.rx.next() => {
+                    let (remote, buffer) = recv.unwrap();
                     if let Some(result) = receive_buffer(self, remote, buffer) {
-                        break result;
+                        return result;
                     }
                 }
-            };
-            if let Ok(result) = E::timeout(Duration::from_millis(1000), receive_loop).await {
-                return result;
+                _ = E::sleep_until(timeout).fuse() => {
+                    warn!("resend for request number {}", self.request_number);
+                    self.transport
+                        .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
+                    timeout = Instant::now() + Duration::from_millis(1000);
+                }
             }
-
-            warn!("resend for request number {}", self.request_number);
-            self.transport
-                .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
         }
     }
 }

@@ -1,14 +1,13 @@
 use std::{
     collections::HashMap,
-    fmt::{self, Debug, Formatter},
     marker::PhantomData,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use async_trait::async_trait;
 use futures::{
     channel::mpsc::{unbounded, UnboundedReceiver},
-    StreamExt,
+    select, FutureExt, StreamExt,
 };
 use serde_derive::{Deserialize, Serialize};
 use tracing::{debug, warn};
@@ -17,9 +16,8 @@ use crate::{
     common::{
         deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
     },
+    facade::{self, App, AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     stage::{Handle, State, StatefulContext},
-    transport::{self, Receiver, Transport, TxAgent},
-    App, AsyncExecutor, Invoke,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,20 +43,7 @@ pub struct Client<T: Transport, E> {
     request_number: RequestNumber,
 }
 
-impl<T: Transport, E> Debug for Client<T, E> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Client({}{}{}{})",
-            char::from(self.id[0]),
-            char::from(self.id[1]),
-            char::from(self.id[2]),
-            char::from(self.id[3])
-        )
-    }
-}
-
-impl<T: Transport, E> transport::Receiver<T> for Client<T, E> {
+impl<T: Transport, E> facade::Receiver<T> for Client<T, E> {
     fn get_address(&self) -> &T::Address {
         &self.address
     }
@@ -85,11 +70,10 @@ impl<T: Transport, E> Client<T, E> {
 }
 
 #[async_trait]
-impl<T: Transport, E: for<'a> AsyncExecutor<'a, Opaque>> Invoke for Client<T, E>
+impl<T: Transport, E: AsyncEcosystem<Opaque>> Invoke for Client<T, E>
 where
     Self: Send,
 {
-    #[tracing::instrument]
     async fn invoke(&mut self, op: Opaque) -> Opaque {
         self.request_number += 1;
         let request = RequestMessage {
@@ -100,24 +84,24 @@ where
 
         self.transport
             .send_message_to_replica(self, 0, serialize(request.clone()));
+        let mut timeout = Instant::now() + Duration::from_millis(1000);
 
         loop {
-            let receive_buffer = async {
-                loop {
-                    let (_remote, buffer) = self.rx.next().await.unwrap();
+            select! {
+                _ = E::sleep_until(timeout).fuse() => {
+                    warn!("resend for request number {}", self.request_number);
+                    self.transport
+                        .send_message_to_replica(self, 0, serialize(request.clone()));
+                    timeout = Instant::now() + Duration::from_millis(1000);
+                }
+                recv = self.rx.next() => {
+                    let (_remote, buffer) = recv.unwrap();
                     let reply: ReplyMessage = deserialize(buffer.as_ref()).unwrap();
                     if reply.request_number == self.request_number {
-                        break reply.result;
+                        return reply.result;
                     }
                 }
-            };
-
-            if let Ok(result) = E::timeout(Duration::from_millis(1000), receive_buffer).await {
-                return result;
             }
-            warn!("resend for request number {}", self.request_number);
-            self.transport
-                .send_message_to_replica(self, 0, serialize(request.clone()));
         }
     }
 }
@@ -201,11 +185,8 @@ mod tests {
     use tokio::{spawn, time::timeout};
 
     use crate::{
-        app::mock::App,
-        common::Opaque,
-        simulated::{AsyncExecutor, Transport},
-        tests::TRACING,
-        Invoke,
+        app::mock::App, common::Opaque, facade::Invoke, runtime::tokio::AsyncEcosystem,
+        simulated::Transport, tests::TRACING,
     };
 
     use super::{Client, Replica};
@@ -215,7 +196,7 @@ mod tests {
         *TRACING;
         let mut transport = Transport::new(1, 0);
         Replica::register_new(&mut transport, 0, App::default());
-        let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+        let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
 
         spawn(async move { transport.deliver_now().await });
         assert_eq!(
@@ -231,7 +212,7 @@ mod tests {
         *TRACING;
         let mut transport = Transport::new(1, 0);
         Replica::register_new(&mut transport, 0, App::default());
-        let mut client: Client<_, AsyncExecutor> = Client::register_new(&mut transport);
+        let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
 
         spawn(async move { transport.deliver_now().await });
         for i in 0..10 {

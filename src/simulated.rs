@@ -1,14 +1,12 @@
 use std::{
     collections::HashMap,
     fmt::Debug,
-    future::Future,
     io::Write,
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
 };
 
-use futures::future::BoxFuture;
 use rand::{thread_rng, Rng};
 #[cfg(not(doc))]
 use tokio::{
@@ -17,7 +15,7 @@ use tokio::{
         mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
         Mutex, MutexGuard,
     },
-    time::{error::Elapsed, sleep, sleep_until, timeout, Instant, Timeout},
+    time::{sleep, sleep_until, Instant},
 };
 use tracing::trace;
 
@@ -25,7 +23,7 @@ use tracing::trace;
 use crate::stage_prod::State;
 use crate::{
     common::SigningKey,
-    transport::{self, Config, Receiver},
+    facade::{self, Config, Receiver},
 };
 
 type Address = String;
@@ -59,7 +57,7 @@ pub struct TxAgent {
     config: Arc<Config<Transport>>,
 }
 
-impl transport::TxAgent for TxAgent {
+impl facade::TxAgent for TxAgent {
     type Transport = Transport;
 
     fn config(&self) -> &Config<Self::Transport> {
@@ -69,7 +67,7 @@ impl transport::TxAgent for TxAgent {
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
-        dest: &<Self::Transport as transport::Transport>::Address,
+        dest: &<Self::Transport as facade::Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         let mut buffer = [0; 9000];
@@ -102,7 +100,7 @@ impl transport::TxAgent for TxAgent {
     }
 }
 
-impl transport::Transport for Transport {
+impl facade::Transport for Transport {
     type Address = Address;
     type RxBuffer = RxBuffer;
     type TxAgent = TxAgent;
@@ -269,7 +267,7 @@ mod undoc {
     // but Rust does not have specialization, and the corresponding RFC seems
     // stalled
     // then the only approach I can think of is to add constrait when implementing
-    // trait, but for Executor I decide to do conditional compiling instead of
+    // trait, but for stage I decide to do conditional compiling instead of
     // trait
     // really hope this would be solved
     pub struct Handle<S: State>(Submit<S>);
@@ -379,21 +377,6 @@ mod undoc {
                     shared: submit.shared,
                 });
             });
-        }
-    }
-
-    pub struct AsyncExecutor;
-    impl<'a, T: Send + 'static> crate::AsyncExecutor<'a, T> for AsyncExecutor {
-        type JoinHandle = BoxFuture<'static, T>;
-        type Timeout = Timeout<BoxFuture<'a, T>>;
-        type Elapsed = Elapsed;
-
-        fn spawn(task: impl Future<Output = T> + Send + 'static) -> Self::JoinHandle {
-            Box::pin(async move { spawn(task).await.unwrap() })
-        }
-
-        fn timeout(duration: Duration, task: impl Future<Output = T> + Send + 'a) -> Self::Timeout {
-            timeout(duration, Box::pin(task))
         }
     }
 }

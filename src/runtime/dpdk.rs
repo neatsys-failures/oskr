@@ -2,12 +2,16 @@ use std::{
     collections::HashMap,
     env,
     ffi::CString,
-    intrinsics::copy_nonoverlapping,
     mem::MaybeUninit,
     os::raw::{c_char, c_int, c_uint},
     ptr::NonNull,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
 };
+
+use crossbeam::utils::Backoff;
 
 use crate::{
     dpdk_shim::{
@@ -16,7 +20,7 @@ use crate::{
         rte_eth_macaddr_get, rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
         rte_socket_id, setup_port, Address, RxBuffer,
     },
-    transport::{self, Config, Receiver},
+    facade::{self, Config, Receiver},
 };
 
 #[derive(Clone)]
@@ -24,12 +28,47 @@ pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
     config: Arc<Config<Transport>>,
+    rr: Arc<RoundRobin>,
+}
+
+struct RoundRobin {
+    sequence: AtomicU32,
+    counter: [AtomicU32; 32], // 32 tx queue should be maximum expectation right?
+    n: u32,
+}
+
+impl RoundRobin {
+    fn new(n: u32) -> Self {
+        Self {
+            sequence: AtomicU32::new(0),
+            counter: (0..32)
+                .map(|_| AtomicU32::new(0))
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap(),
+            n,
+        }
+    }
+
+    fn acquire(&self) -> u32 {
+        let sequence = self.sequence.fetch_add(1, Ordering::SeqCst);
+        let (i, c) = (sequence % self.n, sequence / self.n);
+        let backoff = Backoff::new();
+        while self.counter[i as usize].load(Ordering::SeqCst) != c {
+            backoff.snooze();
+        }
+        i
+    }
+
+    fn release(&self, i: u32) {
+        self.counter[i as usize].fetch_add(1, Ordering::SeqCst);
+    }
 }
 
 unsafe impl Send for TxAgent {}
 unsafe impl Sync for TxAgent {}
 
-impl transport::TxAgent for TxAgent {
+impl facade::TxAgent for TxAgent {
     type Transport = Transport;
 
     fn config(&self) -> &Config<Self::Transport> {
@@ -39,7 +78,7 @@ impl transport::TxAgent for TxAgent {
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
-        dest: &<Self::Transport as transport::Transport>::Address,
+        dest: &<Self::Transport as facade::Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         unsafe {
@@ -50,10 +89,10 @@ impl transport::TxAgent for TxAgent {
             let length = message(rte_mbuf::get_tx_buffer(data));
             rte_mbuf::set_buffer_length(mbuf, length);
 
-            // should be cache-able, but that will make TxAgent !Send
-            let queue_id = Transport::worker_id() as u16;
-            let ret = oskr_eth_tx_burst(self.port_id, queue_id, (&mut mbuf).into(), 1);
+            let queue_id = self.rr.acquire();
+            let ret = oskr_eth_tx_burst(self.port_id, queue_id as u16, (&mut mbuf).into(), 1);
             assert_eq!(ret, 1);
+            self.rr.release(queue_id);
         }
     }
 
@@ -98,9 +137,9 @@ impl transport::TxAgent for TxAgent {
                     (sample_mbuf, sample_data)
                 } else {
                     let mbuf = NonNull::new(*mbuf).unwrap();
-                    let mut data = rte_mbuf::get_data(mbuf);
+                    let data = rte_mbuf::get_data(mbuf);
                     // TODO hide length + 16 behide rte_mbuf abstraction
-                    copy_nonoverlapping(sample_data.as_ptr(), data.as_mut(), length as usize + 16);
+                    rte_mbuf::copy_data(sample_data, data, length);
                     (mbuf, data)
                 };
                 rte_mbuf::set_dest(data, dest);
@@ -109,16 +148,17 @@ impl transport::TxAgent for TxAgent {
             })
             .collect();
 
-        let queue_id = Transport::worker_id() as u16;
+        let queue_id = self.rr.acquire();
         let ret = unsafe {
             oskr_eth_tx_burst(
                 self.port_id,
-                queue_id,
+                queue_id as u16,
                 mbuf_list.first_mut().unwrap().into(),
                 mbuf_list.len() as u16,
             )
         };
         assert_eq!(ret, mbuf_list.len() as u16);
+        self.rr.release(queue_id);
     }
 }
 
@@ -127,12 +167,13 @@ pub struct Transport {
     port_id: u16,
     config: Arc<Config<Self>>,
     recv_table: RecvTable,
+    rr: Arc<RoundRobin>,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 
 unsafe impl Send for Transport {}
 
-impl transport::Transport for Transport {
+impl facade::Transport for Transport {
     type Address = Address;
     type RxBuffer = RxBuffer;
     type TxAgent = TxAgent;
@@ -142,6 +183,7 @@ impl transport::Transport for Transport {
             mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
             config: self.config.clone(),
+            rr: self.rr.clone(),
         }
     }
 
@@ -172,7 +214,7 @@ impl transport::Transport for Transport {
     }
 
     fn ephemeral_address(&self) -> Self::Address {
-        for id in (0..=254).rev() {
+        for id in 200..=u16::MAX >> 1 {
             let address = Address::new_local(self.port_id, id);
             if !self.recv_table.contains_key(&address) {
                 return address;
@@ -214,8 +256,9 @@ impl Transport {
             let name = CString::new("MBUF_POOL").unwrap();
             let pktmpool = rte_pktmbuf_pool_create(
                 NonNull::new(name.as_ptr() as *mut _).unwrap(),
-                8191,
-                250,
+                // is it necessary to scale mbuf number according to worker number as well?
+                8192 + 2048 * ((n_tx + n_rx) as u32),
+                256,
                 0,
                 oskr_mbuf_default_buf_size(),
                 rte_eth_dev_socket_id(port_id),
@@ -230,45 +273,7 @@ impl Transport {
                 mbuf_pool,
                 config: Arc::new(config),
                 recv_table: HashMap::new(),
-            }
-        }
-    }
-
-    fn run_internal(
-        &self,
-        queue_id: u16,
-        mut shutdown: impl FnMut() -> bool,
-        dispatch: impl Fn(Address, Address, RxBuffer) -> bool,
-    ) {
-        let (socket, dev_socket) =
-            unsafe { (rte_socket_id(), rte_eth_dev_socket_id(self.port_id)) };
-        if socket != dev_socket {
-            println!(
-                "warn: queue {} rx thread (socket = {}) and device (socket = {}) different",
-                queue_id, socket, dev_socket
-            );
-        }
-
-        while !shutdown() {
-            let burst = unsafe {
-                let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
-                let burst_size = oskr_eth_rx_burst(
-                    self.port_id,
-                    queue_id,
-                    NonNull::new(burst.as_mut_ptr() as *mut _).unwrap(),
-                    32,
-                );
-                &(burst.assume_init())[..burst_size as usize]
-            };
-            for mbuf in burst {
-                let mbuf = NonNull::new(*mbuf).unwrap();
-                unsafe {
-                    let data = rte_mbuf::get_data(mbuf);
-                    let (source, dest) = (rte_mbuf::get_source(data), rte_mbuf::get_dest(data));
-                    if !dispatch(source, dest, rte_mbuf::into_rx_buffer(mbuf, data)) {
-                        println!("warn: unknown destination {}", dest);
-                    }
-                }
+                rr: Arc::new(RoundRobin::new(n_tx as u32)),
             }
         }
     }
@@ -277,8 +282,44 @@ impl Transport {
         (unsafe { rte_lcore_index(oskr_lcore_id() as c_int) }) as usize - 1
     }
 
-    pub fn run(&self, queue_id: u16, shutdown: impl FnMut() -> bool) {
-        self.run_internal(queue_id, shutdown, |source, dest, buffer| {
+    // rethink for a better interface
+    pub fn check_socket(&self) -> bool {
+        let (socket, dev_socket) =
+            unsafe { (rte_socket_id(), rte_eth_dev_socket_id(self.port_id)) };
+        if socket != dev_socket {
+            println!(
+                "warn: rx thread (socket = {}) and device (socket = {}) different",
+                socket, dev_socket
+            );
+        }
+        socket == dev_socket
+    }
+
+    fn run_internal(&self, queue_id: u16, dispatch: impl Fn(Address, Address, RxBuffer) -> bool) {
+        let burst = unsafe {
+            let mut burst: MaybeUninit<[*mut rte_mbuf; 32]> = MaybeUninit::uninit();
+            let burst_size = oskr_eth_rx_burst(
+                self.port_id,
+                queue_id,
+                NonNull::new(burst.as_mut_ptr() as *mut _).unwrap(),
+                32,
+            );
+            &(burst.assume_init())[..burst_size as usize]
+        };
+        for mbuf in burst {
+            let mbuf = NonNull::new(*mbuf).unwrap();
+            unsafe {
+                let data = rte_mbuf::get_data(mbuf);
+                let (source, dest) = (rte_mbuf::get_source(data), rte_mbuf::get_dest(data));
+                if !dispatch(source, dest, rte_mbuf::into_rx_buffer(mbuf, data)) {
+                    println!("warn: unknown destination {}", dest);
+                }
+            }
+        }
+    }
+
+    pub fn poll(&self, queue_id: u16) {
+        self.run_internal(queue_id, |source, dest, buffer| {
             if let Some(rx_agent) = self.recv_table.get(&dest) {
                 rx_agent(source, buffer);
                 true
@@ -288,16 +329,25 @@ impl Transport {
         });
     }
 
-    pub fn run1(&self, shutdown: impl FnMut() -> bool) {
+    pub fn run(&self, queue_id: u16, mut shutdown: impl FnMut() -> bool) {
+        self.check_socket();
+        while !shutdown() {
+            self.poll(queue_id);
+        }
+    }
+
+    pub fn run1(&self, mut shutdown: impl FnMut() -> bool) {
         assert_eq!(self.recv_table.len(), 1);
         let (address, rx_agent) = self.recv_table.iter().next().unwrap();
-        self.run_internal(0, shutdown, |source, dest, buffer| {
-            if dest == *address {
-                rx_agent(source, buffer);
-                true
-            } else {
-                false
-            }
-        });
+        while !shutdown() {
+            self.run_internal(0, |source, dest, buffer| {
+                if dest == *address {
+                    rx_agent(source, buffer);
+                    true
+                } else {
+                    false
+                }
+            });
+        }
     }
 }
