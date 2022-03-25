@@ -9,8 +9,7 @@ use crate::common::{
 
 // HotStuff paper omit much implementation details, maybe too much.
 // some noticeable specification/modification by this implementation:
-// * Separate Msg(Generic, ...) and VoteMsg(Generic, ...) types. By the way,
-//   remove message type field from signed content.
+// * Disaggregate message types. Remove blank field of each message type.
 // * Because vote message now only contains (view number, node, signature of
 //   (view number, node)), it is represented as SignedMessage<(view number,
 //   node)> directly.
@@ -18,9 +17,20 @@ use crate::common::{
 //   represented as node's digest, because we assume the receiver probably get
 //   the node content already.
 // * Add replica id field to VoteGeneric so we can count the number of
-//   deduplicated votes. (I don't want to deduplicate base on remote address,
-//   and I don't want to follow the paper to deduplicate on partial signature,
-//   which must rely on hashable signature.)
+//   deduplicated votes.
+//
+//   In original HotStuff paper leader collect all votes with different (view
+//   number, partial signature) pair, without checking voter. This is obviously
+//   wrong, because one voter can vote in multiple views, and its votes will be
+//   counted multiple times in the quorum.
+//
+//   Notice that in previous section `QC` is defined as a merger of partial
+//   signatures who have the same view number, the paper has inconsistent
+//   content and did not explain anywhere. Anyway, I choose to follow a
+//   intuatively strict rule to implement: message view number should always
+//   match current view number, or the message is ignored from ingress. This is
+//   not necessary safe and also could break liveness, but it's the best I can
+//   do.
 // * Define QC as a vector of signed message and simulate threshold signature
 //   by verifying them in sequence.
 //
@@ -53,8 +63,7 @@ pub struct Request {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Generic {
     pub view_number: ViewNumber,
-    pub node: Option<GenericNode>,
-    pub justify: Option<QuorumCertification>,
+    pub node: GenericNode,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

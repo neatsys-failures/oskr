@@ -1,12 +1,14 @@
 use std::{borrow::Borrow, collections::HashMap, ops::Index, sync::Arc};
 
+use tracing::warn;
+
 use crate::{
     common::{
-        signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId, RequestNumber,
+        deserialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId, RequestNumber,
         SignedMessage, SigningKey, VerifyingKey, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
-    protocol::hotstuff::message::{self, GenericNode, QuorumCertification},
+    protocol::hotstuff::message::{self, GenericNode, QuorumCertification, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
@@ -124,9 +126,7 @@ impl<T: Transport> Replica<T> {
         replica.with_stateful(|replica| {
             let submit = replica.submit.clone();
             transport.register(replica, move |remote, buffer| {
-                submit.stateless(|replica| {
-                    //
-                });
+                submit.stateless(move |replica| replica.receive_buffer(remote, buffer));
             });
         });
 
@@ -164,7 +164,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 }
 impl<T: Transport> StatelessContext<Replica<T>> {
     fn on_receive_proposal(&self, message: message::Generic) {
-        let block_new = message.node.unwrap();
+        let block_new = message.node;
         let digest = block_new.digest();
         self.submit.stateful(move |replica| {
             let safe_node = if replica.extend(&block_new, &replica.block_locked) {
@@ -246,4 +246,49 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     }
 
     // TODO new view
+}
+
+// the other thing to support
+impl<T: Transport> StatelessContext<Replica<T>> {
+    fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
+        match deserialize(buffer.as_ref()) {
+            Ok(ToReplica::Request(request)) => {
+                //
+                return;
+            }
+            Ok(ToReplica::Generic(generic)) => {
+                let verifying_key = |replica| {
+                    &self.verifying_key[&self.transport.config().replica_address[replica as usize]]
+                };
+                let threshold =
+                    self.transport.config().replica_address.len() - self.transport.config().n_fault;
+                if generic
+                    .node
+                    .justify
+                    .verify(verifying_key, threshold)
+                    .is_err()
+                {
+                    warn!("failed to verify generic node justify");
+                    return;
+                }
+
+                self.on_receive_proposal(generic);
+                return;
+            }
+            Ok(ToReplica::VoteGeneric(vote_generic)) => {
+                if let Ok(verified) = vote_generic.verify(&self.verifying_key[&remote]) {
+                    self.submit.stateful(move |replica| {
+                        if verified.view_number == replica.current_view {
+                            replica.on_receive_vote(verified);
+                        }
+                    });
+                } else {
+                    warn!("failed to verify vote generic");
+                }
+                return;
+            }
+            _ => {}
+        }
+        warn!("failed to deserialize");
+    }
 }
