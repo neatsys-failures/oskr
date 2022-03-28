@@ -4,8 +4,8 @@ use tracing::warn;
 
 use crate::{
     common::{
-        deserialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId, RequestNumber,
-        SignedMessage, SigningKey, VerifyingKey, ViewNumber,
+        deserialize, serialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId,
+        RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
     protocol::hotstuff::message::{self, GenericNode, QuorumCertification, ToReplica},
@@ -158,7 +158,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn on_commit(&mut self, block: &Digest) {
         if self[self.block_executed].height < self[block].height {
             self.on_commit(&{ self[block].parent });
-            // execute(self[block].command);
+            self.execute(block);
         }
     }
 }
@@ -253,7 +253,8 @@ impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         match deserialize(buffer.as_ref()) {
             Ok(ToReplica::Request(request)) => {
-                //
+                self.submit
+                    .stateful(move |replica| replica.handle_request(remote, request));
                 return;
             }
             Ok(ToReplica::Generic(generic)) => {
@@ -290,5 +291,63 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             _ => {}
         }
         warn!("failed to deserialize");
+    }
+}
+impl<T: Transport> StatefulContext<'_, Replica<T>> {
+    fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+        if let Some((request_number, reply)) = self.client_table.get(&message.client_id) {
+            if *request_number > message.request_number {
+                return;
+            }
+            if *request_number == message.request_number {
+                if let Some(reply) = reply {
+                    self.transport
+                        .send_message(self, &remote, serialize(reply.clone()));
+                }
+                return;
+            }
+        }
+
+        self.batch.push(message);
+        if self.batch.len() == self.batch_size {
+            let command = self.batch.drain(..).collect();
+            self.on_beat(command);
+        }
+    }
+
+    fn execute(&mut self, block: &Digest) {
+        for request in self[block].command.clone() {
+            if let Some((request_number, _)) = self.client_table.get(&request.client_id) {
+                if *request_number >= request.request_number {
+                    continue;
+                }
+            }
+
+            let result = self.app.execute(request.op.clone());
+            let reply = message::Reply {
+                request_number: request.request_number,
+                result,
+                replica_id: self.id,
+            };
+
+            let remote = self.route_table.get(&request.client_id).cloned();
+            let client_id = request.client_id;
+            let request_number = request.request_number;
+            self.submit.stateless(move |replica| {
+                let signed = SignedMessage::sign(reply, &replica.signing_key);
+                if let Some(remote) = remote {
+                    replica
+                        .transport
+                        .send_message(replica, &remote, serialize(&signed));
+                } else {
+                    // log
+                }
+                replica.submit.stateful(move |replica| {
+                    replica
+                        .client_table
+                        .insert(client_id, (request_number, Some(signed)));
+                });
+            });
+        }
     }
 }
