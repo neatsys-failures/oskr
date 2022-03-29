@@ -20,11 +20,11 @@ because the core of this project is based on a specialized actor model.
 **Benchmark result.** Detailed explaination work in progress.
 
 |Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
-|--------------|-----|-----|-----------|-----------|
-|Unreplicated  |1    |1    |2011.256   |10.751     |
-|PBFT          |14   |1    |14.686     |789.614    |
-|PBFT          |14   |100  |127.109    |1596.052   |
-|HotStuff      |
+|--------------|-----|--------|-----------|-----------|
+|Unreplicated  |1    |1       |2011.256   |10.751     |
+|PBFT          |14   |1       |14.686     |789.614    |
+|PBFT          |14   |100     |127.109    |-          |
+|HotStuff      |14   |Adaptive|
 
 ----
 

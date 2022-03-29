@@ -1,4 +1,12 @@
-use std::{borrow::Borrow, collections::HashMap, ops::Index, sync::Arc};
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    ops::Index,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use tracing::{debug, warn};
 
@@ -32,7 +40,7 @@ pub struct Replica<T: Transport> {
 
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     log: HashMap<Digest, GenericNode>,
-    batch: Vec<message::Request>,
+    request_buffer: Vec<message::Request>,
 
     app: Box<dyn App + Send>,
     route_table: HashMap<ClientId, T::Address>,
@@ -115,7 +123,7 @@ impl<T: Transport> Replica<T> {
             qc_high: GENESIS.justify.clone(),
             client_table: HashMap::new(),
             log,
-            batch: Vec::new(),
+            request_buffer: Vec::new(),
             app: Box::new(app),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -205,18 +213,35 @@ impl<T: Transport> StatelessContext<Replica<T>> {
 }
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn on_receive_vote(&mut self, message: VerifiedMessage<message::VoteGeneric>) {
-        self.vote_table
-            .entry(message.node)
-            .or_default()
-            .insert(message.replica_id, message.signed_message().clone());
-        let vote_table = self.vote_table.get(&message.node).unwrap();
-        if vote_table.len()
+        self.insert_vote(
+            message.node,
+            message.replica_id,
+            message.signed_message().clone(),
+        );
+    }
+
+    fn insert_vote(
+        &mut self,
+        node: Digest,
+        replica_id: ReplicaId,
+        vote: SignedMessage<message::VoteGeneric>,
+    ) {
+        let quorum = self.vote_table.entry(node).or_default();
+        quorum.insert(replica_id, vote);
+        let vote_count = quorum.len();
+        if vote_count
             >= self.transport.config().replica_address.len() - self.transport.config().n_fault
         {
             let qc = QuorumCertification {
                 view_number: self.current_view,
-                node: message.node,
-                signature: vote_table.clone().into_iter().collect(),
+                node,
+                signature: self
+                    .vote_table
+                    .get(&node)
+                    .unwrap()
+                    .clone()
+                    .into_iter()
+                    .collect(),
             };
             self.update_qc_high(qc);
         }
@@ -233,6 +258,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let qc_high = self.qc_high.clone();
         let height = self[&self.block_leaf].height + 1;
         let view_number = self.current_view;
+        let replica_id = self.id;
         self.submit.stateless(move |replica| {
             let block_new = GenericNode::create_leaf(&block_leaf, command, qc_high, height);
             let generic = message::Generic {
@@ -244,9 +270,23 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 .send_message_to_all(replica, serialize(ToReplica::Generic(generic)));
 
             let digest = block_new.digest();
+            let vote_generic = SignedMessage::sign(
+                message::VoteGeneric {
+                    view_number,
+                    node: digest,
+                    replica_id,
+                },
+                &replica.signing_key,
+            );
+
             replica.submit.stateful(move |replica| {
                 replica.log.insert(digest, block_new);
                 k(replica, digest);
+
+                // propose locally
+                replica.update(&digest);
+                // vote locally
+                replica.insert_vote(digest, replica.id, vote_generic);
             });
         });
     }
@@ -261,6 +301,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         if self[&qc_high1.node].height > self[&self.qc_high.node].height {
             self.block_leaf = qc_high1.node;
             self.qc_high = qc_high1;
+
+            let command = 0..self.batch_size.min(self.request_buffer.len());
+            let command = self.request_buffer.drain(command).collect();
+            self.on_beat(command);
         }
     }
 
@@ -338,10 +382,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
         }
 
-        self.batch.push(message);
-        if self.batch.len() == self.batch_size {
-            let command = self.batch.drain(..).collect();
+        self.request_buffer.push(message);
+
+        static FIRST_BEAT: AtomicBool = AtomicBool::new(true);
+        if FIRST_BEAT.load(Ordering::SeqCst) {
+            let command = self.request_buffer.drain(..).collect();
             self.on_beat(command);
+            FIRST_BEAT.store(false, Ordering::SeqCst);
         }
     }
 
