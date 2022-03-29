@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, collections::HashMap, ops::Index, sync::Arc};
 
-use tracing::warn;
+use tracing::{debug, warn};
 
 use crate::{
     common::{
@@ -8,7 +8,7 @@ use crate::{
         RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
-    protocol::hotstuff::message::{self, GenericNode, QuorumCertification, ToReplica},
+    protocol::hotstuff::message::{self, GenericNode, QuorumCertification, ToReplica, GENESIS},
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
@@ -96,6 +96,10 @@ impl<T: Transport> Replica<T> {
     ) -> Handle<Self> {
         assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
 
+        let log = [(GENESIS.justify.node, GENESIS.clone())]
+            .into_iter()
+            .collect();
+
         let address = transport.tx_agent().config().replica_address[replica_id as usize].clone();
         let replica: Handle<_> = Self {
             address: address.clone(),
@@ -105,12 +109,12 @@ impl<T: Transport> Replica<T> {
             current_view: 0,
             vote_table: HashMap::new(),
             voted_height: 0,
-            block_locked: Digest::default(),
-            block_executed: Digest::default(),
-            block_leaf: Digest::default(),
-            qc_high: QuorumCertification::default(),
+            block_locked: GENESIS.justify.node,
+            block_executed: GENESIS.justify.node,
+            block_leaf: GENESIS.justify.node,
+            qc_high: GENESIS.justify.clone(),
             client_table: HashMap::new(),
-            log: HashMap::new(), // do we need a block0 guard?
+            log,
             batch: Vec::new(),
             app: Box::new(app),
             route_table: HashMap::new(),
@@ -150,6 +154,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.block_locked = *block1;
         }
         if decide_block0 {
+            debug!("on commit: block = {:02x?}", block0);
             self.on_commit(block0);
             self.block_executed = *block0;
         }
@@ -185,9 +190,11 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 let primary = replica.get_leader();
                 replica.submit.stateless(move |replica| {
                     let signed = SignedMessage::sign(vote_generic, &replica.signing_key);
-                    replica
-                        .transport
-                        .send_message_to_replica(replica, primary, serialize(signed));
+                    replica.transport.send_message_to_replica(
+                        replica,
+                        primary,
+                        serialize(ToReplica::VoteGeneric(signed)),
+                    );
                 });
             }
 
@@ -234,7 +241,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             };
             replica
                 .transport
-                .send_message_to_all(replica, serialize(generic));
+                .send_message_to_all(replica, serialize(ToReplica::Generic(generic)));
 
             let digest = block_new.digest();
             replica.submit.stateful(move |replica| {
@@ -257,7 +264,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
     }
 
-    fn on_beat(&mut self, command: Vec<message::Request>) {
+    pub(super) fn on_beat(&mut self, command: Vec<message::Request>) {
+        debug!("on beat");
         if self.get_leader() == self.id {
             self.on_propose(command, |replica, block_leaf| {
                 replica.block_leaf = block_leaf;

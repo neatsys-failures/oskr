@@ -7,7 +7,9 @@ use std::{
     time::Duration,
 };
 
+use futures::Future;
 use rand::{thread_rng, Rng};
+use tokio::pin;
 #[cfg(not(doc))]
 use tokio::{
     select, spawn,
@@ -181,6 +183,20 @@ impl Transport {
                 Some((source, dest, message, filtered)) = self.rx.recv() => {
                     self.deliver_internal(source, dest, message, filtered, start);
                }
+            }
+        }
+    }
+
+    pub async fn deliver_until<T>(&mut self, predict: impl Future<Output = T>) {
+        let start = Instant::now();
+        pin!(predict);
+        loop {
+            #[cfg(not(doc))]
+            select! {
+                _ = &mut predict => break,
+                Some((source, dest, message, filtered)) = self.rx.recv() => {
+                    self.deliver_internal(source, dest, message, filtered, start)
+                }
             }
         }
     }

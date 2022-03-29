@@ -1,4 +1,5 @@
 use bincode::Options;
+use lazy_static::lazy_static;
 use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 
@@ -80,12 +81,20 @@ pub struct Reply {
     pub replica_id: ReplicaId,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GenericNode {
     pub parent: Digest,
     pub command: Vec<Request>,
     pub justify: QuorumCertification,
     pub height: OpNumber,
+}
+
+lazy_static! {
+    pub static ref GENESIS: GenericNode = {
+        let mut node = GenericNode::default();
+        node.justify = QuorumCertification::default();
+        node
+    };
 }
 
 impl GenericNode {
@@ -124,6 +133,10 @@ impl QuorumCertification {
         threshold: usize,
     ) -> Result<(), InauthenticMessage> {
         assert!(threshold > 0);
+        if self.node == GENESIS.justify.node {
+            return Ok(());
+        }
+
         if self.signature.len() < threshold {
             return Err(InauthenticMessage);
         }
