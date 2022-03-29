@@ -176,7 +176,19 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             };
             if block_new.height > replica.voted_height && safe_node {
                 replica.voted_height = block_new.height;
-                // send
+                let vote_generic = message::VoteGeneric {
+                    view_number: replica.current_view,
+                    node: digest,
+                    replica_id: replica.id,
+                };
+
+                let primary = replica.get_leader();
+                replica.submit.stateless(move |replica| {
+                    let signed = SignedMessage::sign(vote_generic, &replica.signing_key);
+                    replica
+                        .transport
+                        .send_message_to_replica(replica, primary, serialize(signed));
+                });
             }
 
             replica.log.insert(digest, block_new);
@@ -213,9 +225,17 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let block_leaf = self.block_leaf;
         let qc_high = self.qc_high.clone();
         let height = self[&self.block_leaf].height + 1;
+        let view_number = self.current_view;
         self.submit.stateless(move |replica| {
             let block_new = GenericNode::create_leaf(&block_leaf, command, qc_high, height);
-            // send
+            let generic = message::Generic {
+                view_number,
+                node: block_new.clone(),
+            };
+            replica
+                .transport
+                .send_message_to_all(replica, serialize(generic));
+
             let digest = block_new.digest();
             replica.submit.stateful(move |replica| {
                 replica.log.insert(digest, block_new);
@@ -295,6 +315,8 @@ impl<T: Transport> StatelessContext<Replica<T>> {
 }
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+        self.route_table.insert(message.client_id, remote.clone());
+
         if let Some((request_number, reply)) = self.client_table.get(&message.client_id) {
             if *request_number > message.request_number {
                 return;
@@ -340,7 +362,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                         .transport
                         .send_message(replica, &remote, serialize(&signed));
                 } else {
-                    // log
+                    warn!("no route record so skip sending reply");
                 }
                 replica.submit.stateful(move |replica| {
                     replica
