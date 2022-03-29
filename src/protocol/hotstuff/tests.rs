@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::{spawn, sync::oneshot, time::timeout};
 
 use crate::{
-    app::mock::App, facade::Invoke, runtime::tokio::AsyncEcosystem, simulated::Transport,
+    app::mock::App, facade::Invoke, framework::tokio::AsyncEcosystem, simulated::Transport,
     tests::TRACING,
 };
 

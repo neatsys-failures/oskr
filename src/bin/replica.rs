@@ -15,8 +15,8 @@ use oskr::{
     common::{panic_abort, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{App, Config},
+    framework::dpdk::Transport,
     protocol::{hotstuff, pbft, unreplicated},
-    runtime::dpdk::Transport,
     stage::{Handle, State},
 };
 use tracing::{info, warn};

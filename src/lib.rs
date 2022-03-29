@@ -123,7 +123,7 @@ pub mod latency;
 ///
 /// This module exports implementations of `Transport` and `AsyncEcosystem`.
 /// The submodules are named after implementation base.
-pub mod runtime {
+pub mod framework {
     pub mod busy_poll;
     pub mod dpdk;
     #[cfg(any(feature = "tokio", test))]

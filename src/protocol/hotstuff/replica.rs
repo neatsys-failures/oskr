@@ -384,6 +384,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         self.request_buffer.push(message);
 
+        // TODO
         static FIRST_BEAT: AtomicBool = AtomicBool::new(true);
         if FIRST_BEAT.load(Ordering::SeqCst) {
             let command = self.request_buffer.drain(..).collect();

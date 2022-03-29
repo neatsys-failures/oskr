@@ -185,7 +185,7 @@ mod tests {
     use tokio::{spawn, time::timeout};
 
     use crate::{
-        app::mock::App, common::Opaque, facade::Invoke, runtime::tokio::AsyncEcosystem,
+        app::mock::App, common::Opaque, facade::Invoke, framework::tokio::AsyncEcosystem,
         simulated::Transport, tests::TRACING,
     };
 
