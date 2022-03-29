@@ -15,7 +15,7 @@ use oskr::{
     common::{panic_abort, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{App, Config},
-    protocol::{pbft, unreplicated},
+    protocol::{hotstuff, pbft, unreplicated},
     runtime::dpdk::Transport,
     stage::{Handle, State},
 };
@@ -37,6 +37,7 @@ fn main() {
     enum Mode {
         Unreplicated,
         PBFT,
+        HotStuff,
     }
 
     #[derive(Parser, Debug)]
@@ -140,6 +141,16 @@ fn main() {
         ),
         Mode::PBFT => WorkerData::launch(
             pbft::Replica::register_new(&mut transport, args.replica_id, NullApp, args.batch_size),
+            args,
+            shutdown.clone(),
+        ),
+        Mode::HotStuff => WorkerData::launch(
+            hotstuff::Replica::register_new(
+                &mut transport,
+                args.replica_id,
+                NullApp,
+                args.batch_size,
+            ),
             args,
             shutdown.clone(),
         ),

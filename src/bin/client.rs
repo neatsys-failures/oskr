@@ -22,7 +22,7 @@ use oskr::{
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{AsyncEcosystem as _, Config, Invoke, Receiver},
     latency::{Latency, LocalLatency},
-    protocol::{pbft, unreplicated},
+    protocol::{hotstuff, pbft, unreplicated},
     runtime::{busy_poll::AsyncEcosystem, dpdk::Transport},
 };
 use tracing::{debug, info};
@@ -36,6 +36,7 @@ fn main() {
     enum Mode {
         Unreplicated,
         PBFT,
+        HotStuff,
     }
 
     #[derive(Parser, Debug)]
@@ -212,6 +213,12 @@ fn main() {
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncEcosystem>::register_new(&mut transport),
+            args,
+            status.clone(),
+            latency.local(),
+        ),
+        Mode::HotStuff => WorkerData::launch(
+            || hotstuff::Client::<_, AsyncEcosystem>::register_new(&mut transport),
             args,
             status.clone(),
             latency.local(),
