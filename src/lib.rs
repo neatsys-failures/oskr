@@ -60,6 +60,70 @@ pub mod dpdk_shim;
 pub mod simulated;
 
 /// Stage abstraction. Receiver on stage can use multiple threads efficiently.
+///
+/// Strictly speaking this is part of [`framework`]. Keeping in its own module
+/// to emphasize its importance.
+///
+/// # Why create another wheel?
+///
+/// There are good enough thread pool libraries from Rust community. [Rayon] for
+/// example is one of the most popular, and it is able to be used in this
+/// codebase. Alternatively, the async-based libraries are also good for
+/// multithreading in some ways.
+///
+/// [Rayon]: https://docs.rs/rayon/latest/rayon/
+///
+/// Building a new stage is not for extreme performance, and there is no plan to
+/// perform special optimization from the first place. The requirement is more
+/// about a specialized interface, which:
+/// * Makes a distinguishment between *stateful* tasks and *stateless* tasks.
+///   Most protocol implementations are centralized to "one big state", and
+///   tranditionally they runs in a single-threaded context.
+///
+///   The meaning of stage is to annotate stateless snippets, give runtime a
+///   chance to go concurrent and dramatically increase performance. This is
+///   conceptually different to existed worker pool models, which assume most
+///   tasks are independent and treat stateful tasks as exception.
+///
+///   In practice, this stage module puts minimal affection on implementation's
+///   logical structure. No lock or channel is required.
+/// * Provides task priority. Certain protocols may rely on dynamical priority
+///   semantic, i.e. determine task-processing order upon submitting, which
+///   cannot be expressed as simple FIFO or LIFO strategy.
+/// * Provides timing task. This interface is absent in rayon, and although it
+///   presents in async libraries, it may not guarantee efficient implementation
+///   of reseting deadline, which is widely required by view change related
+///   timers.
+///
+/// Additionally, providing a standard stage for server-side receiver serves as
+/// a supplement to the *lightweight RX agent* rule of
+/// [`Transport`](facade::Transport). It is recommended for all server-side
+/// receiver to:
+/// * Be on stage.
+/// * Submit as soon as possible in RX agent.
+///
+/// # Why conditional compiling?
+///
+/// In this codebase we try to avoid conditional compiling in most places.
+/// Instead, we abstract aspects of runtime into traits in [`facade`]. However,
+/// the stage module is using conditional compiling: in test profile the stage
+/// module is mocked by an asynchronized polyfill from [`simulated`] module.
+///
+/// The reason for this design is mostly because I believe there will be only
+/// one "suitable" stage implementation for all scenario except testing.
+/// Opposite to this, transport may be DPDK-based or kernel-based, and async
+/// ecosystem that based on Tokio or smol may not be suitable for benchmark.
+/// Making abstraction is fun, but more abstraction means more learning efforts
+/// users need to spend, so skipping should be better.
+///
+/// **The shortage of conditional compiling.** The polyfill simulated
+/// implementation only promises to work when pairing with async ecosystem from
+/// [`framework::tokio`]. Because of conditional compiling there is no way to
+/// force this pairing (the generic specialization of Rust is still on its way).
+///
+/// # Example
+///
+/// Work in progress.
 #[cfg(not(test))]
 pub mod stage;
 #[cfg(test)]
