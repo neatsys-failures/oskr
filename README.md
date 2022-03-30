@@ -1,3 +1,4 @@
+    <!-- -->
 ## High Performance Distributed Protocols Collection
 ![Crates.io](https://img.shields.io/crates/v/oskr)
 ![Crates.io](https://img.shields.io/crates/l/oskr)
@@ -20,11 +21,12 @@ because the core of this project is based on a specialized actor model.
 **Benchmark result.** Detailed explaination work in progress.
 
 |Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
-|--------------|-----|--------|-----------|-----------|
-|Unreplicated  |1    |1       |2011.256   |10.751     |
-|PBFT          |14   |1       |14.686     |789.614    |
-|PBFT          |14   |100     |127.109    |-          |
-|HotStuff      |14   |Adaptive|
+|---------------|---|-----------|-----------|-----------|
+|Unreplicated   |1  |1          |2011.256   |10.751     |
+|PBFT           |14 |1          |14.686     |789.614    |
+|PBFT           |14 |100        |127.109    |-          |
+|HotStuff       |14 |Adaptive   |100.423    |-          |
+|HotStuff       |14 |100        |
 
 ----
 
@@ -48,32 +50,32 @@ Prerequisites on Ubuntu:
    exists in remote working directory.
 5. Create deploy configuration. Create description file `deploy/shard0.config`,
    write the following lines:
-   ```
-   f 1
-   replica 12:34:56:aa:aa:aa%0
-   replica 12:34:56:bb:bb:bb%0
-   replica 12:34:56:cc:cc:cc%0
-   replica 12:34:56:dd:dd:dd%0
-   multicast 01:00:5e:00:00:01%255
-   ```
+    ```
+    f 1
+    replica 12:34:56:aa:aa:aa%0
+    replica 12:34:56:bb:bb:bb%0
+    replica 12:34:56:cc:cc:cc%0
+    replica 12:34:56:dd:dd:dd%0
+    multicast 01:00:5e:00:00:01%255
+    ```
    Replace MAC addresses with the ones of network cards, and make sure network
    is able to do L2 forward for packets sent to these MAC addresses. The 
    multicast line is optional for running PBFT.
 6. Create signing key files. Generate signing key file for replica 0 with:
-   ```
-   openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/shard0-0.pem
-   ```
+    ```
+    openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/shard0-0.pem
+    ```
    Run the command three more times to generate `deploy/shard0-{1,2,3}.pem`.
 7. Start replica 0 with:
-   ```
-   sudo ./target/release/replica -m pbft -c deploy/shard0 -i 0
-   ```
+    ```
+    sudo ./target/release/replica -m pbft -c deploy/shard0 -i 0
+    ```
    Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
    assigned to them.
 8. Start client with:
-   ```
-   sudo ./target/release/client -m pbft -c deploy/shard0
-   ```
+    ```
+    sudo ./target/release/client -m pbft -c deploy/shard0
+    ```
    You may use `-t` to spawn multiple clients that send concurrent requests, or
    use `-d` to extend sending duration.
 
