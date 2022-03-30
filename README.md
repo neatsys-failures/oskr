@@ -1,4 +1,3 @@
-    <!-- -->
 ## High Performance Distributed Protocols Collection
 ![Crates.io](https://img.shields.io/crates/v/oskr)
 ![Crates.io](https://img.shields.io/crates/l/oskr)
@@ -40,16 +39,16 @@ Prerequisites on Ubuntu:
 `python3-pyelftools`.
 
 
-1. Clone repository recursively.
-2. Compile DPDK: `meson setup target/dpdk src/dpdk && ninja -C target/dpdk`.
-3. To run unit tests: `cargo test --lib`.
-4. To build benchmark executables: `cargo build --release`.
+1.  Clone repository recursively.
+2.  Compile DPDK: `meson setup target/dpdk src/dpdk && ninja -C target/dpdk`.
+3.  To run unit tests: `cargo test --lib`.
+4.  To build benchmark executables: `cargo build --release`.
 
-   The compiled executables are dynamically linked to rte shared objects, so if 
-   you transfer executables to a remote machine to run, make sure `target/dpdk` 
-   exists in remote working directory.
-5. Create deploy configuration. Create description file `deploy/shard0.config`,
-   write the following lines:
+    The compiled executables are dynamically linked to rte shared objects, so if 
+    you transfer executables to a remote machine to run, make sure `target/dpdk` 
+    exists in remote working directory.
+5.  Create deploy configuration. Create description file `deploy/shard0.config`,
+    write the following lines:
     ```
     f 1
     replica 12:34:56:aa:aa:aa%0
@@ -58,25 +57,25 @@ Prerequisites on Ubuntu:
     replica 12:34:56:dd:dd:dd%0
     multicast 01:00:5e:00:00:01%255
     ```
-   Replace MAC addresses with the ones of network cards, and make sure network
-   is able to do L2 forward for packets sent to these MAC addresses. The 
-   multicast line is optional for running PBFT.
-6. Create signing key files. Generate signing key file for replica 0 with:
+    Replace MAC addresses with the ones of network cards, and make sure network
+    is able to do L2 forward for packets sent to these MAC addresses. The 
+    multicast line is optional for running PBFT.
+6.  Create signing key files. Generate signing key file for replica 0 with:
     ```
     openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/shard0-0.pem
     ```
-   Run the command three more times to generate `deploy/shard0-{1,2,3}.pem`.
-7. Start replica 0 with:
+    Run the command three more times to generate `deploy/shard0-{1,2,3}.pem`.
+7.  Start replica 0 with:
     ```
     sudo ./target/release/replica -m pbft -c deploy/shard0 -i 0
     ```
-   Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
-   assigned to them.
-8. Start client with:
+    Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
+    assigned to them.
+8.  Start client with:
     ```
     sudo ./target/release/client -m pbft -c deploy/shard0
     ```
-   You may use `-t` to spawn multiple clients that send concurrent requests, or
-   use `-d` to extend sending duration.
+    You may use `-t` to spawn multiple clients that send concurrent requests, or
+    use `-d` to extend sending duration.
 
 Kindly pass `-h` to executables to learn about other options.
