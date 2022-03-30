@@ -62,6 +62,22 @@ impl<T: Transport> Replica<T> {
             false
         }
     }
+
+    fn insert_log(&mut self, digest: Digest, block: GenericNode) {
+        for request in &block.command {
+            if self
+                .client_table
+                .get(&request.client_id)
+                .map(|(request_number, _)| *request_number < request.request_number)
+                .unwrap_or(true)
+            {
+                self.client_table
+                    .insert(request.client_id, (request.request_number, None));
+            }
+        }
+
+        self.log.insert(digest, block);
+    }
 }
 
 impl<D: Borrow<Digest>, T: Transport> Index<D> for Replica<T> {
@@ -173,7 +189,14 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.block_locked = *block1;
         }
         if decide_block0 {
-            trace!("on commit: block = {:02x?}", block0);
+            trace!(
+                "on commit: block = {}",
+                block0
+                    .iter()
+                    .map(|b| format!("{:02x}", b))
+                    .collect::<Vec<_>>()
+                    .join("")
+            );
             self.on_commit(block0);
             self.block_executed = *block0;
         }
@@ -220,7 +243,7 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 });
             }
 
-            replica.log.insert(digest, block_new);
+            replica.insert_log(digest, block_new);
             replica.update(&digest);
         });
     }
@@ -294,7 +317,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             );
 
             replica.submit.stateful(move |replica| {
-                replica.log.insert(digest, block_new);
+                replica.insert_log(digest, block_new);
                 k(replica, digest);
 
                 // propose locally
@@ -429,8 +452,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
     fn execute(&mut self, block: &Digest) {
         for request in self[block].command.clone() {
-            if let Some((request_number, _)) = self.client_table.get(&request.client_id) {
-                if *request_number >= request.request_number {
+            if let Some((request_number, reply)) = self.client_table.get(&request.client_id) {
+                if *request_number >= request.request_number && reply.is_some() {
                     continue;
                 }
             }

@@ -367,6 +367,18 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     fn insert_log_item(&mut self, item: LogItem) {
         assert_eq!(item.quorum_key.view_number, self.view_number);
 
+        for request in &item.batch {
+            if self
+                .client_table
+                .get(&request.client_id)
+                .map(|(request_number, _)| *request_number < request.request_number)
+                .unwrap_or(true)
+            {
+                self.client_table
+                    .insert(request.client_id, (request.request_number, None));
+            }
+        }
+
         if item.quorum_key.op_number != self.log.len() as OpNumber + 1 {
             self.reorder_log.insert(item.quorum_key.op_number, item);
         } else {
