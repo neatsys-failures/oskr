@@ -360,7 +360,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
             let on_beat = if !self.adaptive_batching {
                 self.request_buffer.len() >= self.batch_size
-            } else if self.request_buffer.len() > 0 {
+            } else if !self.request_buffer.is_empty() {
                 true
             } else {
                 let mut not_committed = self.block_leaf;
@@ -368,7 +368,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                     if not_committed == self.block_executed {
                         break false;
                     }
-                    if self[not_committed].command.len() > 0 {
+                    if !self[not_committed].command.is_empty() {
                         break true;
                     }
                     not_committed = self[not_committed].parent;

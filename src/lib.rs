@@ -52,7 +52,47 @@ pub mod facade;
 
 /// Low-level DPDK binding.
 ///
-/// For practical usage consider [`framework::dpdk::Transport`].
+/// For practical usage consider [`framework::dpdk`], which is a higher level
+/// DPDK interface based on this module.
+///
+/// This shim module contains two parts: a set of `extern "C"` DPDK function
+/// definitions, and a custom L2 packet layout.
+///
+/// The extern functions starts with `rte_` present in DPDK's shared objects,
+/// and will be linked directly. The other functions which starts with `oskr_`
+/// are static inline DPDK functions that defined in C header files, so this
+/// codebase create a custom stub in `dpdk_shim.c` to be linked against.
+///
+/// There is also a `setup_port` function, which underly calls several DPDK
+/// functions to set up a ethernet device port properly.
+///
+/// # DPDK transport packet format
+///
+/// By default DPDK does not perform TCP/IP network stack processing, so if we
+/// don't include these protocol layers, the packet parsing/assembling part can
+/// be omitted, and the transport packets are smaller.
+///
+/// The DPDK transport packet layout takes 17 bytes. The first 14 bytes are
+/// normal ethernet layer: 6 bytes destination MAC address, 6 bytes source MAC
+/// address, and 2 bytes ethernet type is specified as `0x88d5`. Then there are
+/// 1 byte destination local id and 1 byte source local id. Finally, there is 1
+/// byte as id extension field. Local id pairs are encoded as following:
+/// * The local id field contains the low 7 bits.
+/// * If the highest bit of local id field is 1, then the id is a 15 bits
+///   "large" id, and the extension field contains high 8 bits. Otherwise, it is
+///   a 7 bits "small" id.
+/// * At most one local id of the two is large. If both of them are small,
+///   extension field is unused.
+///
+/// The transport packet format can be transfered with normal L2 forwarding, and
+/// support up to 128 local ids on small side, and up to 32768 local ids on
+/// large side. This allow users to run large number of clients from the same
+/// machine. Notice that the format actually allows more than 128 servers, i.e.
+/// well-known addresses. Just use difference MAC addresses. The format is also
+/// capatible with L2 multicast.
+///
+/// The related accessing and manipulating functions of the packet format is
+/// defined in [`rte_mbuf`](dpdk_shim::rte_mbuf).
 pub mod dpdk_shim;
 
 /// Simulated facilities for writing test cases.
@@ -120,6 +160,16 @@ pub mod simulated;
 /// implementation only promises to work when pairing with async ecosystem from
 /// [`framework::tokio`]. Because of conditional compiling there is no way to
 /// force this pairing (the generic specialization of Rust is still on its way).
+///
+/// # Why callback hell?
+///
+/// The [`Submit`](stage::Submit), core interface of stage module, cause
+/// submitted task one level deeper in closure. There are lots of efforts on
+/// avoid such callback hell, such as promise and async syntax. These solutions
+/// normally only works well on sequential logic. However, implementations
+/// usually do conditionally submitting, or even submit in a loop, for example
+/// sending replies while executing a batch. In such case, callback closure is
+/// still the most nature way to express.
 ///
 /// # Example
 ///

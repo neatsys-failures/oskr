@@ -301,14 +301,9 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         }
 
         self.batch.push(message);
-        let close_batch = if self.batch.len() == self.batch_size {
-            true
-        } else if self.adaptive_batching && (self.op_number == 0 || self.prepared(self.op_number)) {
-            true
-        } else {
-            false
-        };
-        if close_batch {
+        if (self.batch.len() == self.batch_size)
+            || (self.adaptive_batching && (self.op_number == 0 || self.prepared(self.op_number)))
+        {
             self.close_batch();
         }
     }
