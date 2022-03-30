@@ -52,7 +52,7 @@ pub mod facade;
 
 /// Low-level DPDK binding.
 ///
-/// For practical usage consider [`runtime::dpdk::Transport`].
+/// For practical usage consider [`framework::dpdk::Transport`].
 pub mod dpdk_shim;
 
 /// Simulated facilities for writing test cases.
@@ -72,6 +72,19 @@ pub mod stage {
 }
 
 /// Common definitions. Extract them so future refactor can be easier.
+///
+/// # Difference between `common` and `framework`
+///
+/// The common module is more specification-like, while [`framework`] module
+/// contains more implementation. For example, we keep
+/// [`ReplicaId`](common::ReplicaId) alias in common module, so if one day we
+/// decide to change its aliasing target (again actually, originally it was
+/// `u8`), we only need to change it once in common module instead of finding
+/// every occurance in the codebase. Framework module does not serve this
+/// propose.
+///
+/// In practice, common module can be depended by anything, even from [`facade`]
+/// and [`protocol`], while framework should not be depended by either of them.
 pub mod common;
 
 /// Protocol implementations.
@@ -92,9 +105,9 @@ pub mod common;
 /// The non-`Invoke`able receivers, i.e. server nodes should be built upon
 /// [`stage`], even for the single-threaded ones.
 pub mod protocol {
+    pub mod hotstuff;
     pub mod pbft;
     pub mod unreplicated;
-    pub mod hotstuff;
 }
 
 /// Application implementations.
@@ -112,22 +125,29 @@ pub mod app {
     pub mod mock;
 }
 
-/// Convenient library for latency measurement.
+/// Engineering components.
 ///
-/// This module is a thin wrapper around [quanta] and [hdrhistogram]. It
-/// provides a similar but more user-friendly interface to specpaxos's latency
-/// library, especially for multithreaded usage.
-pub mod latency;
-
-/// Various runtime facilities that supports protocol implementations.
+/// The propose here is to keep protocol implementations minimal. Decouple
+/// protocol implementations with reality helps improve protocol module's
+/// readibility. (As this implied, code in framework is generally harder to
+/// follow.)
 ///
-/// This module exports implementations of `Transport` and `AsyncEcosystem`.
-/// The submodules are named after implementation base.
+/// The framework components expose all kinds of interfaces. The essential ones
+/// are [`Transport`](facade::Transport) and
+/// [`AsyncEcosystem`](facade::AsyncEcosystem) implementations. The submodules
+/// are named after invovled lower-level stuff, and the structure is flattened.
 pub mod framework {
     pub mod busy_poll;
     pub mod dpdk;
     #[cfg(any(feature = "tokio", test))]
     pub mod tokio;
+
+    /// Convenient library for latency measurement.
+    ///
+    /// This module is a thin wrapper around [quanta] and [hdrhistogram]. It
+    /// provides a similar but more user-friendly interface to specpaxos's latency
+    /// library, especially for multithreaded usage.
+    pub mod latency;
 }
 
 #[cfg(test)]

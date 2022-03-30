@@ -60,8 +60,8 @@ pub trait App {
 /// that interfaces are free-function style, which may only be valid in certain
 /// context. It is user's responsiblity to provide proper context, e.g. set up
 /// a tokio runtime and create receivers that depend on
-/// [`runtime::tokio::AsyncEcosystem`](crate::runtime::tokio::AsyncEcosystem) in
-/// it, or the receiver will probably fail at runtime.
+/// [`runtime::tokio::AsyncEcosystem`](crate::framework::tokio::AsyncEcosystem) 
+/// in it, or the receiver will probably fail at runtime.
 
 // wait for GAT to remove trait generic parameter
 pub trait AsyncEcosystem<T> {

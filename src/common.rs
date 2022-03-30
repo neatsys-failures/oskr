@@ -66,7 +66,7 @@ where
     }
 }
 
-// consider move to util
+// consider move to framework
 pub fn panic_abort() {
     let default_hook = take_hook();
     set_hook(Box::new(move |info| {

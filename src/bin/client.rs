@@ -21,8 +21,11 @@ use oskr::{
     common::{panic_abort, Opaque},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{AsyncEcosystem as _, Config, Invoke, Receiver},
-    framework::{busy_poll::AsyncEcosystem, dpdk::Transport},
-    latency::{Latency, LocalLatency},
+    framework::{
+        busy_poll::AsyncEcosystem,
+        dpdk::Transport,
+        latency::{Latency, LocalLatency},
+    },
     protocol::{hotstuff, pbft, unreplicated},
 };
 use tracing::{debug, info};
