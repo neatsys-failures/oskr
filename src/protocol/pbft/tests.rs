@@ -62,7 +62,7 @@ async fn one_request() {
     *TRACING;
     let mut transport = Transport::new(4, 1);
     let replica: Vec<_> = (0..4)
-        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1, false))
         .collect();
     let client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
     let client = [client];
@@ -83,7 +83,7 @@ async fn multiple_client() {
     *TRACING;
     let mut transport = Transport::new(4, 1);
     let replica: Vec<_> = (0..4)
-        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1, false))
         .collect();
     let client: Vec<Client<_, AsyncEcosystem>> = (0..3)
         .map(|_| Client::register_new(&mut transport))

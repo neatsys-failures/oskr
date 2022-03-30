@@ -22,6 +22,7 @@ pub struct Replica<T: Transport> {
     transport: T::TxAgent,
     id: ReplicaId,
     batch_size: usize,
+    adaptive_batching: bool,
 
     view_number: ViewNumber,
     op_number: OpNumber, // one OpNumber for a batch
@@ -150,6 +151,7 @@ impl<T: Transport> Replica<T> {
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
+        adaptive_batching: bool,
     ) -> Handle<Self> {
         assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
 
@@ -159,6 +161,7 @@ impl<T: Transport> Replica<T> {
             transport: transport.tx_agent(),
             id: replica_id,
             batch_size,
+            adaptive_batching,
             view_number: 0,
             op_number: 0,
             commit_number: 0,
@@ -298,7 +301,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         }
 
         self.batch.push(message);
-        if self.batch.len() == self.batch_size {
+        let close_batch = if self.batch.len() == self.batch_size {
+            true
+        } else if self.adaptive_batching && (self.op_number == 0 || self.prepared(self.op_number)) {
+            true
+        } else {
+            false
+        };
+        if close_batch {
             self.close_batch();
         }
     }
@@ -465,6 +475,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         if self.prepared(prepare.op_number) {
             debug!("prepared");
             self.send_commit(prepare.op_number, prepare.digest);
+
+            if self.is_primary()
+                && self.adaptive_batching
+                && prepare.op_number == self.op_number
+                && self.batch.len() > 0
+            {
+                self.close_batch();
+            }
         }
     }
 

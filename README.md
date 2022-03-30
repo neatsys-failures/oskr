@@ -22,8 +22,8 @@ because the core of this project is based on a specialized actor model.
 |Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
 |---------------|---|-----------|-----------|-----------|
 |Unreplicated   |1  |-          |2011.256   |10.751     |
-|PBFT           |14 |1          |14.686     |789.614    |
-|PBFT           |14 |100        |127.109    |-          |
+|PBFT           |14 |Adaptive   |97.184     |843.775    |
+|PBFT           |14 |100        |101.4      |-          |
 |HotStuff       |14 |Adaptive   |76.624     |2719.743   |
 |HotStuff       |14 |100        |78.946     |-          |
 

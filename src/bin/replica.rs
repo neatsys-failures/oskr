@@ -142,7 +142,13 @@ fn main() {
             shutdown.clone(),
         ),
         Mode::PBFT => WorkerData::launch(
-            pbft::Replica::register_new(&mut transport, args.replica_id, NullApp, args.batch_size),
+            pbft::Replica::register_new(
+                &mut transport,
+                args.replica_id,
+                NullApp,
+                args.batch_size,
+                args.adaptive,
+            ),
             args,
             shutdown.clone(),
         ),
