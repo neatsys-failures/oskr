@@ -9,7 +9,7 @@ use crate::common::{
 };
 
 // HotStuff paper omit much implementation details, maybe too much.
-// some noticeable specification/modification by this implementation:
+// some noticeable specification/modification on message in this implementation:
 // * Disaggregate message types. Remove blank field of each message type.
 // * Because vote message now only contains (view number, node, signature of
 //   (view number, node)), it is represented as SignedMessage<(view number,

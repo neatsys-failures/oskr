@@ -12,6 +12,25 @@ use crate::{
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
+// Check message module for modification in messages format
+// Currently this implementation contains one fixed pacemaker. I don't see a
+// meaningful reason to implementation more pacemakers. It could be extracted
+// as trait and be replaciable, if necessary.
+// The pacemaker has such behavior:
+// * Round-robin select leader base on view number, and increase view number
+//   on every synchronized new view.
+// * Preempt leader if either: client request is not proposed soon enough, or
+//   leader's proposal is not justified (and the justify is received) soon
+//   enough
+// * Close batch, i.e. `on_beat`, only after collected parent block's QC. In
+//   adaptive batching configuration new block is proposed immediately as long
+//   as it's not empty, otherwise new block is proposed after receiving enough
+//   client requests to fill the batch.
+// * In adaptive batching configuration, extra empty-block proposal is sent to
+//   drive non-empty blocks which is not committed yet to progress. In normal
+//   configuration these blocks will not reach commit point until enough number
+//   of following client requests be proposed.
+
 pub struct Replica<T: Transport> {
     address: T::Address,
     transport: T::TxAgent,
@@ -339,21 +358,23 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.block_leaf = qc_high1.node;
             self.qc_high = qc_high1;
 
-            let skip_beat = if self.request_buffer.len() > 0 {
-                false
+            let on_beat = if !self.adaptive_batching {
+                self.request_buffer.len() >= self.batch_size
+            } else if self.request_buffer.len() > 0 {
+                true
             } else {
-                let mut block = self.block_leaf;
+                let mut not_committed = self.block_leaf;
                 loop {
-                    if block == self.block_executed {
-                        break true;
-                    }
-                    if self[block].command.len() > 0 {
+                    if not_committed == self.block_executed {
                         break false;
                     }
-                    block = self[block].parent;
+                    if self[not_committed].command.len() > 0 {
+                        break true;
+                    }
+                    not_committed = self[not_committed].parent;
                 }
             };
-            if !skip_beat {
+            if on_beat {
                 let command = ..self.batch_size.min(self.request_buffer.len());
                 let command = self.request_buffer.drain(command).collect();
                 self.on_beat(command);
@@ -439,6 +460,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
         }
 
+        if self.get_leader() != self.id {
+            return;
+        }
+
         self.request_buffer.push(message);
 
         if self.will_beat
@@ -453,11 +478,14 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn execute(&mut self, block: &Digest) {
         for request in self[block].command.clone() {
             if let Some((request_number, reply)) = self.client_table.get(&request.client_id) {
-                if *request_number >= request.request_number && reply.is_some() {
+                if *request_number > request.request_number
+                    || (*request_number == request.request_number && reply.is_some())
+                {
                     continue;
                 }
             }
 
+            debug!("execute");
             let result = self.app.execute(request.op.clone());
             let reply = message::Reply {
                 request_number: request.request_number,
