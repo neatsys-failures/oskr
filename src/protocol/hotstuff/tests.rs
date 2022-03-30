@@ -15,7 +15,7 @@ async fn single_request() {
     let mut transport = Transport::new(4, 1);
 
     for i in 0..4 {
-        Replica::register_new(&mut transport, i, App::default(), 1);
+        Replica::register_new(&mut transport, i, App::default(), 1, true);
     }
     let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
 

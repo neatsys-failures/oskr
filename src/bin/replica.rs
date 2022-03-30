@@ -59,6 +59,8 @@ fn main() {
         n_tx: u16,
         #[clap(short, long, default_value_t = 1)]
         batch_size: usize,
+        #[clap(long)]
+        adaptive: bool,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -150,6 +152,7 @@ fn main() {
                 args.replica_id,
                 NullApp,
                 args.batch_size,
+                args.adaptive,
             ),
             args,
             shutdown.clone(),

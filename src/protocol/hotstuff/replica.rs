@@ -1,14 +1,6 @@
-use std::{
-    borrow::Borrow,
-    collections::HashMap,
-    ops::Index,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-};
+use std::{borrow::Borrow, collections::HashMap, ops::Index, sync::Arc};
 
-use tracing::{debug, warn};
+use tracing::{debug, trace, warn};
 
 use crate::{
     common::{
@@ -25,6 +17,7 @@ pub struct Replica<T: Transport> {
     transport: T::TxAgent,
     id: ReplicaId,
     batch_size: usize,
+    adaptive_batching: bool,
 
     // although not present in event-driven HotStuff, current view must be kept,
     // so we have something to fill message field
@@ -35,8 +28,10 @@ pub struct Replica<T: Transport> {
     voted_height: OpNumber,
     block_locked: Digest,
     block_executed: Digest,
+    // pacemaker states
     qc_high: QuorumCertification,
     block_leaf: Digest,
+    will_beat: bool,
 
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     log: HashMap<Digest, GenericNode>,
@@ -101,6 +96,7 @@ impl<T: Transport> Replica<T> {
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
+        adaptive_batching: bool,
     ) -> Handle<Self> {
         assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
 
@@ -114,6 +110,7 @@ impl<T: Transport> Replica<T> {
             transport: transport.tx_agent(),
             id: replica_id,
             batch_size,
+            adaptive_batching,
             current_view: 0,
             vote_table: HashMap::new(),
             voted_height: 0,
@@ -121,6 +118,7 @@ impl<T: Transport> Replica<T> {
             block_executed: GENESIS.justify.node,
             block_leaf: GENESIS.justify.node,
             qc_high: GENESIS.justify.clone(),
+            will_beat: true,
             client_table: HashMap::new(),
             log,
             request_buffer: Vec::new(),
@@ -150,9 +148,22 @@ impl<T: Transport> Replica<T> {
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     // block3: b*, block2: b'', block1: b', block0: b
     fn update(&mut self, block3: &Digest) {
-        let block2 = &{ self[block3].justify.node };
-        let block1 = &{ self[block2].justify.node };
-        let block0 = &{ self[block1].justify.node };
+        trace!("update");
+        let block2 = &if let Some(block3) = self.log.get(block3) {
+            block3.justify.node
+        } else {
+            unreachable!("block3 should always present");
+        };
+        let block1 = &if let Some(block2) = self.log.get(block2) {
+            block2.justify.node
+        } else {
+            return;
+        };
+        let block0 = &if let Some(block1) = self.log.get(block1) {
+            block1.justify.node
+        } else {
+            return;
+        };
 
         let commit_block1 = self[block1].height > self[self.block_locked].height;
         let decide_block0 = self[block2].parent == *block1 && self[block1].parent == *block0;
@@ -162,13 +173,16 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.block_locked = *block1;
         }
         if decide_block0 {
-            debug!("on commit: block = {:02x?}", block0);
+            trace!("on commit: block = {:02x?}", block0);
             self.on_commit(block0);
             self.block_executed = *block0;
         }
     }
 
     fn on_commit(&mut self, block: &Digest) {
+        if !self.log.contains_key(block) {
+            todo!("state transfer on execution gap");
+        }
         if self[self.block_executed].height < self[block].height {
             self.on_commit(&{ self[block].parent });
             self.execute(block);
@@ -302,19 +316,39 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.block_leaf = qc_high1.node;
             self.qc_high = qc_high1;
 
-            let command = 0..self.batch_size.min(self.request_buffer.len());
-            let command = self.request_buffer.drain(command).collect();
-            self.on_beat(command);
+            let skip_beat = if self.request_buffer.len() > 0 {
+                false
+            } else {
+                let mut block = self.block_leaf;
+                loop {
+                    if block == self.block_executed {
+                        break true;
+                    }
+                    if self[block].command.len() > 0 {
+                        break false;
+                    }
+                    block = self[block].parent;
+                }
+            };
+            if !skip_beat {
+                let command = ..self.batch_size.min(self.request_buffer.len());
+                let command = self.request_buffer.drain(command).collect();
+                self.on_beat(command);
+            } else {
+                debug!("skip beat");
+                self.will_beat = true;
+            }
         }
     }
 
     pub(super) fn on_beat(&mut self, command: Vec<message::Request>) {
-        debug!("on beat");
+        trace!("on beat");
         if self.get_leader() == self.id {
             self.on_propose(command, |replica, block_leaf| {
                 replica.block_leaf = block_leaf;
             });
         }
+        self.will_beat = false;
     }
 
     // TODO new view
@@ -384,12 +418,12 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         self.request_buffer.push(message);
 
-        // TODO
-        static FIRST_BEAT: AtomicBool = AtomicBool::new(true);
-        if FIRST_BEAT.load(Ordering::SeqCst) {
-            let command = self.request_buffer.drain(..).collect();
+        if self.will_beat
+            && (self.adaptive_batching || self.request_buffer.len() >= self.batch_size)
+        {
+            let command = ..self.batch_size.min(self.request_buffer.len());
+            let command = self.request_buffer.drain(command).collect();
             self.on_beat(command);
-            FIRST_BEAT.store(false, Ordering::SeqCst);
         }
     }
 

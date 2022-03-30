@@ -90,11 +90,7 @@ pub struct GenericNode {
 }
 
 lazy_static! {
-    pub static ref GENESIS: GenericNode = {
-        let mut node = GenericNode::default();
-        node.justify = QuorumCertification::default();
-        node
-    };
+    pub static ref GENESIS: GenericNode = GenericNode::default();
 }
 
 impl GenericNode {
