@@ -96,7 +96,7 @@ where
                     .values()
                     .filter(|result| **result == reply.result)
                     .count()
-                    == client.transport.config().n_fault + 1
+                    == client.transport.config().f + 1
                 {
                     Some(reply.result)
                 } else {

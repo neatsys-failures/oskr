@@ -87,7 +87,7 @@ impl facade::TxAgent for TxAgent {
         let mut buffer = [0; 9000];
         let message_length = message(&mut buffer);
         let message = buffer[..message_length as usize].to_vec();
-        for dest in &self.config.replica_address {
+        for dest in &self.config.replica {
             if dest != source.get_address() {
                 self.tx
                     .send((
@@ -147,12 +147,13 @@ impl facade::Transport for Transport {
 impl Transport {
     pub fn new(n_replica: usize, n_fault: usize) -> Self {
         let mut config: Config<Self> = Config {
-            replica_address: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
-            multicast_address: None, // TODO
-            n_fault,
+            replica: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
+            group: Vec::new(), // TODO
+            multicast: None,   // TODO
+            f: n_fault,
             signing_key: Default::default(),
         };
-        for address in &config.replica_address {
+        for address in &config.replica {
             let mut signing_key = [0; 32];
             signing_key
                 .as_mut_slice()

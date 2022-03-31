@@ -168,8 +168,8 @@ pub mod simulated;
 /// avoid such callback hell, such as promise and async syntax. These solutions
 /// normally only works well on sequential logic. However, implementations
 /// usually do conditionally submitting, or even submit in a loop, for example
-/// sending replies while executing a batch. In such case, callback closure is
-/// still the most nature way to express.
+/// sending replies while executing a batch. As far as I know, callback closure
+/// is still the most nature way to express in such case.
 ///
 /// # Example
 ///

@@ -1,6 +1,6 @@
 use std::{
-    collections::HashMap, convert::Infallible, fs::File, hash::Hash, io::Read, path::Path,
-    str::FromStr, time::Instant,
+    collections::HashMap, convert::Infallible, fs::File, hash::Hash, io::Read, ops::Range,
+    path::Path, str::FromStr, time::Instant,
 };
 
 use async_trait::async_trait;
@@ -136,11 +136,7 @@ pub trait TxAgent {
         replica_id: ReplicaId,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
-        self.send_message(
-            source,
-            &self.config().replica_address[replica_id as usize],
-            message,
-        );
+        self.send_message(source, &self.config().replica[replica_id as usize], message);
     }
     fn send_message_to_all(
         &self,
@@ -152,19 +148,20 @@ pub trait TxAgent {
         source: &impl Receiver<Self::Transport>,
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
-        self.send_message(
-            source,
-            self.config().multicast_address.as_ref().unwrap(),
-            message,
-        );
+        self.send_message(source, self.config().multicast.as_ref().unwrap(), message);
     }
 }
 
+/// Network configuration.
+///
+/// This struct is precisely mapped from configuration file content. Common
+/// module wraps it into the interface suitable for various protocols.
 // consider move to dedicated module if getting too long
 pub struct Config<T: Transport + ?Sized> {
-    pub replica_address: Vec<T::Address>,
-    pub multicast_address: Option<T::Address>,
-    pub n_fault: usize,
+    pub replica: Vec<T::Address>,
+    pub group: Vec<Range<usize>>,
+    pub multicast: Option<T::Address>,
+    pub f: usize,
     // for non-signed protocol this is empty
     pub signing_key: HashMap<T::Address, SigningKey>,
 }
@@ -178,7 +175,7 @@ impl<T: Transport + ?Sized> Config<T> {
     }
 
     pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
-        (view_number as usize % self.replica_address.len()) as ReplicaId
+        (view_number as usize % self.replica.len()) as ReplicaId
     }
 }
 
@@ -189,6 +186,8 @@ where
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut replica_address = Vec::new();
+        let mut group = Vec::new();
+        let mut group_start = None;
         let mut multicast_address = None;
         let mut n_fault = None;
         for line in s.lines() {
@@ -207,16 +206,26 @@ where
                 "replica" => {
                     replica_address.push(value.parse().map_err(|_| error_message).unwrap())
                 }
+                "group" => {
+                    if !replica_address.is_empty() {
+                        group.push(group_start.unwrap()..replica_address.len());
+                    }
+                    group_start = Some(replica_address.len());
+                }
                 "multicast" => {
                     multicast_address = Some(value.parse().map_err(|_| error_message).unwrap())
                 }
                 _ => panic!("unexpect prompt: {}", prompt),
             }
         }
+        if let Some(group_start) = group_start {
+            group.push(group_start..replica_address.len());
+        }
         Ok(Self {
-            replica_address,
-            multicast_address,
-            n_fault: n_fault.unwrap(),
+            replica: replica_address,
+            group,
+            multicast: multicast_address,
+            f: n_fault.unwrap(),
             signing_key: HashMap::new(), // fill later
         })
     }
@@ -224,7 +233,7 @@ where
 
 impl<T: Transport + ?Sized> Config<T> {
     pub fn collect_signing_key(&mut self, path: &Path) {
-        for (i, replica) in self.replica_address.iter().enumerate() {
+        for (i, replica) in self.replica.iter().enumerate() {
             let prefix = path.file_name().unwrap().to_str().unwrap();
             let key = path.with_file_name(format!("{}-{}.pem", prefix, i));
             let key = {

@@ -103,7 +103,7 @@ impl facade::TxAgent for TxAgent {
     ) {
         let dest_list: Vec<_> = self
             .config
-            .replica_address
+            .replica
             .iter()
             .filter(|dest| *dest != source.get_address())
             .collect();

@@ -134,7 +134,7 @@ impl<T: Transport> Replica<T> {
     ) -> Handle<Self> {
         assert_eq!(replica_id, 0);
         let replica: Handle<_> = Self {
-            address: transport.tx_agent().config().replica_address[0].clone(),
+            address: transport.tx_agent().config().replica[0].clone(),
             transport: transport.tx_agent(),
 
             app: Box::new(app),

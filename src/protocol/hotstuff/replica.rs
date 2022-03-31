@@ -133,13 +133,13 @@ impl<T: Transport> Replica<T> {
         batch_size: usize,
         adaptive_batching: bool,
     ) -> Handle<Self> {
-        assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
+        assert!(transport.tx_agent().config().replica.len() > 1); // TODO
 
         let log = [(GENESIS.justify.node, GENESIS.clone())]
             .into_iter()
             .collect();
 
-        let address = transport.tx_agent().config().replica_address[replica_id as usize].clone();
+        let address = transport.tx_agent().config().replica[replica_id as usize].clone();
         let replica: Handle<_> = Self {
             address: address.clone(),
             transport: transport.tx_agent(),
@@ -285,9 +285,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let quorum = self.vote_table.entry(node).or_default();
         quorum.insert(replica_id, vote);
         let vote_count = quorum.len();
-        if vote_count
-            >= self.transport.config().replica_address.len() - self.transport.config().n_fault
-        {
+        if vote_count >= self.transport.config().replica.len() - self.transport.config().f {
             let qc = QuorumCertification {
                 view_number: self.current_view,
                 node,
@@ -409,10 +407,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             }
             Ok(ToReplica::Generic(generic)) => {
                 let verifying_key = |replica| {
-                    &self.verifying_key[&self.transport.config().replica_address[replica as usize]]
+                    &self.verifying_key[&self.transport.config().replica[replica as usize]]
                 };
-                let threshold =
-                    self.transport.config().replica_address.len() - self.transport.config().n_fault;
+                let threshold = self.transport.config().replica.len() - self.transport.config().f;
                 if generic
                     .node
                     .justify

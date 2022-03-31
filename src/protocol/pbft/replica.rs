@@ -78,7 +78,7 @@ impl<T: Transport> Replica<T> {
             return false;
         };
         if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.transport.config().n_fault * 2
+            prepare_quorum.len() >= self.transport.config().f * 2
         } else {
             false
         }
@@ -94,13 +94,13 @@ impl<T: Transport> Replica<T> {
             return false;
         };
         let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.transport.config().n_fault * 2
+            prepare_quorum.len() >= self.transport.config().f * 2
         } else {
             false
         };
         prepared
             && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
-                commit_quorum.len() >= self.transport.config().n_fault * 2 + 1
+                commit_quorum.len() >= self.transport.config().f * 2 + 1
             } else {
                 false
             }
@@ -153,9 +153,9 @@ impl<T: Transport> Replica<T> {
         batch_size: usize,
         adaptive_batching: bool,
     ) -> Handle<Self> {
-        assert!(transport.tx_agent().config().replica_address.len() > 1); // TODO
+        assert!(transport.tx_agent().config().replica.len() > 1); // TODO
 
-        let address = transport.tx_agent().config().replica_address[replica_id as usize].clone();
+        let address = transport.tx_agent().config().replica[replica_id as usize].clone();
         let replica: Handle<_> = Self {
             address: address.clone(),
             transport: transport.tx_agent(),
