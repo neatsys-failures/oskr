@@ -12,7 +12,9 @@ use futures::{
 use tracing::{debug, warn};
 
 use crate::{
-    common::{deserialize, generate_id, serialize, ClientId, Opaque, RequestNumber, SignedMessage},
+    common::{
+        deserialize, generate_id, serialize, ClientId, Config, Opaque, RequestNumber, SignedMessage,
+    },
     facade::{AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     protocol::hotstuff::message::{self, ToReplica},
 };
@@ -20,6 +22,7 @@ use crate::{
 pub struct Client<T: Transport, E> {
     address: T::Address,
     pub(super) id: ClientId,
+    config: Config<T>,
     transport: T::TxAgent,
     rx: UnboundedReceiver<(T::Address, T::RxBuffer)>,
     _executor: PhantomData<E>,
@@ -34,11 +37,12 @@ impl<T: Transport, E> Receiver<T> for Client<T, E> {
 }
 
 impl<T: Transport, E> Client<T, E> {
-    pub fn register_new(transport: &mut T) -> Self {
+    pub fn register_new(config: Config<T>, transport: &mut T) -> Self {
         let (tx, rx) = unbounded();
         let client = Self {
             address: transport.ephemeral_address(),
             id: generate_id(),
+            config,
             transport: transport.tx_agent(),
             rx,
             request_number: 0,
@@ -66,8 +70,11 @@ where
             request_number: self.request_number,
             client_id: self.id,
         };
-        self.transport
-            .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
+        self.transport.send_message_to_all(
+            self,
+            self.config.replica(..),
+            serialize(ToReplica::Request(request.clone())),
+        );
 
         let mut result_table = HashMap::new();
         let mut receive_buffer =
@@ -84,7 +91,7 @@ where
                     .values()
                     .filter(|result| **result == reply.result)
                     .count()
-                    == client.transport.config().n_fault + 1
+                    == client.config.f + 1
                 {
                     Some(reply.result)
                 } else {
@@ -104,7 +111,7 @@ where
                 _ = E::sleep_until(timeout).fuse() => {
                     warn!("resend for request number {}", self.request_number);
                     self.transport
-                        .send_message_to_all(self, serialize(ToReplica::Request(request.clone())));
+                        .send_message_to_all(self, self.config.replica(..), serialize(ToReplica::Request(request.clone())));
                     timeout = Instant::now() + Duration::from_millis(1000);
                 }
             }

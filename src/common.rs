@@ -9,10 +9,12 @@ use std::{
 use bincode::Options;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::debug;
 
+pub mod config;
+pub use config::Config;
 pub mod signed;
 pub use signed::{SignedMessage, SigningKey, VerifyingKey};
-use tracing::debug;
 
 pub type ReplicaId = i8;
 pub type ClientId = [u8; 4];
@@ -66,7 +68,7 @@ where
     }
 }
 
-// consider move to util
+// consider move to framework
 pub fn panic_abort() {
     let default_hook = take_hook();
     set_hook(Box::new(move |info| {

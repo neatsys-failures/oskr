@@ -9,7 +9,7 @@ use crossbeam::{
     utils::Backoff,
 };
 
-use crate::latency::Latency;
+use crate::framework::latency::Latency;
 
 pub trait State {
     type Shared: Clone + Send;

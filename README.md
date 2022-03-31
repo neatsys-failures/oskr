@@ -19,12 +19,13 @@ because the core of this project is based on a specialized actor model.
 
 **Benchmark result.** Detailed explaination work in progress.
 
-|Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
-|--------------|-----|-----|-----------|-----------|
-|Unreplicated  |1    |1    |2011.256   |10.751     |
-|PBFT          |14   |1    |14.686     |789.614    |
-|PBFT          |14   |100  |127.109    |1596.052   |
-|HotStuff      |
+|Protocol|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
+|---------------|-----------|-----------|-----------|
+|Unreplicated   |-          |2011.256   |10.751     |
+|PBFT           |Adaptive   |129.391    |720.895    |
+|PBFT           |100        |127.851    |-          |
+|HotStuff       |Adaptive   |98.654     |2195.455   |
+|HotStuff       |100        |98.491     |-          |
 
 ----
 
@@ -38,43 +39,43 @@ Prerequisites on Ubuntu:
 `python3-pyelftools`.
 
 
-1. Clone repository recursively.
-2. Compile DPDK: `meson setup target/dpdk src/dpdk && ninja -C target/dpdk`.
-3. To run unit tests: `cargo test --lib`.
-4. To build benchmark executables: `cargo build --release`.
+1.  Clone repository recursively.
+2.  Compile DPDK: `meson setup target/dpdk src/dpdk && ninja -C target/dpdk`.
+3.  To run unit tests: `cargo test --lib`.
+4.  To build benchmark executables: `cargo build --release`.
 
-   The compiled executables are dynamically linked to rte shared objects, so if 
-   you transfer executables to a remote machine to run, make sure `target/dpdk` 
-   exists in remote working directory.
-5. Create deploy configuration. Create description file `deploy/shard0.config`,
-   write the following lines:
-   ```
-   f 1
-   replica 12:34:56:aa:aa:aa%0
-   replica 12:34:56:bb:bb:bb%0
-   replica 12:34:56:cc:cc:cc%0
-   replica 12:34:56:dd:dd:dd%0
-   multicast 01:00:5e:00:00:01%255
-   ```
-   Replace MAC addresses with the ones of network cards, and make sure network
-   is able to do L2 forward for packets sent to these MAC addresses. The 
-   multicast line is optional for running PBFT.
-6. Create signing key files. Generate signing key file for replica 0 with:
-   ```
-   openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/shard0-0.pem
-   ```
-   Run the command three more times to generate `deploy/shard0-{1,2,3}.pem`.
-7. Start replica 0 with:
-   ```
-   sudo ./target/release/replica -m pbft -c deploy/shard0 -i 0
-   ```
-   Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
-   assigned to them.
-8. Start client with:
-   ```
-   sudo ./target/release/client -m pbft -c deploy/shard0
-   ```
-   You may use `-t` to spawn multiple clients that send concurrent requests, or
-   use `-d` to extend sending duration.
+    The compiled executables are dynamically linked to rte shared objects, so if 
+    you transfer executables to a remote machine to run, make sure `target/dpdk` 
+    exists in remote working directory.
+5.  Create deploy configuration. Create description file `deploy/quad.config`,
+    write the following lines:
+    ```
+    f 1
+    replica 12:34:56:aa:aa:aa%0
+    replica 12:34:56:bb:bb:bb%0
+    replica 12:34:56:cc:cc:cc%0
+    replica 12:34:56:dd:dd:dd%0
+    multicast 01:00:5e:00:00:01%255
+    ```
+    Replace MAC addresses with the ones of network cards, and make sure network
+    is able to do L2 forward for packets sent to these MAC addresses. The 
+    multicast line is optional for running PBFT.
+6.  Create signing key files. Generate signing key file for replica 0 with:
+    ```
+    openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/quad-0.pem
+    ```
+    Run the command three more times to generate `deploy/quad-{1,2,3}.pem`.
+7.  Start replica 0 with:
+    ```
+    sudo ./target/release/replica -m pbft -c deploy/quad -i 0
+    ```
+    Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
+    assigned to them.
+8.  Start client with:
+    ```
+    sudo ./target/release/client -m pbft -c deploy/quad
+    ```
+    You may use `-t` to spawn multiple clients that send concurrent requests, or
+    use `-d` to extend sending duration.
 
 Kindly pass `-h` to executables to learn about other options.

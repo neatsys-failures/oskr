@@ -1,3 +1,25 @@
+//! Common interface for signing and verification.
+//!
+#![doc = include_str!("signed.svg")]
+//!
+//! The module serves for two proposes:
+//! * Hide crypto related dependences behind it, to make it easier to replace
+//!   when necessary.
+//! * Provide a simple and useful abstraction for signed message, make efforts
+//!   to encourage protocols not to keep bare signatures.
+//!
+//! The basic relation and transformation among message types are shown in the
+//! diagram. Additionally:
+//! * `SignedMessage` contains only serialized data, and should be used in
+//!   messages for transferring and bookkeeping.
+//! * `VerifiedMessage` bridges between the other two, and receiving side can
+//!   perform most processing against it.
+//! * The clear message should be constructed by sending side for signing.
+//!
+//! # Choose Rust Crypto or libsecp256k1
+//!
+//! Work in progress.
+
 use std::{
     error::Error,
     fmt::{self, Display, Formatter},

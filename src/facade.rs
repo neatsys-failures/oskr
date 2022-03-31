@@ -1,12 +1,11 @@
 use std::{
-    collections::HashMap, convert::Infallible, fs::File, hash::Hash, io::Read, path::Path,
-    str::FromStr, time::Instant,
+    convert::Infallible, fs::File, io::Read, ops::Range, path::Path, str::FromStr, time::Instant,
 };
 
 use async_trait::async_trait;
 use futures::Future;
 
-use crate::common::{Opaque, ReplicaId, SigningKey, VerifyingKey, ViewNumber};
+use crate::common::{Opaque, SigningKey};
 
 /// Asynchronized invoking interface.
 ///
@@ -60,8 +59,8 @@ pub trait App {
 /// that interfaces are free-function style, which may only be valid in certain
 /// context. It is user's responsiblity to provide proper context, e.g. set up
 /// a tokio runtime and create receivers that depend on
-/// [`runtime::tokio::AsyncEcosystem`](crate::runtime::tokio::AsyncEcosystem) in
-/// it, or the receiver will probably fail at runtime.
+/// [`framework::tokio::AsyncEcosystem`](crate::framework::tokio::AsyncEcosystem)
+/// in it, or the receiver will probably fail at runtime.
 
 // wait for GAT to remove trait generic parameter
 pub trait AsyncEcosystem<T> {
@@ -87,7 +86,7 @@ pub trait Transport
 where
     Self: 'static,
 {
-    type Address: Clone + Eq + Hash + Send + Sync;
+    type Address: Clone + Eq + Send + Sync;
     type RxBuffer: AsRef<[u8]> + Send;
     // TxAgent has to be Sync for now, because it may show up in stage's shared
     // state and be accessed concurrently from multiple threads
@@ -122,63 +121,47 @@ pub trait Receiver<T: Transport> {
 pub trait TxAgent {
     type Transport: Transport;
 
-    fn config(&self) -> &Config<Self::Transport>;
-
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
         dest: &<Self::Transport as Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     );
-    fn send_message_to_replica(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        replica_id: ReplicaId,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        self.send_message(
-            source,
-            &self.config().replica_address[replica_id as usize],
-            message,
-        );
-    }
+
+    /// This cannot be replaced by a loop calling to `send_message`, because
+    /// `message` closure only allow to be invoked once.
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
+        dest_list: &[<Self::Transport as Transport>::Address],
         message: impl FnOnce(&mut [u8]) -> u16,
     );
-    fn send_message_to_multicast(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        self.send_message(
-            source,
-            self.config().multicast_address.as_ref().unwrap(),
-            message,
-        );
-    }
 }
 
+/// Network configuration.
+///
+/// This struct is precisely mapped from configuration file content. The
+/// [`Config`](crate::common::Config) in common module wraps it into the
+/// interface suitable for various protocols.
 // consider move to dedicated module if getting too long
 pub struct Config<T: Transport + ?Sized> {
-    pub replica_address: Vec<T::Address>,
-    pub multicast_address: Option<T::Address>,
-    pub n_fault: usize,
+    pub replica: Vec<T::Address>,
+    pub group: Vec<Range<usize>>,
+    pub multicast: Option<T::Address>,
+    pub f: usize,
     // for non-signed protocol this is empty
-    pub signing_key: HashMap<T::Address, SigningKey>,
+    pub signing_key: Vec<(T::Address, SigningKey)>,
 }
 
-impl<T: Transport + ?Sized> Config<T> {
-    pub fn verifying_key(&self) -> HashMap<T::Address, VerifyingKey> {
-        self.signing_key
-            .iter()
-            .map(|(address, key)| (address.clone(), key.verifying_key()))
-            .collect()
-    }
-
-    pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
-        (view_number as usize % self.replica_address.len()) as ReplicaId
+impl<T: Transport + ?Sized> Clone for Config<T> {
+    fn clone(&self) -> Self {
+        Self {
+            replica: self.replica.clone(),
+            group: self.group.clone(),
+            multicast: self.multicast.clone(),
+            f: self.f,
+            signing_key: self.signing_key.clone(),
+        }
     }
 }
 
@@ -189,6 +172,8 @@ where
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut replica_address = Vec::new();
+        let mut group = Vec::new();
+        let mut group_start = None;
         let mut multicast_address = None;
         let mut n_fault = None;
         for line in s.lines() {
@@ -207,24 +192,34 @@ where
                 "replica" => {
                     replica_address.push(value.parse().map_err(|_| error_message).unwrap())
                 }
+                "group" => {
+                    if !replica_address.is_empty() {
+                        group.push(group_start.unwrap()..replica_address.len());
+                    }
+                    group_start = Some(replica_address.len());
+                }
                 "multicast" => {
                     multicast_address = Some(value.parse().map_err(|_| error_message).unwrap())
                 }
                 _ => panic!("unexpect prompt: {}", prompt),
             }
         }
+        if let Some(group_start) = group_start {
+            group.push(group_start..replica_address.len());
+        }
         Ok(Self {
-            replica_address,
-            multicast_address,
-            n_fault: n_fault.unwrap(),
-            signing_key: HashMap::new(), // fill later
+            replica: replica_address,
+            group,
+            multicast: multicast_address,
+            f: n_fault.unwrap(),
+            signing_key: Vec::new(), // fill later
         })
     }
 }
 
 impl<T: Transport + ?Sized> Config<T> {
     pub fn collect_signing_key(&mut self, path: &Path) {
-        for (i, replica) in self.replica_address.iter().enumerate() {
+        for (i, replica) in self.replica.iter().enumerate() {
             let prefix = path.file_name().unwrap().to_str().unwrap();
             let key = path.with_file_name(format!("{}-{}.pem", prefix, i));
             let key = {
@@ -233,7 +228,7 @@ impl<T: Transport + ?Sized> Config<T> {
                 buf
             };
             let key = key.parse().unwrap();
-            self.signing_key.insert(replica.clone(), key);
+            self.signing_key.push((replica.clone(), key));
         }
     }
 }

@@ -8,8 +8,8 @@ use crate::{
     app::mock::App,
     common::{Opaque, SignedMessage, SigningKey},
     facade::{Invoke, Receiver},
+    framework::tokio::AsyncEcosystem,
     protocol::pbft::message::{self, ToReplica},
-    runtime::tokio::AsyncEcosystem,
     simulated::Transport,
     stage::Handle,
     tests::TRACING,
@@ -60,11 +60,12 @@ fn generate_route(
 #[tokio::test(start_paused = true)]
 async fn one_request() {
     *TRACING;
-    let mut transport = Transport::new(4, 1);
+    let config = Transport::config_builder(4, 1);
+    let mut transport = Transport::new(config());
     let replica: Vec<_> = (0..4)
-        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .map(|i| Replica::register_new(config(), &mut transport, i, App::default(), 1, false))
         .collect();
-    let client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
+    let client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
     let client = [client];
     generate_route(&replica, &client);
     let mut client = client.into_iter().next().unwrap();
@@ -81,12 +82,13 @@ async fn one_request() {
 #[tokio::test(start_paused = true)]
 async fn multiple_client() {
     *TRACING;
-    let mut transport = Transport::new(4, 1);
+    let config = Transport::config_builder(4, 1);
+    let mut transport = Transport::new(config());
     let replica: Vec<_> = (0..4)
-        .map(|i| Replica::register_new(&mut transport, i, App::default(), 1))
+        .map(|i| Replica::register_new(config(), &mut transport, i, App::default(), 1, false))
         .collect();
     let client: Vec<Client<_, AsyncEcosystem>> = (0..3)
-        .map(|_| Client::register_new(&mut transport))
+        .map(|_| Client::register_new(config(), &mut transport))
         .collect();
     generate_route(&replica, &client);
     let client: Vec<_> = client
