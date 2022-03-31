@@ -16,7 +16,7 @@ use tokio::{
         mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
         Mutex, MutexGuard,
     },
-    time::{sleep, sleep_until, Instant},
+    time::{sleep, Instant},
 };
 use tracing::trace;
 
@@ -178,20 +178,6 @@ impl Transport {
         }
     }
 
-    pub async fn deliver(&mut self, duration: Duration) {
-        let start = Instant::now();
-        let deadline = start + duration;
-        loop {
-            #[cfg(not(doc))]
-            select! {
-                _ = sleep_until(deadline) => break,
-                Some((source, dest, message, filtered)) = self.rx.recv() => {
-                    self.deliver_internal(source, dest, message, filtered, start);
-               }
-            }
-        }
-    }
-
     pub async fn deliver_until<T>(&mut self, predict: impl Future<Output = T>) {
         let start = Instant::now();
         #[cfg(not(doc))]
@@ -249,10 +235,6 @@ impl Transport {
                 tx.send((source, dest, message, true)).unwrap();
             });
         }
-    }
-
-    pub async fn deliver_now(&mut self) {
-        self.deliver(Duration::from_micros(1)).await;
     }
 
     pub fn insert_filter(

@@ -186,7 +186,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 mod tests {
     use std::time::Duration;
 
-    use tokio::{spawn, time::timeout};
+    use tokio::{spawn, sync::oneshot, time::timeout};
 
     use crate::{
         app::mock::App, common::Opaque, facade::Invoke, framework::tokio::AsyncEcosystem,
@@ -203,13 +203,15 @@ mod tests {
         Replica::register_new(config(), &mut transport, 0, App::default());
         let mut client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
 
-        spawn(async move { transport.deliver_now().await });
+        let (stop_tx, stop) = oneshot::channel();
+        spawn(async move { transport.deliver_until(stop).await });
         assert_eq!(
             timeout(Duration::from_micros(1), client.invoke(b"hello".to_vec()))
                 .await
                 .unwrap(),
             b"reply: hello".to_vec()
         );
+        stop_tx.send(()).unwrap();
     }
 
     #[tokio::test(start_paused = true)]
@@ -220,7 +222,8 @@ mod tests {
         Replica::register_new(config(), &mut transport, 0, App::default());
         let mut client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
 
-        spawn(async move { transport.deliver_now().await });
+        let (stop_tx, stop) = oneshot::channel();
+        spawn(async move { transport.deliver_until(stop).await });
         for i in 0..10 {
             assert_eq!(
                 timeout(
@@ -232,5 +235,6 @@ mod tests {
                 Opaque::from(format!("reply: #{}", i))
             );
         }
+        stop_tx.send(()).unwrap();
     }
 }
