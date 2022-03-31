@@ -5,7 +5,7 @@ use std::{
 use async_trait::async_trait;
 use futures::Future;
 
-use crate::common::{Opaque, SigningKey};
+use crate::common::{OpNumber, Opaque, SigningKey};
 
 /// Asynchronized invoking interface.
 ///
@@ -31,8 +31,36 @@ pub trait Invoke {
     async fn invoke(&mut self, op: Opaque) -> Opaque;
 }
 
+/// State machine application which may support speculative execution and
+/// rollback.
+///
+/// The leader upcall in specpaxos in removed and not supported, because this
+/// is a trait for more general application model, not only replicated ones.
+///
+/// For applications that support rollback: implement `execute` with speculative
+/// execution. The `op_number` is subject to be `rollback`ed, until it is
+/// `commit`ted later.
+///
+/// For applications that not support rollback: implement `execute` as
+/// irreversible operation, and use default implementation of `rollback`, which
+/// correctly prevent protocol calling it.
+#[allow(unused_variables)]
 pub trait App {
-    fn execute(&mut self, op: Opaque) -> Opaque;
+    /// Protocol promise `op_number` is strictly ascending through calls when
+    /// there is no rollback. However, there could be gap.
+    ///
+    /// It is unspecified whether protocol allows to reuse op number after
+    /// rollback, but I think they do not.
+    fn execute(&mut self, op_number: OpNumber, op: Opaque) -> Opaque;
+    fn rollback(
+        &mut self,
+        current: OpNumber,
+        to: OpNumber,
+        op_list: &dyn Iterator<Item = (OpNumber, Opaque)>,
+    ) {
+        unimplemented!()
+    }
+    fn commit(&mut self, op_number: OpNumber) {}
 }
 
 /// Abstraction for async ecosystem.

@@ -565,9 +565,11 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 break;
             }
 
+            let op_number = item.quorum_key.op_number;
             // why have to clone?
-            for request in item.batch.clone() {
-                let result = self.app.execute(request.op);
+            for (i, request) in item.batch.clone().into_iter().enumerate() {
+                let op_number = op_number * self.batch_size as OpNumber + i as OpNumber;
+                let result = self.app.execute(op_number, request.op);
                 let reply = message::Reply {
                     view_number: self.view_number,
                     request_number: request.request_number,

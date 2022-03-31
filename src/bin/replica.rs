@@ -12,7 +12,7 @@ use std::{
 
 use clap::{ArgEnum, Parser};
 use oskr::{
-    common::{panic_abort, Config, Opaque, ReplicaId},
+    common::{panic_abort, Config, OpNumber, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{self, App},
     framework::dpdk::Transport,
@@ -23,7 +23,7 @@ use tracing::{info, warn};
 
 struct NullApp;
 impl App for NullApp {
-    fn execute(&mut self, _op: Opaque) -> Opaque {
+    fn execute(&mut self, _op_number: OpNumber, _op: Opaque) -> Opaque {
         Opaque::default()
     }
 }

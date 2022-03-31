@@ -223,7 +223,8 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         }
 
         self.op_number += 1;
-        let result = self.app.execute(request.op);
+        let op_number = self.op_number;
+        let result = self.app.execute(op_number, request.op);
         let reply = ReplyMessage {
             request_number: request.request_number,
             result,
