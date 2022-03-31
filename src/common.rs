@@ -9,10 +9,11 @@ use std::{
 use bincode::Options;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::debug;
 
+pub mod config;
 pub mod signed;
 pub use signed::{SignedMessage, SigningKey, VerifyingKey};
-use tracing::debug;
 
 pub type ReplicaId = i8;
 pub type ClientId = [u8; 4];
