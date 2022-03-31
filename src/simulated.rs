@@ -9,10 +9,9 @@ use std::{
 
 use futures::Future;
 use rand::{thread_rng, Rng};
-use tokio::pin;
 #[cfg(not(doc))]
 use tokio::{
-    select, spawn,
+    pin, select, spawn,
     sync::{
         mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
         Mutex, MutexGuard,
@@ -195,6 +194,7 @@ impl Transport {
 
     pub async fn deliver_until<T>(&mut self, predict: impl Future<Output = T>) {
         let start = Instant::now();
+        #[cfg(not(doc))]
         pin!(predict);
         loop {
             #[cfg(not(doc))]
