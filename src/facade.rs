@@ -1,12 +1,11 @@
 use std::{
-    collections::HashMap, convert::Infallible, fs::File, hash::Hash, io::Read, ops::Range,
-    path::Path, str::FromStr, time::Instant,
+    convert::Infallible, fs::File, io::Read, ops::Range, path::Path, str::FromStr, time::Instant,
 };
 
 use async_trait::async_trait;
 use futures::Future;
 
-use crate::common::{Opaque, ReplicaId, SigningKey, VerifyingKey, ViewNumber};
+use crate::common::{Opaque, SigningKey};
 
 /// Asynchronized invoking interface.
 ///
@@ -87,7 +86,7 @@ pub trait Transport
 where
     Self: 'static,
 {
-    type Address: Clone + Eq + Hash + Send + Sync;
+    type Address: Clone + Eq + Send + Sync;
     type RxBuffer: AsRef<[u8]> + Send;
     // TxAgent has to be Sync for now, because it may show up in stage's shared
     // state and be accessed concurrently from multiple threads
@@ -122,40 +121,28 @@ pub trait Receiver<T: Transport> {
 pub trait TxAgent {
     type Transport: Transport;
 
-    fn config(&self) -> &Config<Self::Transport>;
-
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
         dest: &<Self::Transport as Transport>::Address,
         message: impl FnOnce(&mut [u8]) -> u16,
     );
-    fn send_message_to_replica(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        replica_id: ReplicaId,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        self.send_message(source, &self.config().replica[replica_id as usize], message);
-    }
+
+    /// This cannot be replaced by a loop calling to `send_message`, because
+    /// `message` closure only allow to be invoked once.
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
+        dest_list: &[<Self::Transport as Transport>::Address],
         message: impl FnOnce(&mut [u8]) -> u16,
     );
-    fn send_message_to_multicast(
-        &self,
-        source: &impl Receiver<Self::Transport>,
-        message: impl FnOnce(&mut [u8]) -> u16,
-    ) {
-        self.send_message(source, self.config().multicast.as_ref().unwrap(), message);
-    }
 }
 
 /// Network configuration.
 ///
-/// This struct is precisely mapped from configuration file content. Common
-/// module wraps it into the interface suitable for various protocols.
+/// This struct is precisely mapped from configuration file content. The
+/// [`Config`](crate::common::Config) in common module wraps it into the
+/// interface suitable for various protocols.
 // consider move to dedicated module if getting too long
 pub struct Config<T: Transport + ?Sized> {
     pub replica: Vec<T::Address>,
@@ -163,19 +150,18 @@ pub struct Config<T: Transport + ?Sized> {
     pub multicast: Option<T::Address>,
     pub f: usize,
     // for non-signed protocol this is empty
-    pub signing_key: HashMap<T::Address, SigningKey>,
+    pub signing_key: Vec<(T::Address, SigningKey)>,
 }
 
-impl<T: Transport + ?Sized> Config<T> {
-    pub fn verifying_key(&self) -> HashMap<T::Address, VerifyingKey> {
-        self.signing_key
-            .iter()
-            .map(|(address, key)| (address.clone(), key.verifying_key()))
-            .collect()
-    }
-
-    pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
-        (view_number as usize % self.replica.len()) as ReplicaId
+impl<T: Transport + ?Sized> Clone for Config<T> {
+    fn clone(&self) -> Self {
+        Self {
+            replica: self.replica.clone(),
+            group: self.group.clone(),
+            multicast: self.multicast.clone(),
+            f: self.f,
+            signing_key: self.signing_key.clone(),
+        }
     }
 }
 
@@ -226,7 +212,7 @@ where
             group,
             multicast: multicast_address,
             f: n_fault.unwrap(),
-            signing_key: HashMap::new(), // fill later
+            signing_key: Vec::new(), // fill later
         })
     }
 }
@@ -242,7 +228,7 @@ impl<T: Transport + ?Sized> Config<T> {
                 buf
             };
             let key = key.parse().unwrap();
-            self.signing_key.insert(replica.clone(), key);
+            self.signing_key.push((replica.clone(), key));
         }
     }
 }

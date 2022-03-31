@@ -9,8 +9,8 @@ use tracing::{debug, info, warn};
 
 use crate::{
     common::{
-        deserialize, serialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId,
-        RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
+        deserialize, serialize, signed::VerifiedMessage, ClientId, Config, Digest, OpNumber,
+        ReplicaId, RequestNumber, SignedMessage, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
     protocol::pbft::message::{self, ToReplica},
@@ -19,6 +19,7 @@ use crate::{
 
 pub struct Replica<T: Transport> {
     address: T::Address,
+    config: Config<T>,
     transport: T::TxAgent,
     id: ReplicaId,
     batch_size: usize,
@@ -40,6 +41,19 @@ pub struct Replica<T: Transport> {
     pub(super) route_table: HashMap<ClientId, T::Address>,
 
     shared: Arc<Shared<T>>,
+}
+
+struct LogItem {
+    quorum_key: QuorumKey,
+    batch: Vec<message::Request>,
+    pre_prepare: SignedMessage<message::PrePrepare>,
+    committed: bool,
+}
+
+pub struct Shared<T: Transport> {
+    address: T::Address,
+    config: Config<T>,
+    transport: T::TxAgent,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -78,7 +92,7 @@ impl<T: Transport> Replica<T> {
             return false;
         };
         if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.transport.config().f * 2
+            prepare_quorum.len() >= self.config.f * 2
         } else {
             false
         }
@@ -94,36 +108,21 @@ impl<T: Transport> Replica<T> {
             return false;
         };
         let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.transport.config().f * 2
+            prepare_quorum.len() >= self.config.f * 2
         } else {
             false
         };
         prepared
             && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
-                commit_quorum.len() >= self.transport.config().f * 2 + 1
+                commit_quorum.len() >= self.config.f * 2 + 1
             } else {
                 false
             }
     }
 
     fn is_primary(&self) -> bool {
-        self.transport.config().view_primary(self.view_number) == self.id
+        self.config.view_primary(self.view_number) == self.id
     }
-}
-
-struct LogItem {
-    quorum_key: QuorumKey,
-    batch: Vec<message::Request>,
-    pre_prepare: SignedMessage<message::PrePrepare>,
-    committed: bool,
-}
-
-pub struct Shared<T: Transport> {
-    address: T::Address,
-    transport: T::TxAgent,
-
-    signing_key: SigningKey,
-    verifying_key: HashMap<T::Address, VerifyingKey>,
 }
 
 impl<'a, T: Transport> Receiver<T> for StatefulContext<'a, Replica<T>> {
@@ -147,17 +146,18 @@ impl<T: Transport> State for Replica<T> {
 
 impl<T: Transport> Replica<T> {
     pub fn register_new(
+        config: Config<T>,
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
         adaptive_batching: bool,
     ) -> Handle<Self> {
-        assert!(transport.tx_agent().config().replica.len() > 1); // TODO
+        assert!(config.replica(..).len() > 1); // TODO
 
-        let address = transport.tx_agent().config().replica[replica_id as usize].clone();
         let replica: Handle<_> = Self {
-            address: address.clone(),
+            address: config.replica(replica_id).clone(),
+            config: config.clone(),
             transport: transport.tx_agent(),
             id: replica_id,
             batch_size,
@@ -174,10 +174,9 @@ impl<T: Transport> Replica<T> {
             app: Box::new(app),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
+                address: config.replica(replica_id).clone(),
+                config,
                 transport: transport.tx_agent(),
-                verifying_key: transport.tx_agent().config().verifying_key(),
-                signing_key: transport.tx_agent().config().signing_key[&address].clone(),
-                address,
             }),
         }
         .into();
@@ -188,7 +187,7 @@ impl<T: Transport> Replica<T> {
                 move |remote, buffer| {
                     // shortcut: if we don't have verifying key for remote, we
                     // cannot do verify so skip stateless task
-                    if replica.verifying_key.contains_key(&remote) {
+                    if replica.config.verifying_key(&remote).is_some() {
                         replica
                             .submit
                             .stateless(move |replica| replica.receive_buffer(remote, buffer));
@@ -222,7 +221,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         let mut buffer = buffer.as_ref();
-        let verifying_key = &self.verifying_key[&remote];
         match deserialize(&mut buffer) {
             Ok(ToReplica::RelayedRequest(request)) => {
                 self.submit
@@ -230,7 +228,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 return;
             }
             Ok(ToReplica::PrePrepare(pre_prepare)) => {
-                if let Ok(pre_prepare) = pre_prepare.verify(verifying_key) {
+                if let Ok(pre_prepare) =
+                    pre_prepare.verify(self.config.verifying_key(&remote).unwrap())
+                {
                     if Sha256::digest(buffer)[..] == pre_prepare.digest {
                         let batch: Result<Vec<message::Request>, _> = deserialize(buffer);
                         if let Ok(batch) = batch {
@@ -243,14 +243,14 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 }
             }
             Ok(ToReplica::Prepare(prepare)) => {
-                if let Ok(prepare) = prepare.verify(verifying_key) {
+                if let Ok(prepare) = prepare.verify(self.config.verifying_key(&remote).unwrap()) {
                     self.submit
                         .stateful(|replica| replica.handle_prepare(remote, prepare));
                     return;
                 }
             }
             Ok(ToReplica::Commit(commit)) => {
-                if let Ok(commit) = commit.verify(verifying_key) {
+                if let Ok(commit) = commit.verify(self.config.verifying_key(&remote).unwrap()) {
                     self.submit
                         .stateful(|replica| replica.handle_commit(remote, commit));
                     return;
@@ -291,9 +291,10 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         }
 
         if !self.is_primary() {
-            self.transport.send_message_to_replica(
+            self.transport.send_message(
                 self,
-                self.transport.config().view_primary(self.view_number),
+                self.config
+                    .replica(self.config.view_primary(self.view_number)),
                 serialize(ToReplica::RelayedRequest(message)),
             );
             // TODO start view change timeout
@@ -334,14 +335,16 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 digest,
             };
 
-            let pre_prepare = SignedMessage::sign(pre_prepare, &replica.signing_key);
-            replica.transport.send_message_to_all(replica, |buffer| {
-                let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
-                (&mut buffer[offset as usize..])
-                    .write_all(&batch_buffer)
-                    .unwrap();
-                offset + batch_buffer.len() as u16
-            });
+            let pre_prepare = SignedMessage::sign(pre_prepare, replica.config.signing_key(replica));
+            replica
+                .transport
+                .send_message_to_all(replica, replica.config.replica(..), |buffer| {
+                    let offset = serialize(ToReplica::PrePrepare(pre_prepare.clone()))(buffer);
+                    (&mut buffer[offset as usize..])
+                        .write_all(&batch_buffer)
+                        .unwrap();
+                    offset + batch_buffer.len() as u16
+                });
 
             replica.submit.stateful(move |replica| {
                 if replica.view_number != quorum_key.view_number {
@@ -429,9 +432,11 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
         let prepared = self.prepared(message.op_number);
         self.submit.stateless(move |replica| {
-            let signed_prepare = SignedMessage::sign(prepare.clone(), &replica.signing_key);
+            let signed_prepare =
+                SignedMessage::sign(prepare.clone(), replica.config.signing_key(replica));
             replica.transport.send_message_to_all(
                 replica,
+                replica.config.replica(..),
                 serialize(ToReplica::Prepare(signed_prepare.clone())),
             );
 
@@ -506,9 +511,10 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             move |replica| {
                 replica.transport.send_message_to_all(
                     replica,
+                    replica.config.replica(..),
                     serialize(ToReplica::Commit(SignedMessage::sign(
                         commit,
-                        &replica.signing_key,
+                        replica.config.signing_key(replica),
                     ))),
                 )
             }
@@ -570,7 +576,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                     result,
                 };
                 self.submit.stateless(move |replica| {
-                    let reply = SignedMessage::sign(reply, &replica.signing_key);
+                    let reply = SignedMessage::sign(reply, replica.config.signing_key(replica));
                     replica.submit.stateful(move |replica| {
                         replica.client_table.insert(
                             request.client_id,

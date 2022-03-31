@@ -58,10 +58,10 @@
 //! If configuration files do not include secret keys, i.e. in a non-security
 //! setup, then no one has identity at all.
 
-use std::{ops::Index, slice::SliceIndex};
+use std::ops::{Deref, RangeFull};
 
 use crate::{
-    common::{SigningKey, VerifyingKey},
+    common::{ReplicaId, SigningKey, VerifyingKey, ViewNumber},
     facade::{self, Receiver, Transport},
 };
 
@@ -73,6 +73,20 @@ pub struct Config<T: Transport> {
 enum ConfigInner<T: Transport> {
     Shard(facade::Config<T>, usize),
     Global(facade::Config<T>),
+}
+
+impl<T: Transport> Clone for Config<T> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: match &self.inner {
+                ConfigInner::Shard(config, group_id) => {
+                    ConfigInner::Shard(config.clone(), *group_id)
+                }
+                ConfigInner::Global(config) => ConfigInner::Global(config.clone()),
+            },
+            verifying_key: self.verifying_key.clone(),
+        }
+    }
 }
 
 impl<T: Transport> Config<T> {
@@ -103,13 +117,15 @@ impl<T: Transport> Config<T> {
     }
 
     pub fn signing_key(&self, receiver: &impl Receiver<T>) -> &SigningKey {
-        match &self.inner {
+        &match &self.inner {
             ConfigInner::Shard(config, _) => config,
             ConfigInner::Global(config) => config,
         }
         .signing_key
-        .get(receiver.get_address())
+        .iter()
+        .find(|(address, _)| address == receiver.get_address())
         .unwrap()
+        .1
     }
 
     pub fn verifying_key(&self, remote: &T::Address) -> Option<&VerifyingKey> {
@@ -119,25 +135,52 @@ impl<T: Transport> Config<T> {
             .map(|(_, key)| key)
     }
 
-    pub fn replica<I: SliceIndex<[T::Address]>>(&self, index: I) -> &I::Output {
-        &(match &self.inner {
-            ConfigInner::Shard(config, group_id) => {
-                &config.replica[config
-                    .group
-                    .get(*group_id)
-                    .cloned()
-                    .unwrap_or(0..config.replica.len())]
-            }
-            ConfigInner::Global(config) => &*config.replica,
-        })[index]
+    pub fn replica<I: ReplicaIndex<T>>(&self, at: I) -> &I::Output {
+        I::index(
+            match &self.inner {
+                ConfigInner::Shard(config, group_id) => {
+                    &config.replica[config
+                        .group
+                        .get(*group_id)
+                        .cloned()
+                        .unwrap_or(0..config.replica.len())]
+                }
+                ConfigInner::Global(config) => &*config.replica,
+            },
+            at,
+        )
     }
 
-    pub fn multicast(&self) -> Option<&T::Address> {
+    pub fn view_primary(&self, view_number: ViewNumber) -> ReplicaId {
+        (view_number as usize % self.replica(..).len()) as _
+    }
+}
+
+impl<T: Transport> Deref for Config<T> {
+    type Target = facade::Config<T>;
+    fn deref(&self) -> &Self::Target {
         match &self.inner {
             ConfigInner::Shard(config, _) => config,
             ConfigInner::Global(config) => config,
         }
-        .multicast
-        .as_ref()
+    }
+}
+
+pub trait ReplicaIndex<T: Transport> {
+    type Output: ?Sized;
+    fn index(replica: &[T::Address], at: Self) -> &Self::Output;
+}
+
+impl<T: Transport> ReplicaIndex<T> for ReplicaId {
+    type Output = T::Address;
+    fn index(replica: &[T::Address], at: Self) -> &Self::Output {
+        &replica[at as usize]
+    }
+}
+
+impl<T: Transport> ReplicaIndex<T> for RangeFull {
+    type Output = [T::Address];
+    fn index(replica: &[T::Address], _at: Self) -> &Self::Output {
+        replica
     }
 }

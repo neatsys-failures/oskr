@@ -4,8 +4,8 @@ use tracing::{debug, trace, warn};
 
 use crate::{
     common::{
-        deserialize, serialize, signed::VerifiedMessage, ClientId, Digest, OpNumber, ReplicaId,
-        RequestNumber, SignedMessage, SigningKey, VerifyingKey, ViewNumber,
+        deserialize, serialize, signed::VerifiedMessage, ClientId, Config, Digest, OpNumber,
+        ReplicaId, RequestNumber, SignedMessage, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
     protocol::hotstuff::message::{self, GenericNode, QuorumCertification, ToReplica, GENESIS},
@@ -33,6 +33,7 @@ use crate::{
 
 pub struct Replica<T: Transport> {
     address: T::Address,
+    config: Config<T>,
     transport: T::TxAgent,
     id: ReplicaId,
     batch_size: usize,
@@ -64,10 +65,8 @@ pub struct Replica<T: Transport> {
 
 pub struct Shared<T: Transport> {
     address: T::Address,
+    config: Config<T>,
     transport: T::TxAgent,
-
-    signing_key: SigningKey,
-    verifying_key: HashMap<T::Address, VerifyingKey>,
 }
 
 impl<T: Transport> Replica<T> {
@@ -127,21 +126,22 @@ impl<T: Transport> Receiver<T> for StatelessContext<Replica<T>> {
 
 impl<T: Transport> Replica<T> {
     pub fn register_new(
+        config: Config<T>,
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
         adaptive_batching: bool,
     ) -> Handle<Self> {
-        assert!(transport.tx_agent().config().replica.len() > 1); // TODO
+        assert!(config.replica(..).len() > 1); // TODO
 
         let log = [(GENESIS.justify.node, GENESIS.clone())]
             .into_iter()
             .collect();
 
-        let address = transport.tx_agent().config().replica[replica_id as usize].clone();
         let replica: Handle<_> = Self {
-            address: address.clone(),
+            address: config.replica(replica_id).clone(),
+            config: config.clone(),
             transport: transport.tx_agent(),
             id: replica_id,
             batch_size,
@@ -160,10 +160,9 @@ impl<T: Transport> Replica<T> {
             app: Box::new(app),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
-                signing_key: transport.tx_agent().config().signing_key[&address].clone(),
-                verifying_key: transport.tx_agent().config().verifying_key(),
-                address,
+                address: config.replica(replica_id).clone(),
                 transport: transport.tx_agent(),
+                config,
             }),
         }
         .into();
@@ -253,10 +252,11 @@ impl<T: Transport> StatelessContext<Replica<T>> {
 
                 let primary = replica.get_leader();
                 replica.submit.stateless(move |replica| {
-                    let signed = SignedMessage::sign(vote_generic, &replica.signing_key);
-                    replica.transport.send_message_to_replica(
+                    let signed =
+                        SignedMessage::sign(vote_generic, replica.config.signing_key(replica));
+                    replica.transport.send_message(
                         replica,
-                        primary,
+                        replica.config.replica(primary),
                         serialize(ToReplica::VoteGeneric(signed)),
                     );
                 });
@@ -285,7 +285,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let quorum = self.vote_table.entry(node).or_default();
         quorum.insert(replica_id, vote);
         let vote_count = quorum.len();
-        if vote_count >= self.transport.config().replica.len() - self.transport.config().f {
+        if vote_count >= self.config.replica(..).len() - self.config.f {
             let qc = QuorumCertification {
                 view_number: self.current_view,
                 node,
@@ -319,9 +319,11 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 view_number,
                 node: block_new.clone(),
             };
-            replica
-                .transport
-                .send_message_to_all(replica, serialize(ToReplica::Generic(generic)));
+            replica.transport.send_message_to_all(
+                replica,
+                replica.config.replica(..),
+                serialize(ToReplica::Generic(generic)),
+            );
 
             let digest = block_new.digest();
             let vote_generic = SignedMessage::sign(
@@ -330,7 +332,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                     node: digest,
                     replica_id,
                 },
-                &replica.signing_key,
+                replica.config.signing_key(replica),
             );
 
             replica.submit.stateful(move |replica| {
@@ -348,7 +350,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 // "algorithm 5" in HotStuff paper
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn get_leader(&self) -> ReplicaId {
-        self.transport.config().view_primary(self.current_view)
+        self.config.view_primary(self.current_view)
     }
 
     fn update_qc_high(&mut self, qc_high1: QuorumCertification) {
@@ -407,9 +409,11 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             }
             Ok(ToReplica::Generic(generic)) => {
                 let verifying_key = |replica| {
-                    &self.verifying_key[&self.transport.config().replica[replica as usize]]
+                    self.config
+                        .verifying_key(self.config.replica(replica))
+                        .unwrap() // all replica id should have a key
                 };
-                let threshold = self.transport.config().replica.len() - self.transport.config().f;
+                let threshold = self.config.replica(..).len() - self.config.f;
                 if generic
                     .node
                     .justify
@@ -424,7 +428,14 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 return;
             }
             Ok(ToReplica::VoteGeneric(vote_generic)) => {
-                if let Ok(verified) = vote_generic.verify(&self.verifying_key[&remote]) {
+                let verifying_key = if let Some(verifying_key) = self.config.verifying_key(&remote)
+                {
+                    verifying_key
+                } else {
+                    warn!("no remote identity");
+                    return;
+                };
+                if let Ok(verified) = vote_generic.verify(verifying_key) {
                     self.submit.stateful(move |replica| {
                         if verified.view_number == replica.current_view {
                             replica.on_receive_vote(verified);
@@ -494,7 +505,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             let client_id = request.client_id;
             let request_number = request.request_number;
             self.submit.stateless(move |replica| {
-                let signed = SignedMessage::sign(reply, &replica.signing_key);
+                let signed = SignedMessage::sign(reply, replica.config.signing_key(replica));
                 if let Some(remote) = remote {
                     replica
                         .transport

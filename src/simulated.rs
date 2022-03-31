@@ -24,8 +24,8 @@ use tracing::trace;
 #[cfg(not(doc))]
 use crate::stage_prod::State;
 use crate::{
-    common::SigningKey,
-    facade::{self, Config, Receiver},
+    common::{Config, SigningKey},
+    facade::{self, Receiver},
 };
 
 type Address = String;
@@ -37,7 +37,7 @@ pub struct Transport {
     #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
     recv_table: RecvTable,
-    config: Arc<Config<Self>>,
+    // multicast recv table
     filter_table: FilterTable,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
@@ -56,15 +56,10 @@ impl AsRef<[u8]> for RxBuffer {
 pub struct TxAgent {
     #[cfg(not(doc))]
     tx: UnboundedSender<(Address, Address, Message, bool)>,
-    config: Arc<Config<Transport>>,
 }
 
 impl facade::TxAgent for TxAgent {
     type Transport = Transport;
-
-    fn config(&self) -> &Config<Self::Transport> {
-        &self.config
-    }
 
     fn send_message(
         &self,
@@ -82,12 +77,13 @@ impl facade::TxAgent for TxAgent {
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
+        dest_list: &[<Self::Transport as facade::Transport>::Address],
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
         let mut buffer = [0; 9000];
         let message_length = message(&mut buffer);
         let message = buffer[..message_length as usize].to_vec();
-        for dest in &self.config.replica {
+        for dest in dest_list {
             if dest != source.get_address() {
                 self.tx
                     .send((
@@ -110,7 +106,6 @@ impl facade::Transport for Transport {
     fn tx_agent(&self) -> Self::TxAgent {
         TxAgent {
             tx: self.tx.clone(),
-            config: self.config.clone(),
         }
     }
 
@@ -145,31 +140,41 @@ impl facade::Transport for Transport {
 }
 
 impl Transport {
-    pub fn new(n_replica: usize, n_fault: usize) -> Self {
-        let mut config: Config<Self> = Config {
-            replica: (0..n_replica).map(|i| format!("replica-{}", i)).collect(),
-            group: Vec::new(), // TODO
-            multicast: None,   // TODO
-            f: n_fault,
-            signing_key: Default::default(),
-        };
-        for address in &config.replica {
-            let mut signing_key = [0; 32];
-            signing_key
-                .as_mut_slice()
-                .write(address.as_bytes())
-                .unwrap();
-            config.signing_key.insert(
-                address.clone(),
-                SigningKey::from_bytes(&signing_key).unwrap(),
-            );
+    pub fn config_builder(n_replica: usize, n_fault: usize) -> impl Fn() -> Config<Self> {
+        move || {
+            let replica: Vec<_> = (0..n_replica).map(|i| format!("replica-{}", i)).collect();
+            Config::for_shard(
+                facade::Config {
+                    group: Vec::new(), // TODO
+                    multicast: None,   // TODO
+                    f: n_fault,
+                    signing_key: replica
+                        .iter()
+                        .map(|address| {
+                            let mut signing_key = [0; 32];
+                            signing_key
+                                .as_mut_slice()
+                                .write(address.as_bytes())
+                                .unwrap();
+                            (
+                                address.clone(),
+                                SigningKey::from_bytes(&signing_key).unwrap(),
+                            )
+                        })
+                        .collect(),
+                    replica,
+                },
+                0,
+            )
         }
+    }
+
+    pub fn new(_config: Config<Self>) -> Self {
         let (tx, rx) = unbounded_channel();
         Self {
             rx,
             tx,
             recv_table: HashMap::new(),
-            config: Arc::new(config),
             filter_table: HashMap::new(),
         }
     }

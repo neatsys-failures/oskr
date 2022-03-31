@@ -14,7 +14,8 @@ use tracing::{debug, warn};
 
 use crate::{
     common::{
-        deserialize, generate_id, serialize, ClientId, OpNumber, Opaque, ReplicaId, RequestNumber,
+        deserialize, generate_id, serialize, ClientId, Config, OpNumber, Opaque, ReplicaId,
+        RequestNumber,
     },
     facade::{self, App, AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     stage::{Handle, State, StatefulContext},
@@ -36,6 +37,7 @@ struct ReplyMessage {
 pub struct Client<T: Transport, E> {
     address: T::Address,
     id: ClientId,
+    config: Config<T>,
     transport: T::TxAgent,
     rx: UnboundedReceiver<(T::Address, T::RxBuffer)>,
     _executor: PhantomData<E>,
@@ -50,11 +52,12 @@ impl<T: Transport, E> facade::Receiver<T> for Client<T, E> {
 }
 
 impl<T: Transport, E> Client<T, E> {
-    pub fn register_new(transport: &mut T) -> Self {
+    pub fn register_new(config: Config<T>, transport: &mut T) -> Self {
         let (tx, rx) = unbounded();
         let client = Self {
             address: transport.ephemeral_address(),
             id: generate_id(),
+            config,
             transport: transport.tx_agent(),
             rx,
             request_number: 0,
@@ -83,7 +86,7 @@ where
         };
 
         self.transport
-            .send_message_to_replica(self, 0, serialize(request.clone()));
+            .send_message(self, self.config.replica(0), serialize(request.clone()));
         let mut timeout = Instant::now() + Duration::from_millis(1000);
 
         loop {
@@ -91,7 +94,7 @@ where
                 _ = E::sleep_until(timeout).fuse() => {
                     warn!("resend for request number {}", self.request_number);
                     self.transport
-                        .send_message_to_replica(self, 0, serialize(request.clone()));
+                        .send_message(self, self.config.replica(0), serialize(request.clone()));
                     timeout = Instant::now() + Duration::from_millis(1000);
                 }
                 recv = self.rx.next() => {
@@ -128,13 +131,14 @@ impl<'a, T: Transport> Receiver<T> for StatefulContext<'a, Replica<T>> {
 
 impl<T: Transport> Replica<T> {
     pub fn register_new(
+        config: Config<T>,
         transport: &mut T,
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
     ) -> Handle<Self> {
         assert_eq!(replica_id, 0);
         let replica: Handle<_> = Self {
-            address: transport.tx_agent().config().replica[0].clone(),
+            address: config.replica(0).clone(),
             transport: transport.tx_agent(),
 
             app: Box::new(app),
@@ -194,9 +198,10 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn one_request() {
         *TRACING;
-        let mut transport = Transport::new(1, 0);
-        Replica::register_new(&mut transport, 0, App::default());
-        let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
+        let config = Transport::config_builder(1, 0);
+        let mut transport = Transport::new(config());
+        Replica::register_new(config(), &mut transport, 0, App::default());
+        let mut client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
 
         spawn(async move { transport.deliver_now().await });
         assert_eq!(
@@ -210,9 +215,10 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn multiple_request() {
         *TRACING;
-        let mut transport = Transport::new(1, 0);
-        Replica::register_new(&mut transport, 0, App::default());
-        let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
+        let config = Transport::config_builder(1, 0);
+        let mut transport = Transport::new(config());
+        Replica::register_new(config(), &mut transport, 0, App::default());
+        let mut client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
 
         spawn(async move { transport.deliver_now().await });
         for i in 0..10 {

@@ -208,9 +208,13 @@ pub mod common;
 ///
 /// # Implementation convension
 ///
-/// `Receiver`s provide a `register_new(&mut transport, ...)` function, which
-/// constructs a receiver instance and register it to `transport`. This mimics
-/// the behavior of specpaxos `TransportReceiver` constructor.
+/// `Receiver`s provide a `register_new(config, &mut transport, ...)` function,
+/// which constructs a receiver instance and register it to `transport`. This
+/// mimics the behavior of specpaxos `TransportReceiver` constructor. However,
+/// the conventional argument order is different: besides `config` and
+/// `transport`, for server side receiver the third argument is usually
+/// `replica_id`, and the forth is usually `app`. These arguments are commonly
+/// required by almost all receivers.
 ///
 /// The `Invoke`able receivers should not depend on specific asynchronous
 /// facility. Instead, they should access to asynchronous functionality through

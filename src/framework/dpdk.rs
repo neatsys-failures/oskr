@@ -20,14 +20,13 @@ use crate::{
         rte_eth_macaddr_get, rte_lcore_index, rte_mbuf, rte_mempool, rte_pktmbuf_pool_create,
         rte_socket_id, setup_port, Address, RxBuffer,
     },
-    facade::{self, Config, Receiver},
+    facade::{self, Receiver},
 };
 
 #[derive(Clone)]
 pub struct TxAgent {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
-    config: Arc<Config<Transport>>,
     rr: Arc<RoundRobin>,
 }
 
@@ -71,10 +70,6 @@ unsafe impl Sync for TxAgent {}
 impl facade::TxAgent for TxAgent {
     type Transport = Transport;
 
-    fn config(&self) -> &Config<Self::Transport> {
-        &self.config
-    }
-
     fn send_message(
         &self,
         source: &impl Receiver<Self::Transport>,
@@ -99,11 +94,10 @@ impl facade::TxAgent for TxAgent {
     fn send_message_to_all(
         &self,
         source: &impl Receiver<Self::Transport>,
+        dest_list: &[<Self::Transport as facade::Transport>::Address],
         message: impl FnOnce(&mut [u8]) -> u16,
     ) {
-        let dest_list: Vec<_> = self
-            .config
-            .replica
+        let dest_list: Vec<_> = dest_list
             .iter()
             .filter(|dest| *dest != source.get_address())
             .collect();
@@ -165,8 +159,8 @@ impl facade::TxAgent for TxAgent {
 pub struct Transport {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
-    config: Arc<Config<Self>>,
     recv_table: RecvTable,
+    // multicast recv table
     rr: Arc<RoundRobin>,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
@@ -182,7 +176,6 @@ impl facade::Transport for Transport {
         Self::TxAgent {
             mbuf_pool: self.mbuf_pool,
             port_id: self.port_id,
-            config: self.config.clone(),
             rr: self.rr.clone(),
         }
     }
@@ -225,13 +218,7 @@ impl facade::Transport for Transport {
 }
 
 impl Transport {
-    pub fn setup(
-        config: Config<Self>,
-        core_mask: u128,
-        port_id: u16,
-        n_rx: u16,
-        n_tx: u16,
-    ) -> Self {
+    pub fn setup(core_mask: u128, port_id: u16, n_rx: u16, n_tx: u16) -> Self {
         let args = [
             env::args().next().unwrap(),
             "-c".to_string(),
@@ -271,7 +258,6 @@ impl Transport {
             Self {
                 port_id,
                 mbuf_pool,
-                config: Arc::new(config),
                 recv_table: HashMap::new(),
                 rr: Arc::new(RoundRobin::new(n_tx as u32)),
             }

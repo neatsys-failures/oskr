@@ -12,12 +12,13 @@ use super::{Client, Replica};
 #[tokio::test(start_paused = true)]
 async fn single_request() {
     *TRACING;
-    let mut transport = Transport::new(4, 1);
+    let config = Transport::config_builder(4, 1);
+    let mut transport = Transport::new(config());
 
     for i in 0..4 {
-        Replica::register_new(&mut transport, i, App::default(), 1, true);
+        Replica::register_new(config(), &mut transport, i, App::default(), 1, true);
     }
-    let mut client: Client<_, AsyncEcosystem> = Client::register_new(&mut transport);
+    let mut client: Client<_, AsyncEcosystem> = Client::register_new(config(), &mut transport);
 
     let (stop_tx, stop) = oneshot::channel();
     spawn(async move { transport.deliver_until(stop).await });

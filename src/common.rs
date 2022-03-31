@@ -12,6 +12,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use tracing::debug;
 
 pub mod config;
+pub use config::Config;
 pub mod signed;
 pub use signed::{SignedMessage, SigningKey, VerifyingKey};
 
