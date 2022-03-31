@@ -38,6 +38,7 @@ fn main() {
     #[allow(clippy::upper_case_acronyms)]
     enum Mode {
         Unreplicated,
+        UnreplicatedSigned,
         PBFT,
         HotStuff,
     }
@@ -214,6 +215,19 @@ fn main() {
                 unreplicated::Client::<_, AsyncEcosystem>::register_new(
                     config.clone(),
                     &mut transport,
+                    false,
+                )
+            },
+            args,
+            status.clone(),
+            latency.local(),
+        ),
+        Mode::UnreplicatedSigned => WorkerData::launch(
+            || {
+                unreplicated::Client::<_, AsyncEcosystem>::register_new(
+                    config.clone(),
+                    &mut transport,
+                    true,
                 )
             },
             args,

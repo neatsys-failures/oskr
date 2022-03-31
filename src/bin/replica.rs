@@ -36,6 +36,7 @@ fn main() {
     #[allow(clippy::upper_case_acronyms)]
     enum Mode {
         Unreplicated,
+        UnreplicatedSigned,
         PBFT,
         HotStuff,
     }
@@ -138,7 +139,24 @@ fn main() {
 
     let unpark = match args.mode {
         Mode::Unreplicated => WorkerData::launch(
-            unreplicated::Replica::register_new(config, &mut transport, args.replica_id, NullApp),
+            unreplicated::Replica::register_new(
+                config,
+                &mut transport,
+                args.replica_id,
+                NullApp,
+                false,
+            ),
+            args,
+            shutdown.clone(),
+        ),
+        Mode::UnreplicatedSigned => WorkerData::launch(
+            unreplicated::Replica::register_new(
+                config,
+                &mut transport,
+                args.replica_id,
+                NullApp,
+                true,
+            ),
             args,
             shutdown.clone(),
         ),
