@@ -12,9 +12,9 @@ use std::{
 
 use clap::{ArgEnum, Parser};
 use oskr::{
-    common::{panic_abort, Opaque, ReplicaId},
+    common::{panic_abort, Config, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
-    facade::{App, Config},
+    facade::{self, App},
     framework::dpdk::Transport,
     protocol::{hotstuff, pbft, unreplicated},
     stage::{Handle, State},
@@ -69,7 +69,7 @@ fn main() {
 
     let prefix = args.config.file_name().unwrap().to_str().unwrap();
     let config = args.config.with_file_name(format!("{}.config", prefix));
-    let mut config: Config<_> = {
+    let mut config: facade::Config<_> = {
         let mut buf = String::new();
         File::open(config)
             .unwrap()
@@ -78,6 +78,7 @@ fn main() {
         buf.parse().unwrap()
     };
     config.collect_signing_key(&args.config);
+    let config = Config::for_shard(config, 0); // TODO
 
     let shutdown = Arc::new(AtomicBool::new(false));
     ctrlc::set_handler({
@@ -94,7 +95,7 @@ fn main() {
     })
     .unwrap();
 
-    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_tx);
+    let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
@@ -137,12 +138,13 @@ fn main() {
 
     let unpark = match args.mode {
         Mode::Unreplicated => WorkerData::launch(
-            unreplicated::Replica::register_new(&mut transport, args.replica_id, NullApp),
+            unreplicated::Replica::register_new(config, &mut transport, args.replica_id, NullApp),
             args,
             shutdown.clone(),
         ),
         Mode::PBFT => WorkerData::launch(
             pbft::Replica::register_new(
+                config,
                 &mut transport,
                 args.replica_id,
                 NullApp,
@@ -154,6 +156,7 @@ fn main() {
         ),
         Mode::HotStuff => WorkerData::launch(
             hotstuff::Replica::register_new(
+                config,
                 &mut transport,
                 args.replica_id,
                 NullApp,

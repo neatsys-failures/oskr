@@ -47,7 +47,7 @@ Prerequisites on Ubuntu:
     The compiled executables are dynamically linked to rte shared objects, so if 
     you transfer executables to a remote machine to run, make sure `target/dpdk` 
     exists in remote working directory.
-5.  Create deploy configuration. Create description file `deploy/minimal.config`,
+5.  Create deploy configuration. Create description file `deploy/quad.config`,
     write the following lines:
     ```
     f 1
@@ -62,18 +62,18 @@ Prerequisites on Ubuntu:
     multicast line is optional for running PBFT.
 6.  Create signing key files. Generate signing key file for replica 0 with:
     ```
-    openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/minimal-0.pem
+    openssl ecparam -genkey -noout -name secp256k1 | openssl pkcs8 -topk8 -nocrypt -out deploy/quad-0.pem
     ```
-    Run the command three more times to generate `deploy/minimal-{1,2,3}.pem`.
+    Run the command three more times to generate `deploy/quad-{1,2,3}.pem`.
 7.  Start replica 0 with:
     ```
-    sudo ./target/release/replica -m pbft -c deploy/minimal -i 0
+    sudo ./target/release/replica -m pbft -c deploy/quad -i 0
     ```
     Then start replica 1, 2 and 3 with corresponding `-i` option on the servers
     assigned to them.
 8.  Start client with:
     ```
-    sudo ./target/release/client -m pbft -c deploy/minimal
+    sudo ./target/release/client -m pbft -c deploy/quad
     ```
     You may use `-t` to spawn multiple clients that send concurrent requests, or
     use `-d` to extend sending duration.

@@ -18,9 +18,9 @@ use clap::{ArgEnum, Parser};
 use futures::{channel::oneshot, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::SyncHistogram;
 use oskr::{
-    common::{panic_abort, Opaque},
+    common::{panic_abort, Config, Opaque},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
-    facade::{AsyncEcosystem as _, Config, Invoke, Receiver},
+    facade::{self, AsyncEcosystem as _, Invoke, Receiver},
     framework::{
         busy_poll::AsyncEcosystem,
         dpdk::Transport,
@@ -71,7 +71,7 @@ fn main() {
 
     let prefix = args.config.file_name().unwrap().to_str().unwrap();
     let config = args.config.with_file_name(format!("{}.config", prefix));
-    let mut config: Config<_> = {
+    let mut config: facade::Config<_> = {
         let mut buf = String::new();
         File::open(config)
             .unwrap()
@@ -80,8 +80,9 @@ fn main() {
         buf.parse().unwrap()
     };
     config.collect_signing_key(&args.config);
+    let config = Config::for_shard(config, 0); // TODO
 
-    let mut transport = Transport::setup(config, core_mask, args.port_id, 1, args.n_tx);
+    let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum Status {
@@ -209,19 +210,24 @@ fn main() {
     let mut latency = Latency::new("latency");
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
-            || unreplicated::Client::<_, AsyncEcosystem>::register_new(&mut transport),
+            || {
+                unreplicated::Client::<_, AsyncEcosystem>::register_new(
+                    config.clone(),
+                    &mut transport,
+                )
+            },
             args,
             status.clone(),
             latency.local(),
         ),
         Mode::PBFT => WorkerData::launch(
-            || pbft::Client::<_, AsyncEcosystem>::register_new(&mut transport),
+            || pbft::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.local(),
         ),
         Mode::HotStuff => WorkerData::launch(
-            || hotstuff::Client::<_, AsyncEcosystem>::register_new(&mut transport),
+            || hotstuff::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.local(),
