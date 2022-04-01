@@ -491,7 +491,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             if self.is_primary()
                 && self.adaptive_batching
                 && prepare.op_number == self.op_number
-                && self.batch.len() > 0
+                && !self.batch.is_empty()
             {
                 self.close_batch();
             }
