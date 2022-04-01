@@ -17,6 +17,22 @@ use crate::{
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
+// notes on data structure
+// since PBFT clearly models after Viewstamped Replication, I think it's better
+// to use linear log and quorum set table instead of tree-like one
+// for BFT requirement, following PBFT paper we mostly rely on "first sight"
+// pre-prepare: prepare and commit messages are not considered unless they have
+// matching digest to pre-prepare message. This policy, along with the fact that
+// we only consider matching-view messages, and we are using op number as data
+// structures key, is how we implement PBFT's "matching" definition, i.e. same
+// view number, op number and digest.
+// the caveat the comes from this implementation way: we need extra care during
+// view change. we should flush log in VR fashion, and we should flush committed
+// quorum as well. Another problem is the implementation cannot tolerance
+// prepare before pre-prepare and commit before pre-prepare out of order case
+// (while it still can handle out of order between pre-prepare messages). I
+// assume it is rare for that to happen on a up-to-date replica.
+
 pub struct Replica<T: Transport> {
     address: T::Address,
     config: Config<T>,
@@ -33,9 +49,7 @@ pub struct Replica<T: Transport> {
     log: Vec<LogItem>,
     reorder_log: HashMap<OpNumber, LogItem>,
     batch: Vec<message::Request>,
-
-    prepare_quorum: HashMap<QuorumKey, HashMap<ReplicaId, SignedMessage<message::Prepare>>>,
-    commit_quorum: HashMap<QuorumKey, HashSet<ReplicaId>>,
+    commit_quorum: HashMap<OpNumber, HashSet<ReplicaId>>,
 
     app: Box<dyn App + Send>,
     pub(super) route_table: HashMap<ClientId, T::Address>,
@@ -44,9 +58,12 @@ pub struct Replica<T: Transport> {
 }
 
 struct LogItem {
-    quorum_key: QuorumKey,
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    digest: Digest,
     batch: Vec<message::Request>,
     pre_prepare: SignedMessage<message::PrePrepare>,
+    prepare_quorum: HashMap<ReplicaId, SignedMessage<message::Prepare>>,
     committed: bool,
 }
 
@@ -86,34 +103,21 @@ impl<T: Transport> Replica<T> {
 
     // view number is decided by pre-prepare
     fn prepared(&self, op_number: OpNumber) -> bool {
-        let quorum_key = if let Some(item) = self.log_item(op_number) {
-            &item.quorum_key
+        if let Some(item) = self.log_item(op_number) {
+            &item.prepare_quorum
         } else {
             return false;
-        };
-        if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.config.f * 2
-        } else {
-            false
         }
+        .len()
+            >= self.config.f * 2
     }
 
     // committed-local, actually
     #[allow(clippy::int_plus_one)] // I want to follow PBFT paper, preceisely
     fn committed(&self, op_number: OpNumber) -> bool {
         // a little bit duplicated, but I accept that
-        let quorum_key = if let Some(item) = self.log_item(op_number) {
-            &item.quorum_key
-        } else {
-            return false;
-        };
-        let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.config.f * 2
-        } else {
-            false
-        };
-        prepared
-            && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
+        self.prepared(op_number)
+            && if let Some(commit_quorum) = self.commit_quorum.get(&op_number) {
                 commit_quorum.len() >= self.config.f * 2 + 1
             } else {
                 false
@@ -169,7 +173,6 @@ impl<T: Transport> Replica<T> {
             log: Vec::new(),
             reorder_log: HashMap::new(),
             batch: Vec::new(),
-            prepare_quorum: HashMap::new(),
             commit_quorum: HashMap::new(),
             app: Box::new(app),
             route_table: HashMap::new(),
@@ -324,17 +327,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             digest: Default::default(),
         };
 
+        let view_number = self.view_number;
+        let op_number = self.op_number;
         self.submit.stateless(move |replica| {
             let mut batch_buffer = Vec::new();
             serialize(batch.clone())(&mut batch_buffer);
             let digest = Sha256::digest(&batch_buffer).into();
             pre_prepare.digest = digest;
-            let quorum_key = QuorumKey {
-                view_number: pre_prepare.view_number,
-                op_number: pre_prepare.op_number,
-                digest,
-            };
-
             let pre_prepare = SignedMessage::sign(pre_prepare, replica.config.signing_key(replica));
             replica
                 .transport
@@ -347,15 +346,18 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 });
 
             replica.submit.stateful(move |replica| {
-                if replica.view_number != quorum_key.view_number {
+                if replica.view_number != view_number {
                     info!("discard log item from another view");
                     return;
                 }
 
                 replica.insert_log_item(LogItem {
-                    quorum_key,
+                    view_number,
+                    op_number,
+                    digest,
                     batch,
                     pre_prepare,
+                    prepare_quorum: HashMap::new(),
                     committed: false,
                 });
             });
@@ -363,8 +365,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     }
 
     fn insert_log_item(&mut self, item: LogItem) {
-        assert_eq!(item.quorum_key.view_number, self.view_number);
-
         for request in &item.batch {
             if self
                 .client_table
@@ -376,9 +376,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                     .insert(request.client_id, (request.request_number, None));
             }
         }
-
-        if item.quorum_key.op_number != self.log.len() as OpNumber + 1 {
-            self.reorder_log.insert(item.quorum_key.op_number, item);
+        if item.op_number != self.log.len() as OpNumber + 1 {
+            warn!(
+                "out of order log item: {} (expect {})",
+                item.op_number,
+                self.log.len() as OpNumber + 1
+            );
+            self.reorder_log.insert(item.op_number, item);
         } else {
             self.log.push(item);
             let mut insert_number = self.log.len() as OpNumber + 1;
@@ -411,15 +415,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
-        let quorum_key = QuorumKey {
+        self.insert_log_item(LogItem {
             view_number: message.view_number,
             op_number: message.op_number,
             digest: message.digest,
-        };
-        self.insert_log_item(LogItem {
-            quorum_key,
             batch,
             pre_prepare: message.signed_message().clone(),
+            prepare_quorum: HashMap::new(),
             committed: false,
         });
 
@@ -462,6 +464,18 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
+        let item = if let Some(item) = self.log_item(message.op_number) {
+            item
+        } else {
+            warn!("no log item match prepare");
+            // state transfer?
+            return;
+        };
+
+        if message.digest != item.digest {
+            return;
+        }
+
         if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());
         } else {
@@ -474,14 +488,9 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         prepare: &message::Prepare,
         signed_message: &SignedMessage<message::Prepare>,
     ) {
-        let quorum_key = QuorumKey {
-            view_number: prepare.view_number,
-            op_number: prepare.op_number,
-            digest: prepare.digest,
-        };
-        self.prepare_quorum
-            .entry(quorum_key)
-            .or_default()
+        self.log_item_mut(prepare.op_number)
+            .unwrap()
+            .prepare_quorum
             .insert(prepare.replica_id, signed_message.clone());
 
         if self.prepared(prepare.op_number) {
@@ -533,20 +542,26 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
+        let item = if let Some(item) = self.log_item(message.op_number) {
+            item
+        } else {
+            warn!("no log item match commit");
+            // TODO state transfer
+            return;
+        };
+
+        if message.digest != item.digest {
+            return;
+        }
+
         if !self.committed(message.op_number) {
             self.insert_commit(&*message);
         }
     }
 
     fn insert_commit(&mut self, commit: &message::Commit) {
-        let quorum_key = QuorumKey {
-            view_number: commit.view_number,
-            op_number: commit.op_number,
-            digest: commit.digest,
-        };
-
         self.commit_quorum
-            .entry(quorum_key)
+            .entry(commit.op_number)
             .or_default()
             .insert(commit.replica_id);
 
@@ -560,12 +575,12 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
     fn execute_committed(&mut self) {
         while let Some(item) = self.log.get(self.commit_number as usize) {
-            assert_eq!(item.quorum_key.op_number, self.commit_number + 1);
+            assert_eq!(item.op_number, self.commit_number + 1);
             if !item.committed {
                 break;
             }
 
-            let op_number = item.quorum_key.op_number;
+            let op_number = item.op_number;
             // why have to clone?
             for (i, request) in item.batch.clone().into_iter().enumerate() {
                 let op_number = op_number * self.batch_size as OpNumber + i as OpNumber;
