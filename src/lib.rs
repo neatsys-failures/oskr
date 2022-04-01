@@ -309,6 +309,7 @@ pub mod protocol {
     pub mod hotstuff;
     pub mod pbft;
     pub mod unreplicated;
+    pub mod zyzzyva;
 }
 
 /// Application implementations.

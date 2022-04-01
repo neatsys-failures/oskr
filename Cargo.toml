@@ -4,6 +4,9 @@ description = "High performance distributed protocols collection"
 version = "1.0.0-rc.4"
 edition = "2021"
 license = "AGPL-3.0-or-later"
+documentation = "https://docs.rs/oskr"
+homepage = "https://docs.rs/crate/oskr"
+repository = "https://github.com/sgdxbc/oskr"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
