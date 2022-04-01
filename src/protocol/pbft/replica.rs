@@ -28,10 +28,18 @@ use crate::{
 // view number, op number and digest.
 // the caveat the comes from this implementation way: we need extra care during
 // view change. we should flush log in VR fashion, and we should flush committed
-// quorum as well. Another problem is the implementation cannot tolerance
-// prepare before pre-prepare and commit before pre-prepare out of order case
-// (while it still can handle out of order between pre-prepare messages). I
-// assume it is rare for that to happen on a up-to-date replica.
+// quorum as well. Another problem is when prepare before pre-prepare and commit
+// before pre-prepare out of order case happens, we don't have a accepted digest
+// to match against. My solution is to create reordered buffers for each kind
+// of message. According to logging, with proper rate control (described below),
+// the out of order happens rarely.
+// in PBFT paper, it is mentioned that the number of "messages in progress"
+// should not exceed a given maximum, and the maximum is not specified. I choose
+// the maximum based on runtime concurrency, i.e. how many messages a server can
+// process concurrently. The value is estimated, and is tuned a little bit more
+// optimitic to get best performance (without increasing out of order message).
+// Finally, these reorder buffers must be cleared on view change as well
+// obivously.
 
 pub struct Replica<T: Transport> {
     address: T::Address,
@@ -47,9 +55,12 @@ pub struct Replica<T: Transport> {
 
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     log: Vec<LogItem>,
-    reorder_log: HashMap<OpNumber, LogItem>,
-    batch: Vec<message::Request>,
+    request_buffer: Vec<message::Request>,
     commit_quorum: HashMap<OpNumber, HashSet<ReplicaId>>,
+
+    reorder_log: HashMap<OpNumber, LogItem>,
+    reorder_prepare: HashMap<OpNumber, Vec<VerifiedMessage<message::Prepare>>>,
+    reorder_commit: HashMap<OpNumber, Vec<VerifiedMessage<message::Commit>>>,
 
     app: Box<dyn App + Send>,
     pub(super) route_table: HashMap<ClientId, T::Address>,
@@ -171,9 +182,11 @@ impl<T: Transport> Replica<T> {
             commit_number: 0,
             client_table: HashMap::new(),
             log: Vec::new(),
-            reorder_log: HashMap::new(),
-            batch: Vec::new(),
+            request_buffer: Vec::new(),
             commit_quorum: HashMap::new(),
+            reorder_log: HashMap::new(),
+            reorder_prepare: HashMap::new(),
+            reorder_commit: HashMap::new(),
             app: Box::new(app),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -304,21 +317,33 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
-        self.batch.push(message);
-        if (self.batch.len() == self.batch_size)
-            || (self.adaptive_batching && (self.op_number == 0 || self.prepared(self.op_number)))
-        {
-            self.close_batch();
+        self.request_buffer.push(message);
+
+        // one in state and one in stage
+        // notice this assume all servers set up the same number of workers as
+        // leader
+        let estimated_available_concurrency = Arc::strong_count(&self.shared) - 2;
+        // each on-the-fly op number takes n concurrency to sign/verify
+        // pre-prepare/prepare, and n concurrency to sign/verify commit
+        let op_concurrency = self.config.replica(..).len() * 2;
+        let estimated_allocated_concurrency =
+            (self.op_number - self.commit_number) as usize * op_concurrency;
+
+        // we give extra concurrency for one op, for the potential pipelining
+        // feature of the system, and the fact that sometimes op commits out of
+        // order
+        if estimated_allocated_concurrency < estimated_available_concurrency + op_concurrency {
+            if self.request_buffer.len() >= self.batch_size || self.adaptive_batching {
+                self.close_batch();
+            }
         }
     }
 
     fn close_batch(&mut self) {
         assert!(self.is_primary());
-        if self.batch_size == 0 {
-            return;
-        }
 
-        let batch: Vec<_> = self.batch.drain(..).collect();
+        let batch = ..self.batch_size.min(self.request_buffer.len());
+        let batch: Vec<_> = self.request_buffer.drain(batch).collect();
 
         self.op_number += 1;
         let mut pre_prepare = message::PrePrepare {
@@ -376,19 +401,45 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                     .insert(request.client_id, (request.request_number, None));
             }
         }
-        if item.op_number != self.log.len() as OpNumber + 1 {
-            warn!(
+
+        let digest = item.digest;
+        let op_number = item.op_number;
+        if op_number != self.log.len() as OpNumber + 1 {
+            info!(
                 "out of order log item: {} (expect {})",
                 item.op_number,
                 self.log.len() as OpNumber + 1
             );
-            self.reorder_log.insert(item.op_number, item);
+            self.reorder_log.insert(op_number, item);
         } else {
             self.log.push(item);
             let mut insert_number = self.log.len() as OpNumber + 1;
             while let Some(item) = self.reorder_log.remove(&insert_number) {
                 self.log.push(item);
                 insert_number += 1;
+            }
+        }
+
+        if let Some(mut prepare_list) = self.reorder_prepare.remove(&op_number) {
+            while !self.prepared(op_number) {
+                if let Some(prepare) = prepare_list.pop() {
+                    if prepare.digest == digest {
+                        self.insert_prepare(&*prepare, prepare.signed_message());
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+        if let Some(mut commit_list) = self.reorder_commit.remove(&op_number) {
+            while !self.committed(op_number) {
+                if let Some(commit) = commit_list.pop() {
+                    if commit.digest == digest {
+                        self.insert_commit(&*commit);
+                    }
+                } else {
+                    break;
+                }
             }
         }
     }
@@ -467,8 +518,11 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         let item = if let Some(item) = self.log_item(message.op_number) {
             item
         } else {
-            warn!("no log item match prepare");
-            // state transfer?
+            info!("no log item match prepare {}", message.op_number);
+            self.reorder_prepare
+                .entry(message.op_number)
+                .or_default()
+                .push(message);
             return;
         };
 
@@ -478,8 +532,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
         if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());
-        } else {
-            // send commit for late prepare?
         }
     }
 
@@ -496,14 +548,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         if self.prepared(prepare.op_number) {
             debug!("prepared");
             self.send_commit(prepare.op_number, prepare.digest);
-
-            if self.is_primary()
-                && self.adaptive_batching
-                && prepare.op_number == self.op_number
-                && !self.batch.is_empty()
-            {
-                self.close_batch();
-            }
         }
     }
 
@@ -545,8 +589,11 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         let item = if let Some(item) = self.log_item(message.op_number) {
             item
         } else {
-            warn!("no log item match commit");
-            // TODO state transfer
+            info!("no log item match commit {}", message.op_number);
+            self.reorder_commit
+                .entry(message.op_number)
+                .or_default()
+                .push(message);
             return;
         };
 
@@ -570,6 +617,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
             self.log_item_mut(commit.op_number).unwrap().committed = true;
             self.execute_committed();
+
+            if self.is_primary() {
+                if self.request_buffer.len() >= self.batch_size
+                    || (self.adaptive_batching && !self.request_buffer.is_empty())
+                {
+                    self.close_batch();
+                }
+            }
         }
     }
 
