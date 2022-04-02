@@ -1,15 +1,13 @@
-//! High performance distributed protocols collection.
-//!
-//! The detail implementation of various protocols and applications are mostly
-//! undocumented, refer to original work for them.
-//!
 //! The document here mainly for:
-//! * Instruction on how to implement protocols on top of provided runtime.
-//!   Check [`protocol::unreplicated`] module for a beginner example.
+//! * Instruction on how to implement protocols on top of the framework. Check
+//!   [`protocol::unreplicated`] module for a beginner example.
 //! * Instruction on how to evaluate with this codebase. Check provided binaries
 //!   for reference.
 //! * Record some explanation of design choice, help me think consistently over
 //!   long develop period.
+//!
+//! The detail implementation of various protocols and applications are mostly
+//! undocumented, refer to original work for them.
 //!
 //! # Stability
 //!
@@ -21,7 +19,7 @@
 //! codebase, i.e. everything in [`facade`] module remains the same forever. The
 //! future work should be:
 //! * Add more protocols and applications implementation and evaluate them.
-//! * Add more runtime facilities, e.g. kernel network stack, if necessary.
+//! * Add more framework components, e.g. kernel network stack, if necessary.
 //! * Bump toolchain and dependencies version.
 
 /// Interfaces across top-level modules, and to outside.
@@ -180,19 +178,19 @@ pub mod simulated;
 /// // sort list of u32 and merge it into state (only work for once)
 /// // invariant: state vec is always sorted
 /// struct SortingState(Vec<u32>);
-/// 
+///
 /// impl State for SortingState {
 ///     type Shared = (); // nothing need to be shared here
 ///     fn shared(&self) -> Self::Shared {}
 /// }
-/// 
+///
 /// // these are free functions because document code example locate outside
 /// // crate. normally they could be `StatelessContext<SortingState>`'s methods
 /// fn sort(submit: &Submit<SortingState>, list: Vec<u32>, p: usize, completed: Arc<AtomicBool>) {
 ///     let n = list.len();
 ///     submit.stateless(move |shared| sort_internal(&shared.submit, list, p, n, completed));
 /// }
-/// 
+///
 /// fn sort_internal(
 ///     submit: &Submit<SortingState>,
 ///     mut list: Vec<u32>,
@@ -218,7 +216,7 @@ pub mod simulated;
 ///         });
 ///         return;
 ///     }
-/// 
+///
 ///     let mut sample_list: Vec<_> = list
 ///         .choose_multiple(&mut thread_rng(), p - 1)
 ///         .cloned()
@@ -235,7 +233,7 @@ pub mod simulated;
 ///         submit.stateless(move |shared| sort_internal(&shared.submit, list, p, n, completed));
 ///     }
 /// }
-/// 
+///
 /// fn main() {
 ///     let list: Vec<_> = thread_rng()
 ///         .sample_iter(Uniform::new(u32::MIN, u32::MAX))
