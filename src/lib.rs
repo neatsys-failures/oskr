@@ -1,3 +1,5 @@
+#![doc(html_favicon_url = "https://raw.githubusercontent.com/sgdxbc/oskr/blob/dev/logo.svg")]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/sgdxbc/oskr/blob/dev/logo.svg")]
 //! The document here mainly for:
 //! * Instruction on how to implement protocols on top of the framework. Check
 //!   [`protocol::unreplicated`] module for a beginner example.

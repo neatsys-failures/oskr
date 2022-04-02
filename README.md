@@ -1,3 +1,5 @@
+<img src="./logo-banner.svg" height=100>
+
 ## High Performance Distributed Works Collection
 ![Crates.io](https://img.shields.io/crates/v/oskr)
 ![Crates.io](https://img.shields.io/crates/l/oskr)
@@ -17,7 +19,7 @@ the box, as a solution for the first approach.
 To keep fairness and as simple as possible, the codebase intentionally avoids
 too specific optimizations in framework. For example all dependencies are either
 standard library or standard community choice. This is a codebase with a high
-performance architecture and abstraction, with a straightforward reference
+performance architecture and abstraction, and a straightforward reference
 implementation to it.
 
 [specpaxos]: https://github.com/UWSysLab/specpaxos
@@ -26,7 +28,8 @@ implementation to it.
 because the core of this project is based on a specialized actor model.
 
 It is also a shorthand for Overengineered System from Kent Ridge (more 
-precisely, 117418 Singapore).
+precisely, 117418 Singapore), and **o**range **s**a**k**u**r**a which is
+project's logo.
 
 **Benchmark result.** Detailed explaination work in progress.
 
