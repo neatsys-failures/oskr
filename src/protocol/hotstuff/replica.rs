@@ -484,7 +484,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     }
 
     fn execute(&mut self, block: &Digest) {
-        for request in self[block].command.clone() {
+        for (i, request) in self[block].command.clone().into_iter().enumerate() {
             if let Some((request_number, reply)) = self.client_table.get(&request.client_id) {
                 if *request_number > request.request_number
                     || (*request_number == request.request_number && reply.is_some())
@@ -494,7 +494,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
 
             debug!("execute");
-            let result = self.app.execute(request.op.clone());
+            let op_number = self[block].height * self.batch_size as OpNumber + i as OpNumber;
+            let result = self.app.execute(op_number, request.op.clone());
             let reply = message::Reply {
                 request_number: request.request_number,
                 result,

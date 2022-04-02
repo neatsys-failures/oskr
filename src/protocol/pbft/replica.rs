@@ -17,6 +17,30 @@ use crate::{
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
+// notes on data structure
+// since PBFT clearly models after Viewstamped Replication, I think it's better
+// to use linear log and quorum set table instead of tree-like one
+// for BFT requirement, following PBFT paper we mostly rely on "first sight"
+// pre-prepare: prepare and commit messages are not considered unless they have
+// matching digest to pre-prepare message. This policy, along with the fact that
+// we only consider matching-view messages, and we are using op number as data
+// structures key, is how we implement PBFT's "matching" definition, i.e. same
+// view number, op number and digest.
+// the caveat the comes from this implementation way: we need extra care during
+// view change. we should flush log in VR fashion, and we should flush committed
+// quorum as well. Another problem is when prepare before pre-prepare and commit
+// before pre-prepare out of order case happens, we don't have a accepted digest
+// to match against. My solution is to create reordered buffers for each kind
+// of message. According to logging, with proper rate control (described below),
+// the out of order happens rarely.
+// in PBFT paper, it is mentioned that the number of "messages in progress"
+// should not exceed a given maximum, and the maximum is not specified. I choose
+// the maximum based on runtime concurrency, i.e. how many messages a server can
+// process concurrently. The value is estimated, and is tuned a little bit more
+// optimitic to get best performance (without increasing out of order message).
+// Finally, these reorder buffers must be cleared on view change as well
+// obivously.
+
 pub struct Replica<T: Transport> {
     address: T::Address,
     config: Config<T>,
@@ -31,11 +55,12 @@ pub struct Replica<T: Transport> {
 
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     log: Vec<LogItem>,
-    reorder_log: HashMap<OpNumber, LogItem>,
-    batch: Vec<message::Request>,
+    request_buffer: Vec<message::Request>,
+    commit_quorum: HashMap<OpNumber, HashSet<ReplicaId>>,
 
-    prepare_quorum: HashMap<QuorumKey, HashMap<ReplicaId, SignedMessage<message::Prepare>>>,
-    commit_quorum: HashMap<QuorumKey, HashSet<ReplicaId>>,
+    reorder_log: HashMap<OpNumber, LogItem>,
+    reorder_prepare: HashMap<OpNumber, Vec<VerifiedMessage<message::Prepare>>>,
+    reorder_commit: HashMap<OpNumber, Vec<VerifiedMessage<message::Commit>>>,
 
     app: Box<dyn App + Send>,
     pub(super) route_table: HashMap<ClientId, T::Address>,
@@ -44,9 +69,12 @@ pub struct Replica<T: Transport> {
 }
 
 struct LogItem {
-    quorum_key: QuorumKey,
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    digest: Digest,
     batch: Vec<message::Request>,
     pre_prepare: SignedMessage<message::PrePrepare>,
+    prepare_quorum: HashMap<ReplicaId, SignedMessage<message::Prepare>>,
     committed: bool,
 }
 
@@ -86,34 +114,21 @@ impl<T: Transport> Replica<T> {
 
     // view number is decided by pre-prepare
     fn prepared(&self, op_number: OpNumber) -> bool {
-        let quorum_key = if let Some(item) = self.log_item(op_number) {
-            &item.quorum_key
+        if let Some(item) = self.log_item(op_number) {
+            &item.prepare_quorum
         } else {
             return false;
-        };
-        if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.config.f * 2
-        } else {
-            false
         }
+        .len()
+            >= self.config.f * 2
     }
 
     // committed-local, actually
     #[allow(clippy::int_plus_one)] // I want to follow PBFT paper, preceisely
     fn committed(&self, op_number: OpNumber) -> bool {
         // a little bit duplicated, but I accept that
-        let quorum_key = if let Some(item) = self.log_item(op_number) {
-            &item.quorum_key
-        } else {
-            return false;
-        };
-        let prepared = if let Some(prepare_quorum) = self.prepare_quorum.get(quorum_key) {
-            prepare_quorum.len() >= self.config.f * 2
-        } else {
-            false
-        };
-        prepared
-            && if let Some(commit_quorum) = self.commit_quorum.get(quorum_key) {
+        self.prepared(op_number)
+            && if let Some(commit_quorum) = self.commit_quorum.get(&op_number) {
                 commit_quorum.len() >= self.config.f * 2 + 1
             } else {
                 false
@@ -167,10 +182,11 @@ impl<T: Transport> Replica<T> {
             commit_number: 0,
             client_table: HashMap::new(),
             log: Vec::new(),
-            reorder_log: HashMap::new(),
-            batch: Vec::new(),
-            prepare_quorum: HashMap::new(),
+            request_buffer: Vec::new(),
             commit_quorum: HashMap::new(),
+            reorder_log: HashMap::new(),
+            reorder_prepare: HashMap::new(),
+            reorder_commit: HashMap::new(),
             app: Box::new(app),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -301,21 +317,33 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
-        self.batch.push(message);
-        if (self.batch.len() == self.batch_size)
-            || (self.adaptive_batching && (self.op_number == 0 || self.prepared(self.op_number)))
-        {
-            self.close_batch();
+        self.request_buffer.push(message);
+
+        // one in state and one in stage
+        // notice this assume all servers set up the same number of workers as
+        // leader
+        let estimated_available_concurrency = Arc::strong_count(&self.shared) - 2;
+        // each on-the-fly op number takes n concurrency to sign/verify
+        // pre-prepare/prepare, and n concurrency to sign/verify commit
+        let op_concurrency = self.config.replica(..).len() * 2;
+        let estimated_allocated_concurrency =
+            (self.op_number - self.commit_number) as usize * op_concurrency;
+
+        // we give extra concurrency for one op, for the potential pipelining
+        // feature of the system, and the fact that sometimes op commits out of
+        // order
+        if estimated_allocated_concurrency < estimated_available_concurrency + op_concurrency {
+            if self.request_buffer.len() >= self.batch_size || self.adaptive_batching {
+                self.close_batch();
+            }
         }
     }
 
     fn close_batch(&mut self) {
         assert!(self.is_primary());
-        if self.batch_size == 0 {
-            return;
-        }
 
-        let batch: Vec<_> = self.batch.drain(..).collect();
+        let batch = ..self.batch_size.min(self.request_buffer.len());
+        let batch: Vec<_> = self.request_buffer.drain(batch).collect();
 
         self.op_number += 1;
         let mut pre_prepare = message::PrePrepare {
@@ -324,17 +352,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             digest: Default::default(),
         };
 
+        let view_number = self.view_number;
+        let op_number = self.op_number;
         self.submit.stateless(move |replica| {
             let mut batch_buffer = Vec::new();
             serialize(batch.clone())(&mut batch_buffer);
             let digest = Sha256::digest(&batch_buffer).into();
             pre_prepare.digest = digest;
-            let quorum_key = QuorumKey {
-                view_number: pre_prepare.view_number,
-                op_number: pre_prepare.op_number,
-                digest,
-            };
-
             let pre_prepare = SignedMessage::sign(pre_prepare, replica.config.signing_key(replica));
             replica
                 .transport
@@ -347,15 +371,18 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
                 });
 
             replica.submit.stateful(move |replica| {
-                if replica.view_number != quorum_key.view_number {
+                if replica.view_number != view_number {
                     info!("discard log item from another view");
                     return;
                 }
 
                 replica.insert_log_item(LogItem {
-                    quorum_key,
+                    view_number,
+                    op_number,
+                    digest,
                     batch,
                     pre_prepare,
+                    prepare_quorum: HashMap::new(),
                     committed: false,
                 });
             });
@@ -363,8 +390,6 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
     }
 
     fn insert_log_item(&mut self, item: LogItem) {
-        assert_eq!(item.quorum_key.view_number, self.view_number);
-
         for request in &item.batch {
             if self
                 .client_table
@@ -377,14 +402,44 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             }
         }
 
-        if item.quorum_key.op_number != self.log.len() as OpNumber + 1 {
-            self.reorder_log.insert(item.quorum_key.op_number, item);
+        let digest = item.digest;
+        let op_number = item.op_number;
+        if op_number != self.log.len() as OpNumber + 1 {
+            info!(
+                "out of order log item: {} (expect {})",
+                item.op_number,
+                self.log.len() as OpNumber + 1
+            );
+            self.reorder_log.insert(op_number, item);
         } else {
             self.log.push(item);
             let mut insert_number = self.log.len() as OpNumber + 1;
             while let Some(item) = self.reorder_log.remove(&insert_number) {
                 self.log.push(item);
                 insert_number += 1;
+            }
+        }
+
+        if let Some(mut prepare_list) = self.reorder_prepare.remove(&op_number) {
+            while !self.prepared(op_number) {
+                if let Some(prepare) = prepare_list.pop() {
+                    if prepare.digest == digest {
+                        self.insert_prepare(&*prepare, prepare.signed_message());
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+        if let Some(mut commit_list) = self.reorder_commit.remove(&op_number) {
+            while !self.committed(op_number) {
+                if let Some(commit) = commit_list.pop() {
+                    if commit.digest == digest {
+                        self.insert_commit(&*commit);
+                    }
+                } else {
+                    break;
+                }
             }
         }
     }
@@ -411,15 +466,13 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
-        let quorum_key = QuorumKey {
+        self.insert_log_item(LogItem {
             view_number: message.view_number,
             op_number: message.op_number,
             digest: message.digest,
-        };
-        self.insert_log_item(LogItem {
-            quorum_key,
             batch,
             pre_prepare: message.signed_message().clone(),
+            prepare_quorum: HashMap::new(),
             committed: false,
         });
 
@@ -462,10 +515,23 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
+        let item = if let Some(item) = self.log_item(message.op_number) {
+            item
+        } else {
+            info!("no log item match prepare {}", message.op_number);
+            self.reorder_prepare
+                .entry(message.op_number)
+                .or_default()
+                .push(message);
+            return;
+        };
+
+        if message.digest != item.digest {
+            return;
+        }
+
         if !self.prepared(message.op_number) {
             self.insert_prepare(&*message, message.signed_message());
-        } else {
-            // send commit for late prepare?
         }
     }
 
@@ -474,27 +540,14 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         prepare: &message::Prepare,
         signed_message: &SignedMessage<message::Prepare>,
     ) {
-        let quorum_key = QuorumKey {
-            view_number: prepare.view_number,
-            op_number: prepare.op_number,
-            digest: prepare.digest,
-        };
-        self.prepare_quorum
-            .entry(quorum_key)
-            .or_default()
+        self.log_item_mut(prepare.op_number)
+            .unwrap()
+            .prepare_quorum
             .insert(prepare.replica_id, signed_message.clone());
 
         if self.prepared(prepare.op_number) {
             debug!("prepared");
             self.send_commit(prepare.op_number, prepare.digest);
-
-            if self.is_primary()
-                && self.adaptive_batching
-                && prepare.op_number == self.op_number
-                && self.batch.len() > 0
-            {
-                self.close_batch();
-            }
         }
     }
 
@@ -533,20 +586,29 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
             return;
         }
 
+        let item = if let Some(item) = self.log_item(message.op_number) {
+            item
+        } else {
+            info!("no log item match commit {}", message.op_number);
+            self.reorder_commit
+                .entry(message.op_number)
+                .or_default()
+                .push(message);
+            return;
+        };
+
+        if message.digest != item.digest {
+            return;
+        }
+
         if !self.committed(message.op_number) {
             self.insert_commit(&*message);
         }
     }
 
     fn insert_commit(&mut self, commit: &message::Commit) {
-        let quorum_key = QuorumKey {
-            view_number: commit.view_number,
-            op_number: commit.op_number,
-            digest: commit.digest,
-        };
-
         self.commit_quorum
-            .entry(quorum_key)
+            .entry(commit.op_number)
             .or_default()
             .insert(commit.replica_id);
 
@@ -555,19 +617,29 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
             self.log_item_mut(commit.op_number).unwrap().committed = true;
             self.execute_committed();
+
+            if self.is_primary() {
+                if self.request_buffer.len() >= self.batch_size
+                    || (self.adaptive_batching && !self.request_buffer.is_empty())
+                {
+                    self.close_batch();
+                }
+            }
         }
     }
 
     fn execute_committed(&mut self) {
         while let Some(item) = self.log.get(self.commit_number as usize) {
-            assert_eq!(item.quorum_key.op_number, self.commit_number + 1);
+            assert_eq!(item.op_number, self.commit_number + 1);
             if !item.committed {
                 break;
             }
 
+            let op_number = item.op_number;
             // why have to clone?
-            for request in item.batch.clone() {
-                let result = self.app.execute(request.op);
+            for (i, request) in item.batch.clone().into_iter().enumerate() {
+                let op_number = op_number * self.batch_size as OpNumber + i as OpNumber;
+                let result = self.app.execute(op_number, request.op);
                 let reply = message::Reply {
                     view_number: self.view_number,
                     request_number: request.request_number,

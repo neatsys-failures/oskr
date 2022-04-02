@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bincode::Options;
 use futures::future::join_all;
-use tokio::{spawn, time::timeout};
+use tokio::{spawn, sync::oneshot, time::timeout};
 
 use crate::{
     app::mock::App,
@@ -70,13 +70,15 @@ async fn one_request() {
     generate_route(&replica, &client);
     let mut client = client.into_iter().next().unwrap();
 
-    spawn(async move { transport.deliver(Duration::from_micros(1)).await });
+    let (stop_tx, stop) = oneshot::channel();
+    spawn(async move { transport.deliver_until(stop).await });
     assert_eq!(
         timeout(Duration::from_micros(1), client.invoke(b"hello".to_vec()))
             .await
             .unwrap(),
         b"reply: hello".to_vec()
     );
+    stop_tx.send(()).unwrap();
 }
 
 #[tokio::test(start_paused = true)]
@@ -104,8 +106,10 @@ async fn multiple_client() {
         })
         .collect();
 
-    spawn(async move { transport.deliver(Duration::from_micros(1)).await });
+    let (stop_tx, stop) = oneshot::channel();
+    spawn(async move { transport.deliver_until(stop).await });
     timeout(Duration::from_micros(1), join_all(client))
         .await
         .unwrap();
+    stop_tx.send(()).unwrap();
 }

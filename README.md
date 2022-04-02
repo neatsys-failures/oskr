@@ -1,4 +1,6 @@
-## High Performance Distributed Protocols Collection
+<img src="./logo-banner.svg" height=100>
+
+## High Performance Distributed Works Collection
 ![Crates.io](https://img.shields.io/crates/v/oskr)
 ![Crates.io](https://img.shields.io/crates/l/oskr)
 ![docs.rs](https://img.shields.io/docsrs/oskr)
@@ -6,26 +8,40 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oskr)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oskr)
 
-**Motivation.** This is an attempt to improve based on [specpaxos]. Notice that
-although the project is titled *high performance*, we don't do obscure 
-optimization on propose, especially all included protocol implementations are 
-canonical. The high performance mainly means that the project provides a stage 
-interface for replicas, so they can efficiently utilize multi-processor system.
+**Motivation.** This is an attempt to improve based on [specpaxos]. 
+Traditionally system work is hard to evaluate and compare, because it takes a
+lot of effort to reimplement all considered works into same comparable model,
+while directly run their original codebases usually cannot give us comparable
+results. Similar to specpaxos this codebase provide a general foundation for
+reimplement and evaluate, with several implementation of popular works out of
+the box, as a solution for the first approach.
+
+To keep fairness and as simple as possible, the codebase intentionally avoids
+too specific optimizations in framework. For example all dependencies are either
+standard library or standard community choice. This is a codebase with a high
+performance architecture and abstraction, and a straightforward reference
+implementation to it.
+
+[specpaxos]: https://github.com/UWSysLab/specpaxos
 
 **Why named Oskr?** The name is derived from the Oscars (Academy Awards), 
 because the core of this project is based on a specialized actor model.
 
-[specpaxos]: https://github.com/UWSysLab/specpaxos
+It is also abbreviation for Overengineered System from Kent Ridge (more 
+precisely, 117418 Singapore), and **o**range **s**a**k**u**r**a which is
+project's logo.
 
 **Benchmark result.** Detailed explaination work in progress.
 
-|Protocol|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
-|---------------|-----------|-----------|-----------|
-|Unreplicated   |-          |2011.256   |10.751     |
-|PBFT           |Adaptive   |129.391    |720.895    |
-|PBFT           |100        |127.851    |-          |
-|HotStuff       |Adaptive   |98.654     |2195.455   |
-|HotStuff       |100        |98.491     |-          |
+|Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
+|-------------------|---|-----------|-----------|-----------|
+|Unreplicated       |1  |-          |2011.256   |10.751     |
+|Unreplicated Signed|1  |-          |11.799     |91.647     |
+|Unreplicated Signed|14 |-          |154.064    |99.327     |
+|PBFT               |14 |Adaptive   |121.200    |716.799    |
+|PBFT               |14 |100        |122.334    |-          |
+|HotStuff           |14 |Adaptive   |98.654     |2195.455   |
+|HotStuff           |14 |100        |98.491     |-          |
 
 ----
 

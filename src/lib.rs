@@ -1,15 +1,15 @@
-//! High performance distributed protocols collection.
-//!
-//! The detail implementation of various protocols and applications are mostly
-//! undocumented, refer to original work for them.
-//!
+#![doc(html_favicon_url = "https://raw.githubusercontent.com/sgdxbc/oskr/dev/logo.svg")]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/sgdxbc/oskr/dev/logo.svg")]
 //! The document here mainly for:
-//! * Instruction on how to implement protocols on top of provided runtime.
-//!   Check [`protocol::unreplicated`] module for a beginner example.
+//! * Instruction on how to implement protocols on top of the framework. Check
+//!   [`protocol::unreplicated`] module for a beginner example.
 //! * Instruction on how to evaluate with this codebase. Check provided binaries
 //!   for reference.
 //! * Record some explanation of design choice, help me think consistently over
 //!   long develop period.
+//!
+//! The detail implementation of various protocols and applications are mostly
+//! undocumented, refer to original work for them.
 //!
 //! # Stability
 //!
@@ -21,7 +21,7 @@
 //! codebase, i.e. everything in [`facade`] module remains the same forever. The
 //! future work should be:
 //! * Add more protocols and applications implementation and evaluate them.
-//! * Add more runtime facilities, e.g. kernel network stack, if necessary.
+//! * Add more framework components, e.g. kernel network stack, if necessary.
 //! * Bump toolchain and dependencies version.
 
 /// Interfaces across top-level modules, and to outside.
@@ -171,9 +171,92 @@ pub mod simulated;
 /// sending replies while executing a batch. As far as I know, callback closure
 /// is still the most nature way to express in such case.
 ///
-/// # Example
+/// # Example: sample sort
 ///
-/// Work in progress.
+/// ```
+/// # use std::{sync::{Arc, atomic::{AtomicBool, Ordering}}, iter::once};
+/// # use oskr::stage::{Handle, Submit, State};
+/// # use rand::{Rng, thread_rng, distributions::Uniform, seq::SliceRandom};
+/// // sort list of u32 and merge it into state (only work for once)
+/// // invariant: state vec is always sorted
+/// struct SortingState(Vec<u32>);
+///
+/// impl State for SortingState {
+///     type Shared = (); // nothing need to be shared here
+///     fn shared(&self) -> Self::Shared {}
+/// }
+///
+/// // these are free functions because document code example locate outside
+/// // crate. normally they could be `StatelessContext<SortingState>`'s methods
+/// fn sort(submit: &Submit<SortingState>, list: Vec<u32>, p: usize, completed: Arc<AtomicBool>) {
+///     let n = list.len();
+///     submit.stateless(move |shared| sort_internal(&shared.submit, list, p, n, completed));
+/// }
+///
+/// fn sort_internal(
+///     submit: &Submit<SortingState>,
+///     mut list: Vec<u32>,
+///     p: usize,
+///     n: usize,
+///     completed: Arc<AtomicBool>,
+/// ) {
+///     if list.is_empty() {
+///         return;
+///     }
+///     // hardcoded small sort threshold for simplicity
+///     if list.len() <= 32 {
+///         list.sort_unstable();
+///         submit.stateful(move |state| {
+///             let position = state
+///                 .0
+///                 .binary_search(list.last().unwrap())
+///                 .unwrap_or_else(|p| p);
+///             state.0.splice(position..position, list);
+///             if state.0.len() == n {
+///                 completed.store(true, Ordering::SeqCst);
+///             }
+///         });
+///         return;
+///     }
+///
+///     let mut sample_list: Vec<_> = list
+///         .choose_multiple(&mut thread_rng(), p - 1)
+///         .cloned()
+///         .collect();
+///     sample_list.sort_unstable();
+///     sample_list.push(u32::MAX);
+///     for (low, high) in once(&u32::MIN).chain(&sample_list).zip(&sample_list) {
+///         let list = list
+///             .iter()
+///             .filter(|n| (low..high).contains(n))
+///             .cloned()
+///             .collect();
+///         let completed = completed.clone();
+///         submit.stateless(move |shared| sort_internal(&shared.submit, list, p, n, completed));
+///     }
+/// }
+///
+/// fn main() {
+///     let list: Vec<_> = thread_rng()
+///         .sample_iter(Uniform::new(u32::MIN, u32::MAX))
+///         .take(1000)
+///         .collect();
+///     let mut expected = list.clone();
+///     expected.sort_unstable();
+///     let state = Handle::from(SortingState(Vec::new()));
+///     let completed = Arc::new(AtomicBool::new(false));
+///     // can be either `with_stateless` or `with_stateful`, we only need to
+///     // access injected `submit` property
+///     state.with_stateless({
+///         let completed = completed.clone();
+///         move |shared| sort(&shared.submit, list, 2, completed)
+///     });
+///     // donate current thread to stage for executing tasks
+///     // you can donate more thread to speed it up
+///     state.run_worker(move || completed.load(Ordering::SeqCst));
+///     state.with_stateful(|state| assert_eq!(state.0, expected));
+/// }
+/// ```
 #[cfg(not(test))]
 pub mod stage;
 #[cfg(test)]
@@ -226,6 +309,7 @@ pub mod protocol {
     pub mod hotstuff;
     pub mod pbft;
     pub mod unreplicated;
+    pub mod zyzzyva;
 }
 
 /// Application implementations.
