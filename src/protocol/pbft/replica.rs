@@ -198,19 +198,16 @@ impl<T: Transport> Replica<T> {
         .into();
 
         replica.with_stateless(|replica| {
+            let config = replica.config.clone();
+            let submit = replica.submit.clone();
             transport.register(replica, {
-                let replica = replica.clone();
                 move |remote, buffer| {
                     // shortcut: if we don't have verifying key for remote, we
                     // cannot do verify so skip stateless task
-                    if replica.config.verifying_key(&remote).is_some() {
-                        replica
-                            .submit
-                            .stateless(move |replica| replica.receive_buffer(remote, buffer));
+                    if config.verifying_key(&remote).is_some() {
+                        submit.stateless(move |replica| replica.receive_buffer(remote, buffer));
                     } else {
-                        replica
-                            .submit
-                            .stateful(move |replica| replica.receive_buffer(remote, buffer));
+                        submit.stateful(move |replica| replica.receive_buffer(remote, buffer));
                     }
                 }
             });
@@ -319,19 +316,19 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
 
         self.request_buffer.push(message);
 
-        // one in state and one in stage
         // notice this assume all servers set up the same number of workers as
         // leader
-        let estimated_available_concurrency = Arc::strong_count(&self.shared) - 2;
+        let estimated_available_concurrency = Arc::strong_count(&self.shared);
         // each on-the-fly op number takes n concurrency to sign/verify
         // pre-prepare/prepare, and n concurrency to sign/verify commit
         let op_concurrency = self.config.replica(..).len() * 2;
         let estimated_allocated_concurrency =
             (self.op_number - self.commit_number) as usize * op_concurrency;
 
-        // we give extra concurrency for one op, for the potential pipelining
-        // feature of the system, and the fact that sometimes op commits out of
-        // order
+        // we give extra concurrency for one op, for
+        // * the potential pipelining feature of the system
+        // * the fact that sometimes op commits out of order
+        // * allow system to move on when available concurrecy is too small
         if estimated_allocated_concurrency < estimated_available_concurrency + op_concurrency {
             if self.request_buffer.len() >= self.batch_size || self.adaptive_batching {
                 self.close_batch();

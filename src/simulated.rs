@@ -279,7 +279,6 @@ mod undoc {
     impl<S: State> From<S> for Handle<S> {
         fn from(state: S) -> Self {
             Self(Submit {
-                shared: state.shared(),
                 state: Arc::new(Mutex::new(state)),
             })
         }
@@ -295,7 +294,7 @@ mod undoc {
 
         pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
             f(&StatelessContext {
-                shared: self.0.shared.clone(),
+                shared: self.0.state.try_lock().unwrap().shared(),
                 submit: self.0.clone(),
             });
         }
@@ -309,15 +308,6 @@ mod undoc {
     pub struct StatelessContext<S: State> {
         shared: S::Shared,
         pub submit: Submit<S>,
-    }
-
-    impl<S: State> Clone for StatelessContext<S> {
-        fn clone(&self) -> Self {
-            Self {
-                shared: self.shared.clone(),
-                submit: self.submit.clone(),
-            }
-        }
     }
 
     impl<'a, S: State> Deref for StatefulContext<'a, S> {
@@ -342,14 +332,12 @@ mod undoc {
 
     pub struct Submit<S: State> {
         state: Arc<Mutex<S>>,
-        shared: S::Shared,
     }
 
     impl<S: State> Clone for Submit<S> {
         fn clone(&self) -> Self {
             Self {
                 state: self.state.clone(),
-                shared: self.shared.clone(),
             }
         }
     }
@@ -378,7 +366,7 @@ mod undoc {
             spawn(async move {
                 task(&StatelessContext {
                     submit: submit.clone(),
-                    shared: submit.shared,
+                    shared: submit.state.lock().await.shared(),
                 });
             });
         }

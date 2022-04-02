@@ -12,13 +12,12 @@ use crossbeam::{
 use crate::framework::latency::Latency;
 
 pub trait State {
-    type Shared: Clone + Send;
+    type Shared;
     fn shared(&self) -> Self::Shared;
 }
 
 pub struct Handle<S: State> {
     state: Mutex<S>,
-    shared: S::Shared,
     submit: Arc<Submit<S>>,
     metric: Metric,
 }
@@ -38,15 +37,6 @@ pub struct StatelessContext<S: State> {
     pub submit: Arc<Submit<S>>,
 }
 
-impl<S: State> Clone for StatelessContext<S> {
-    fn clone(&self) -> Self {
-        Self {
-            shared: self.shared.clone(),
-            submit: self.submit.clone(),
-        }
-    }
-}
-
 pub struct Submit<S: State> {
     stateful_list: SegQueue<StatefulTask<S>>,
     stateless_list: SegQueue<StatelessTask<S>>,
@@ -58,7 +48,6 @@ type StatelessTask<S> = Box<dyn FnOnce(&StatelessContext<S>) + Send>;
 impl<S: State> From<S> for Handle<S> {
     fn from(state: S) -> Self {
         Self {
-            shared: state.shared(),
             state: Mutex::new(state),
             submit: Arc::new(Submit {
                 stateful_list: SegQueue::new(),
@@ -83,7 +72,7 @@ impl<S: State> Handle<S> {
 
     pub fn with_stateless(&self, f: impl FnOnce(&StatelessContext<S>)) {
         f(&StatelessContext {
-            shared: self.shared.clone(),
+            shared: self.state.lock().unwrap().shared(),
             submit: self.submit.clone(),
         })
     }
@@ -157,7 +146,7 @@ impl<S: State> Handle<S> {
 
             if let Some(task) = self.submit.stateless_list.pop() {
                 let context = StatelessContext {
-                    shared: self.shared.clone(),
+                    shared: context.shared(),
                     submit: context.submit,
                 };
                 // state dropped
@@ -195,7 +184,7 @@ impl<S: State> Handle<S> {
 
     pub fn run_worker(&self, mut shutdown: impl FnMut() -> bool) {
         let context = StatelessContext {
-            shared: self.shared.clone(),
+            shared: self.state.lock().unwrap().shared(),
             submit: self.submit.clone(),
         };
 
