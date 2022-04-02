@@ -27,7 +27,7 @@ implementation to it.
 **Why named Oskr?** The name is derived from the Oscars (Academy Awards), 
 because the core of this project is based on a specialized actor model.
 
-It is also a shorthand for Overengineered System from Kent Ridge (more 
+It is also abbreviation for Overengineered System from Kent Ridge (more 
 precisely, 117418 Singapore), and **o**range **s**a**k**u**r**a which is
 project's logo.
 
