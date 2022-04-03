@@ -13,7 +13,8 @@ use tracing::{debug, warn};
 
 use crate::{
     common::{
-        deserialize, generate_id, serialize, ClientId, Config, Opaque, RequestNumber, ViewNumber,
+        deserialize, generate_id, serialize, ClientId, Config, Digest, OpNumber, Opaque, ReplicaId,
+        RequestNumber, SignedMessage, ViewNumber,
     },
     facade::{AsyncEcosystem, Invoke, Receiver, Transport, TxAgent},
     protocol::zyzzyva::message::{self, ToReplica},
@@ -81,33 +82,68 @@ where
             serialize(ToReplica::Request(request.clone())),
         );
 
-        let mut result_table = HashMap::new();
+        struct Response {
+            signed: SignedMessage<message::SpeculativeResponse>,
+            view_number: ViewNumber,
+            op_number: OpNumber,
+            history_digest: Digest,
+            digest: Digest,
+            // client id and request number is compared on the fly so omitted
+            result: Opaque,
+        }
+        let mut response_table = HashMap::new();
         enum Status {
             Committed(Opaque),
-            Certified(()), // TODO
+            Certified(Vec<(ReplicaId, SignedMessage<message::SpeculativeResponse>)>), // TODO
             Other,
         }
         let mut receive_buffer =
             move |client: &mut Self, _remote: T::Address, buffer: T::RxBuffer| {
                 match deserialize(buffer.as_ref()).unwrap() {
-                    ToClient::SpeculativeResponse(response, replica_id, result, order_request) => {
-                        let response = response.assume_verified();
+                    // TODO proof of misbehavior (not really planned actually)
+                    ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
+                        let (response, signed) = (response.assume_verified(), response);
+                        assert_eq!(response.client_id, client.id);
                         if response.request_number != client.request_number {
                             return Status::Other;
                         }
-                        result_table.insert(replica_id, result.clone());
+                        response_table.insert(
+                            replica_id,
+                            Response {
+                                signed,
+                                view_number: response.view_number,
+                                op_number: response.op_number,
+                                history_digest: response.history_digest,
+                                digest: response.digest,
+                                result: result.clone(),
+                            },
+                        );
                         // TODO save order request message
                         if response.view_number > client.view_number {
                             client.view_number = response.view_number;
                         }
-                        let count = result_table
-                            .values()
-                            .filter(|result0| **result0 == result)
-                            .count();
-                        if count == 3 * client.config.f + 1 {
+                        let response0 = response;
+                        let certification: Vec<_> = response_table
+                            .iter()
+                            .filter(|(_, response)| {
+                                response.view_number == response0.view_number
+                                    && response.op_number == response0.op_number
+                                    && response.history_digest == response0.history_digest
+                                    && response.digest == response0.digest
+                                    && response.result == result
+                            })
+                            .collect();
+                        if certification.len() == 3 * client.config.f + 1 {
                             Status::Committed(result)
-                        } else if count >= 2 * client.config.f + 1 {
-                            Status::Certified(()) // TODO
+                        } else if certification.len() >= 2 * client.config.f + 1 {
+                            Status::Certified(
+                                certification
+                                    .into_iter()
+                                    .map(|(replica_id, response)| {
+                                        (*replica_id, response.signed.clone())
+                                    })
+                                    .collect(),
+                            )
                         } else {
                             Status::Other
                         }
@@ -148,7 +184,7 @@ where
             select! {
                 recv = self.rx.next() => {
                     let (remote, buffer) = recv.unwrap();
-                    match (receive_buffer(self, remote, buffer), certification) {
+                    match (receive_buffer(self, remote, buffer), &mut certification) {
                         (Status::Committed(result), _) => return result,
                         (Status::Certified(cert), None) => certification = Some(cert),
                         _ => {}
@@ -163,7 +199,7 @@ where
                 }
                 _ = E::sleep_until(commit_timeout).fuse() => {
                     warn!("commit timeout for request {}", self.request_number);
-                    if let Some(certification) = certification {
+                    if let Some(certification) = &certification {
                         todo!()
                     }
                 }

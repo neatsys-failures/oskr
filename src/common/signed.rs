@@ -112,7 +112,7 @@ impl<M> SignedMessage<M> {
     }
 
     // upgrade to VerifiedMessage as well?
-    pub fn assume_verified(self) -> M
+    pub fn assume_verified(&self) -> M
     where
         M: DeserializeOwned,
     {

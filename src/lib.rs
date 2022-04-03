@@ -289,7 +289,7 @@ pub mod common;
 /// This module exports implementations of [`Receiver`](facade::Receiver) and
 /// [`Invoke`](facade::Invoke).
 ///
-/// # Implementation convension
+/// # Implementation convention
 ///
 /// `Receiver`s provide a `register_new(config, &mut transport, ...)` function,
 /// which constructs a receiver instance and register it to `transport`. This
@@ -304,7 +304,15 @@ pub mod common;
 /// [`AsyncEcosystem`](facade::AsyncEcosystem) trait.
 ///
 /// The non-`Invoke`able receivers, i.e. server nodes should be built upon
-/// [`stage`], even for the single-threaded ones.
+/// [`stage`], even for the single-threaded ones. This is the standard strategy
+/// to minimize RX thread workload.
+///
+/// No drop, no timer. Implementation should be able to handle reordering of
+/// any messages, without false positive discard followed by rescuing timer.
+/// Instead the message must be buffered until it can be processed.
+/// Implementation may pay for this extra buffering with some performance
+/// overhead, but avoiding timer on fast path help benchmark result stable and
+/// reproducible.
 pub mod protocol {
     pub mod hotstuff;
     pub mod pbft;

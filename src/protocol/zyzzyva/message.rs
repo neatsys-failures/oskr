@@ -36,7 +36,7 @@ pub struct Request {
 pub struct OrderRequest {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
-    pub history: Digest,
+    pub history_digest: Digest,
     pub digest: Digest,
     // non-deterministic field omitted
 }
@@ -45,7 +45,7 @@ pub struct OrderRequest {
 pub struct SpeculativeResponse {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
-    pub history: Digest,
+    pub history_digest: Digest,
     pub digest: Digest,
     pub client_id: ClientId,
     pub request_number: RequestNumber,
@@ -61,7 +61,7 @@ pub struct Commit {
 pub struct LocalCommit {
     pub view_number: ViewNumber,
     pub digest: Digest,
-    pub history: Digest,
+    pub history_digest: Digest,
     pub replica_id: ReplicaId,
     pub client_id: ClientId,
 }

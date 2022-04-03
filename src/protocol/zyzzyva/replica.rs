@@ -1,8 +1,12 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    common::{Config, ReplicaId},
+    common::{
+        deserialize, ClientId, Config, OpNumber, ReplicaId, RequestNumber, SignedMessage,
+        ViewNumber,
+    },
     facade::{App, Receiver, Transport},
+    protocol::zyzzyva::message::{self, ToClient, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
@@ -10,12 +14,21 @@ pub struct Replica<T: Transport> {
     config: Config<T>,
     transport: T::TxAgent,
     id: ReplicaId,
-    app: Box<dyn App>,
+    app: Box<dyn App + Send>,
     batch_size: usize,
     adaptive_batching: bool,
     address: T::Address,
 
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    history: Vec<LogItem>,
+    client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
+
     shared: Arc<Shared<T>>,
+}
+
+struct LogItem {
+    //
 }
 
 pub struct Shared<T: Transport> {
@@ -48,7 +61,7 @@ impl<T: Transport> Replica<T> {
         config: Config<T>,
         transport: &mut T,
         replica_id: ReplicaId,
-        app: impl App + 'static,
+        app: impl App + Send + 'static,
         batch_size: usize,
         adaptive_batching: bool,
     ) -> Handle<Self> {
@@ -62,6 +75,10 @@ impl<T: Transport> Replica<T> {
             batch_size,
             adaptive_batching,
             address: config.replica(replica_id).clone(),
+            view_number: 0,
+            op_number: 0,
+            history: Vec::new(),
+            client_table: HashMap::new(),
             shared: Arc::new(Shared {
                 transport: transport.tx_agent(),
                 address: config.replica(replica_id).clone(),
@@ -70,9 +87,28 @@ impl<T: Transport> Replica<T> {
         });
 
         replica.with_stateful(|state| {
-            //
+            let submit = state.submit.clone();
+            transport.register(state, move |remote, buffer| {
+                submit.stateless(|shared| shared.receive_buffer(remote, buffer))
+            });
         });
 
         replica
+    }
+}
+
+impl<T: Transport> StatelessContext<Replica<T>> {
+    fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
+        match deserialize(buffer.as_ref()) {
+            Ok(ToReplica::Request(request)) => {
+                //
+            }
+            _ => {}
+        }
+    }
+}
+impl<T: Transport> StatefulContext<'_, Replica<T>> {
+    fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+        //
     }
 }
