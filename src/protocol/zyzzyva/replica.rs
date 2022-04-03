@@ -18,7 +18,6 @@ pub struct Replica<T: Transport> {
     id: ReplicaId,
     app: Box<dyn App + Send>,
     batch_size: usize,
-    adaptive_batching: bool,
     address: T::Address,
 
     view_number: ViewNumber,
@@ -27,6 +26,8 @@ pub struct Replica<T: Transport> {
     commit_number: OpNumber, // last stable checkpoint up to
     history: Vec<LogItem>,
     client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
+
+    request_buffer: Vec<message::Request>,
 
     shared: Arc<Shared<T>>,
 }
@@ -70,7 +71,6 @@ impl<T: Transport> Replica<T> {
         replica_id: ReplicaId,
         app: impl App + Send + 'static,
         batch_size: usize,
-        adaptive_batching: bool,
     ) -> Handle<Self> {
         assert!(config.replica(..).len() > 1);
 
@@ -80,13 +80,13 @@ impl<T: Transport> Replica<T> {
             id: replica_id,
             app: Box::new(app),
             batch_size,
-            adaptive_batching,
             address: config.replica(replica_id).clone(),
             view_number: 0,
             op_number: 0,
             commit_number: 0,
             history: Vec::new(),
             client_table: HashMap::new(),
+            request_buffer: Vec::new(),
             shared: Arc::new(Shared {
                 transport: transport.tx_agent(),
                 address: config.replica(replica_id).clone(),
@@ -130,6 +130,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
         }
 
-        //
+        if self.config.view_primary(self.view_number) != self.id {
+            todo!("confirm request");
+        }
+
+        self.request_buffer.push(message);
+        if self.request_buffer.len() >= self.batch_size {
+            // close batch
+        }
     }
 }

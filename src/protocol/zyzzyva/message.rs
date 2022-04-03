@@ -36,8 +36,8 @@ pub struct OrderRequest {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
     pub history_digest: Digest,
-    pub digest: Digest,
-    // non-deterministic field omitted
+    pub digest: Digest, // of m i.e. batch
+                        // non-deterministic field omitted
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +45,7 @@ pub struct SpeculativeResponse {
     pub view_number: ViewNumber,
     pub op_number: OpNumber,
     pub history_digest: Digest,
-    pub digest: Digest,
+    pub digest: Digest, // of r i.e. result
     pub client_id: ClientId,
     pub request_number: RequestNumber,
 }
@@ -75,6 +75,6 @@ pub struct ConfirmRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Checkpoint {
     pub op_number: OpNumber,
-    pub digest: Digest,
+    pub history_digest: Digest,
     // omit application snapshot, we don't have application support this
 }
