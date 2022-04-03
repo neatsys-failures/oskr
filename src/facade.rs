@@ -56,7 +56,7 @@ pub trait App {
         &mut self,
         current: OpNumber,
         to: OpNumber,
-        op_list: &dyn Iterator<Item = (OpNumber, Opaque)>,
+        op_list: &mut dyn Iterator<Item = (OpNumber, Opaque)>,
     ) {
         unimplemented!()
     }
