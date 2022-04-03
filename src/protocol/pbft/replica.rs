@@ -84,13 +84,6 @@ pub struct Shared<T: Transport> {
     transport: T::TxAgent,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-struct QuorumKey {
-    view_number: ViewNumber,
-    op_number: OpNumber,
-    digest: Digest,
-}
-
 impl<T: Transport> Replica<T> {
     fn log_item(&self, op_number: OpNumber) -> Option<&LogItem> {
         if let Some(item) = self.log.get((op_number - 1) as usize) {

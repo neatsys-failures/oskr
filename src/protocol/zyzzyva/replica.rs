@@ -1,11 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
 
+use tracing::warn;
+
 use crate::{
     common::{
-        deserialize, ClientId, Config, OpNumber, ReplicaId, RequestNumber, SignedMessage,
-        ViewNumber,
+        deserialize, serialize, ClientId, Config, Digest, OpNumber, ReplicaId, RequestNumber,
+        SignedMessage, ViewNumber,
     },
-    facade::{App, Receiver, Transport},
+    facade::{App, Receiver, Transport, TxAgent},
     protocol::zyzzyva::message::{self, ToClient, ToReplica},
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
@@ -20,7 +22,9 @@ pub struct Replica<T: Transport> {
     address: T::Address,
 
     view_number: ViewNumber,
-    op_number: OpNumber,
+    op_number: OpNumber, // last op number used by primary for ordering (known locally)
+    // it is also the last op number that has been speculative executed
+    commit_number: OpNumber, // last stable checkpoint up to
     history: Vec<LogItem>,
     client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
 
@@ -28,7 +32,10 @@ pub struct Replica<T: Transport> {
 }
 
 struct LogItem {
-    //
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    batch: Vec<message::Request>,
+    history_digest: Digest, // hash(batch, previous history digest), used in checkpoint
 }
 
 pub struct Shared<T: Transport> {
@@ -77,6 +84,7 @@ impl<T: Transport> Replica<T> {
             address: config.replica(replica_id).clone(),
             view_number: 0,
             op_number: 0,
+            commit_number: 0,
             history: Vec::new(),
             client_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -101,14 +109,27 @@ impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         match deserialize(buffer.as_ref()) {
             Ok(ToReplica::Request(request)) => {
-                //
+                self.submit
+                    .stateful(move |state| state.handle_request(remote, request));
             }
             _ => {}
         }
+        warn!("fail to handle received buffer");
     }
 }
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn handle_request(&mut self, remote: T::Address, message: message::Request) {
+        if let Some((request_number, to_client)) = self.client_table.get(&message.client_id) {
+            if *request_number > message.request_number {
+                return;
+            }
+            if *request_number == message.request_number {
+                self.transport
+                    .send_message(self, &remote, serialize(to_client));
+                return;
+            }
+        }
+
         //
     }
 }

@@ -7,8 +7,7 @@ use crate::common::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ToReplica {
     Request(Request),
-    OrderRequest(SignedMessage<OrderRequest>), // + request message
-    // is this really good design
+    OrderRequest(SignedMessage<OrderRequest>, Vec<Request>),
     Commit(Commit),
     ConfirmRequest(SignedMessage<ConfirmRequest>),
     Checkpoint(SignedMessage<Checkpoint>),
