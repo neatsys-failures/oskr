@@ -103,8 +103,9 @@ where
                     // TODO proof of misbehavior (not really planned actually)
                     ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
                         let (response, signed) = (response.assume_verified(), response);
-                        assert_eq!(response.client_id, client.id);
-                        if response.request_number != client.request_number {
+                        if (response.client_id, response.request_number)
+                            != (client.id, client.request_number)
+                        {
                             return Status::Other;
                         }
                         response_table.insert(
@@ -202,6 +203,7 @@ where
                     if let Some(certification) = &certification {
                         todo!()
                     }
+                    commit_timeout = Instant::now() + Duration::from_secs(100); // TODO
                 }
             }
         }

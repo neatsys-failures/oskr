@@ -26,7 +26,7 @@ use oskr::{
         dpdk::Transport,
         latency::{Latency, LocalLatency},
     },
-    protocol::{hotstuff, pbft, unreplicated},
+    protocol::{hotstuff, pbft, unreplicated, zyzzyva},
 };
 use tracing::{debug, info};
 
@@ -41,6 +41,7 @@ fn main() {
         UnreplicatedSigned,
         PBFT,
         HotStuff,
+        Zyzzyva,
     }
 
     #[derive(Parser, Debug)]
@@ -242,6 +243,12 @@ fn main() {
         ),
         Mode::HotStuff => WorkerData::launch(
             || hotstuff::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
+            args,
+            status.clone(),
+            latency.local(),
+        ),
+        Mode::Zyzzyva => WorkerData::launch(
+            || zyzzyva::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.local(),

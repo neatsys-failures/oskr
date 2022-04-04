@@ -117,6 +117,7 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             Ok(ToReplica::Request(request)) => {
                 self.submit
                     .stateful(move |state| state.handle_request(remote, request));
+                return;
             }
             Ok(ToReplica::OrderRequest(order_request, batch)) => {
                 let verifying_key = if let Some(key) = self.config.verifying_key(&remote) {
@@ -140,6 +141,7 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 }
                 self.submit
                     .stateful(move |state| state.handle_order_request(order_request, batch));
+                return;
             }
             _ => {}
         }

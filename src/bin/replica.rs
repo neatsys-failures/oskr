@@ -16,7 +16,7 @@ use oskr::{
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{self, App},
     framework::dpdk::Transport,
-    protocol::{hotstuff, pbft, unreplicated},
+    protocol::{hotstuff, pbft, unreplicated, zyzzyva},
     stage::{Handle, State},
 };
 use tracing::{info, warn};
@@ -39,6 +39,7 @@ fn main() {
         UnreplicatedSigned,
         PBFT,
         HotStuff,
+        Zyzzyva,
     }
 
     #[derive(Parser, Debug)]
@@ -180,6 +181,17 @@ fn main() {
                 NullApp,
                 args.batch_size,
                 args.adaptive,
+            ),
+            args,
+            shutdown.clone(),
+        ),
+        Mode::Zyzzyva => WorkerData::launch(
+            zyzzyva::Replica::register_new(
+                config,
+                &mut transport,
+                args.replica_id,
+                NullApp,
+                args.batch_size,
             ),
             args,
             shutdown.clone(),
