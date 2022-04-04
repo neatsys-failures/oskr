@@ -6,8 +6,8 @@ use tracing::{debug, info, warn};
 
 use crate::{
     common::{
-        deserialize, serialize, ClientId, Config, Digest, OpNumber, ReplicaId, RequestNumber,
-        SignedMessage, ViewNumber,
+        deserialize, serialize, signed::VerifiedMessage, ClientId, Config, Digest, OpNumber,
+        ReplicaId, RequestNumber, SignedMessage, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
     protocol::zyzzyva::message::{self, ToClient, ToReplica},
@@ -30,7 +30,7 @@ pub struct Replica<T: Transport> {
     client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
 
     request_buffer: Vec<message::Request>,
-    reorder_history: HashMap<OpNumber, LogItem>,
+    reorder_history: HashMap<OpNumber, (LogItem, SignedMessage<message::OrderRequest>)>,
     route_table: HashMap<ClientId, T::Address>,
 
     shared: Arc<Shared<T>>,
@@ -118,6 +118,29 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 self.submit
                     .stateful(move |state| state.handle_request(remote, request));
             }
+            Ok(ToReplica::OrderRequest(order_request, batch)) => {
+                let verifying_key = if let Some(key) = self.config.verifying_key(&remote) {
+                    key
+                } else {
+                    warn!("order request without identity");
+                    return;
+                };
+                let order_request = if let Ok(order_request) = order_request.verify(verifying_key) {
+                    order_request
+                } else {
+                    warn!("fail to verify order request");
+                    return;
+                };
+                if Digest::from(Sha256::digest(
+                    bincode::options().serialize(&batch).unwrap(),
+                )) != order_request.digest
+                {
+                    warn!("order request digest mismatch");
+                    return;
+                }
+                self.submit
+                    .stateful(move |state| state.handle_order_request(order_request, batch));
+            }
             _ => {}
         }
         warn!("fail to handle received buffer");
@@ -204,7 +227,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     ) {
         if item.op_number as usize != self.history.len() + 1 {
             info!("reorder history: op number = {}", item.op_number);
-            self.reorder_history.insert(item.op_number, item);
+            self.reorder_history
+                .insert(item.op_number, (item, order_request.clone()));
             return;
         }
 
@@ -259,6 +283,35 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 });
             });
         }
+
+        let op_number = item.op_number;
         self.history.push(item);
+
+        if let Some((item, order_request)) = self.reorder_history.remove(&(op_number + 1)) {
+            self.speculative_execute(item, &order_request); // TODO
+        }
+    }
+
+    fn handle_order_request(
+        &mut self,
+        order_request: VerifiedMessage<message::OrderRequest>,
+        batch: Vec<message::Request>,
+    ) {
+        if order_request.view_number < self.view_number {
+            return;
+        }
+        if order_request.view_number > self.view_number {
+            todo!("state transfer");
+        }
+
+        self.speculative_execute(
+            LogItem {
+                view_number: self.view_number,
+                op_number: order_request.op_number,
+                batch,
+                history_digest: order_request.history_digest,
+            },
+            order_request.signed_message(),
+        );
     }
 }
