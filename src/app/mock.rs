@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::mem::replace;
 
 use crate::{
     common::{OpNumber, Opaque},
@@ -12,7 +12,7 @@ pub enum Upcall {
 }
 
 pub struct App {
-    execute_stub: Arc<dyn Fn(&mut App, OpNumber, Opaque) -> Opaque + Send + Sync>,
+    execute_stub: Box<dyn Fn(&mut App, OpNumber, Opaque) -> Opaque + Send + Sync>,
     pub upcall_log: Vec<Upcall>,
 }
 
@@ -21,7 +21,7 @@ impl App {
         execute_stub: impl Fn(&mut App, OpNumber, Opaque) -> Opaque + Send + Sync + 'static,
     ) -> Self {
         Self {
-            execute_stub: Arc::new(execute_stub),
+            execute_stub: Box::new(execute_stub),
             upcall_log: Vec::new(),
         }
     }
@@ -40,7 +40,10 @@ impl Default for App {
 impl facade::App for App {
     fn execute(&mut self, op_number: OpNumber, op: Opaque) -> Opaque {
         self.upcall_log.push(Upcall::Execute(op_number, op.clone()));
-        self.execute_stub.clone()(self, op_number, op)
+        let execute_stub = replace(&mut self.execute_stub, Box::new(|_, _, _| unreachable!()));
+        let result = execute_stub(self, op_number, op);
+        let _ = replace(&mut self.execute_stub, execute_stub);
+        result
     }
 
     fn rollback(
