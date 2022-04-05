@@ -24,13 +24,16 @@ pub struct Replica<T: Transport> {
 
     view_number: ViewNumber,
     op_number: OpNumber, // last op number used by primary for ordering (known locally)
-    // it is also the last op number that has been speculative executed
+    // it is also the last op number that can be (and will be) speculative executed
+    history_digest: Digest,
     commit_number: OpNumber, // last stable checkpoint up to
     history: Vec<LogItem>,
     client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
 
     request_buffer: Vec<message::Request>,
-    reorder_history: HashMap<OpNumber, (LogItem, SignedMessage<message::OrderRequest>)>,
+    // op number => (item, batch digest, order request)
+    // too lazy to define new type :)
+    reorder_history: HashMap<OpNumber, (LogItem, Digest, SignedMessage<message::OrderRequest>)>,
     route_table: HashMap<ClientId, T::Address>,
 
     shared: Arc<Shared<T>>,
@@ -41,6 +44,7 @@ struct LogItem {
     op_number: OpNumber,
     batch: Vec<message::Request>,
     history_digest: Digest, // hash(batch, previous history digest), used in checkpoint
+                            // do we need order request here?
 }
 
 pub struct Shared<T: Transport> {
@@ -87,6 +91,7 @@ impl<T: Transport> Replica<T> {
             address: config.replica(replica_id).clone(),
             view_number: 0,
             op_number: 0,
+            history_digest: Digest::default(),
             commit_number: 0,
             history: Vec::new(),
             client_table: HashMap::new(),
@@ -178,25 +183,30 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let batch = ..self.batch_size.min(self.request_buffer.len());
         let batch: Vec<_> = self.request_buffer.drain(batch).collect();
         self.op_number += 1;
-        let mut order_request = message::OrderRequest {
+
+        // to ensure history digest to be correct it has to be updated in
+        // stateful path (and also be checked in stateful path below),
+        // because the history digest is chained, which means there is direct
+        // data dependency between consecutive history log items.
+        // so it has to be sequential, either in stateful path or in stateless
+        // path with barrier, which makes less performance difference but much
+        // more complicated
+        // it is tested in benchmark that this hashing does not affect
+        // performance at all
+        let digest = Sha256::digest(bincode::options().serialize(&batch).unwrap()).into();
+        self.history_digest = Sha256::new()
+            .chain_update(&self.history_digest)
+            .chain_update(&digest)
+            .finalize()
+            .into();
+        let order_request = message::OrderRequest {
             view_number: self.view_number,
             op_number: self.op_number,
-            history_digest: Digest::default(),
-            digest: Digest::default(),
+            history_digest: self.history_digest,
+            digest,
         };
-        let history_digest = self
-            .history
-            .last()
-            .map(|item| item.history_digest)
-            .unwrap_or_default();
+
         self.submit.stateless(move |shared| {
-            order_request.digest =
-                Sha256::digest(bincode::options().serialize(&batch).unwrap()).into();
-            order_request.history_digest = Sha256::new()
-                .chain_update(history_digest)
-                .chain_update(&order_request.digest)
-                .finalize()
-                .into();
             let signed =
                 SignedMessage::sign(order_request.clone(), shared.config.signing_key(shared));
             shared.transport.send_message_to_all(
@@ -216,6 +226,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                         batch,
                         history_digest: order_request.history_digest,
                     },
+                    order_request.digest,
                     &signed,
                 );
             });
@@ -225,12 +236,39 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn speculative_execute(
         &mut self,
         item: LogItem,
+        digest: Digest,
         order_request: &SignedMessage<message::OrderRequest>,
     ) {
         if item.op_number as usize != self.history.len() + 1 {
             info!("reorder history: op number = {}", item.op_number);
+            // here, it is possible that the op number already present in the
+            // reorder history (reorder future maybe?), and get replaced
+            // because of the prefix gap we have no way to determine which item
+            // is the correct one (if they are different)
+            // and there is chance to discard the correct one, keep the faulty
+            // one, which cannot pass the history digest check below, and
+            // trigger a state transfer ("fill hole") slow path
+            // however, this is still good enough, since the Zyzzyva paper, we
+            // are not required to handle reordering at all, just state transfer
+            // whenever it is out of order
             self.reorder_history
-                .insert(item.op_number, (item, order_request.clone()));
+                .insert(item.op_number, (item, digest, order_request.clone()));
+            return;
+        }
+
+        let history_digest = self
+            .history
+            .last()
+            .map(|item| item.history_digest)
+            .unwrap_or_default();
+        // we expect this to be blazing fast
+        let history_digest: Digest = Sha256::new()
+            .chain_update(history_digest)
+            .chain_update(digest)
+            .finalize()
+            .into();
+        if item.history_digest != history_digest {
+            warn!("history digest mismatch: op number = {}", item.op_number);
             return;
         }
 
@@ -286,11 +324,12 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             });
         }
 
-        let op_number = item.op_number;
+        let item_number = item.op_number;
         self.history.push(item);
 
-        if let Some((item, order_request)) = self.reorder_history.remove(&(op_number + 1)) {
-            self.speculative_execute(item, &order_request); // TODO
+        if let Some((item, digest, order_request)) = self.reorder_history.remove(&(item_number + 1))
+        {
+            self.speculative_execute(item, digest, &order_request); // TODO
         }
     }
 
@@ -313,6 +352,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 batch,
                 history_digest: order_request.history_digest,
             },
+            order_request.digest,
             order_request.signed_message(),
         );
     }
