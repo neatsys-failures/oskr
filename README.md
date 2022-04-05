@@ -38,8 +38,10 @@ project's logo.
 |Unreplicated       |1  |-          |2011.256   |10.751     |
 |Unreplicated Signed|1  |-          |11.799     |91.647     |
 |Unreplicated Signed|14 |-          |154.064    |99.327     |
+|PBFT               |14 |1          |4.875      |716.799    |
 |PBFT               |14 |Adaptive   |121.200    |716.799    |
-|HotStuff           |14 |Adaptive   |98.654     |2195.455   |
+|HotStuff           |14 |1          |1.836      |2179.071   |
+|HotStuff           |14 |Adaptive   |98.654     |2179.071   |
 |Zyzzyva            |14 |1          |67.696     |323.583    |
 |Zyzzyva            |14 |100        |138.400    |-          |
 

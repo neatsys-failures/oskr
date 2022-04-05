@@ -116,7 +116,11 @@ where
                     }
                 }
                 _ = E::sleep_until(timeout).fuse() => {
-                    warn!("resend for request number {}", self.request_number);
+                    if self.request_number > 1 {
+                        warn!("resend for request number {}", self.request_number);
+                    } else {
+                        debug!("resend for request number {}", self.request_number);
+                    }
                     self.transport
                         .send_message_to_all(self, self.config.replica(..), serialize(ToReplica::Request(request.clone())));
                     timeout = Instant::now() + Duration::from_millis(1000);

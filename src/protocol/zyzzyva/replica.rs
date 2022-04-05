@@ -173,15 +173,14 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
 
         self.request_buffer.push(message);
-        if self.request_buffer.len() >= self.batch_size {
+        if self.request_buffer.len() == self.batch_size {
             self.close_batch();
         }
     }
 
     fn close_batch(&mut self) {
         assert!(self.config.view_primary(self.view_number) == self.id);
-        let batch = ..self.batch_size.min(self.request_buffer.len());
-        let batch: Vec<_> = self.request_buffer.drain(batch).collect();
+        let batch: Vec<_> = self.request_buffer.drain(..).collect();
         self.op_number += 1;
 
         // to ensure history digest to be correct it has to be updated in
