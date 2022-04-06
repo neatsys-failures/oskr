@@ -19,20 +19,53 @@ impl Default for Database {
 }
 
 impl Database {
+    pub fn create_table(&self, table: &str, field_set: &[&str]) {
+        self.0
+            .execute(&format!("DROP TABLE IF EXISTS {};", table), [])
+            .unwrap(); // not very necessary here
+        self.0
+            .execute(
+                &format!(
+                    "CREATE TABLE {} (YCSB_KEY VARCHAR PRIMARY KEY, {});",
+                    table,
+                    field_set
+                        .iter()
+                        .map(|field| format!("{} TEXT", field))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+                [],
+            )
+            .unwrap();
+    }
+
     fn queried_field(field_set: HashSet<String>, column_list: Vec<&str>) -> Vec<String> {
         if !field_set.is_empty() {
             field_set.into_iter().collect()
         } else {
             column_list
                 .into_iter()
+                .filter(|field| *field != "YCSB_KEY")
                 .map(|field| field.to_string())
                 .collect()
         }
     }
-    fn split_value_table(value_table: &HashMap<String, Opaque>) -> (String, Vec<&dyn ToSql>) {
+    fn split_value_table(
+        value_table: &HashMap<String, Opaque>,
+        update: bool, // not a very good style
+    ) -> (String, Vec<&dyn ToSql>) {
         let (stmt_list, param_list): (Vec<_>, Vec<_>) = value_table
             .iter()
-            .map(|(field, value)| (format!("{}=?", field), value as &dyn ToSql))
+            .map(|(field, value)| {
+                (
+                    if update {
+                        format!("{}=?", field)
+                    } else {
+                        field.clone()
+                    },
+                    value as &dyn ToSql,
+                )
+            })
             .unzip();
         (stmt_list.join(", "), param_list)
     }
@@ -96,7 +129,7 @@ impl ycsb::Database for Database {
         key: String,
         value_table: HashMap<String, Opaque>,
     ) -> DatabaseResult {
-        let (stmt_field, mut param_list) = Self::split_value_table(&value_table);
+        let (stmt_field, mut param_list) = Self::split_value_table(&value_table, true);
         param_list.push(&key as &dyn ToSql);
         let result = self
             .0
@@ -121,7 +154,7 @@ impl ycsb::Database for Database {
     ) -> DatabaseResult {
         // i did not see a real batch statement (i.e. merger) in rusqlite,
         // so just skip implementing batching
-        let (stmt_field, mut param_list) = Self::split_value_table(&value_table);
+        let (stmt_field, mut param_list) = Self::split_value_table(&value_table, false);
         param_list.insert(0, &key as &dyn ToSql);
         let result = self
             .0
@@ -155,5 +188,89 @@ impl ycsb::Database for Database {
         } else {
             Err(Error::UnexpectedState)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app::ycsb::Database as _;
+
+    use super::*;
+
+    #[test]
+    fn create_table() {
+        let db = Database::default();
+        db.create_table("usertable", &["FIELD0", "FIELD1", "FIELD2"]);
+    }
+
+    #[test]
+    fn insert_read() {
+        let mut db = Database::default();
+        db.create_table("usertable", &["A", "B", "C"]);
+        db.insert(
+            "usertable".to_string(),
+            "id-0".to_string(),
+            [
+                ("A".to_string(), "a-0".as_bytes().to_vec()),
+                ("B".to_string(), "b-0".as_bytes().to_vec()),
+                ("C".to_string(), "c-0".as_bytes().to_vec()),
+            ]
+            .into_iter()
+            .collect(),
+        )
+        .unwrap();
+        let mut result = HashMap::new();
+        db.read(
+            "usertable".to_string(),
+            "id-0".to_string(),
+            ["A".to_string(), "B".to_string()].into_iter().collect(),
+            &mut result,
+        )
+        .unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result["A"], "a-0".as_bytes());
+        assert_eq!(result["B"], "b-0".as_bytes());
+    }
+
+    #[test]
+    fn update() {
+        let mut db = Database::default();
+        db.create_table("usertable", &["A", "B", "C"]);
+        db.insert(
+            "usertable".to_string(),
+            "id-0".to_string(),
+            [
+                ("A".to_string(), "a-0".as_bytes().to_vec()),
+                ("B".to_string(), "b-0".as_bytes().to_vec()),
+                ("C".to_string(), "c-0".as_bytes().to_vec()),
+            ]
+            .into_iter()
+            .collect(),
+        )
+        .unwrap();
+        db.update(
+            "usertable".to_string(),
+            "id-0".to_string(),
+            [
+                ("A".to_string(), "a-1".as_bytes().to_vec()),
+                ("B".to_string(), "b-1".as_bytes().to_vec()),
+                ("C".to_string(), "c-1".as_bytes().to_vec()),
+            ]
+            .into_iter()
+            .collect(),
+        )
+        .unwrap();
+        let mut result = HashMap::new();
+        db.read(
+            "usertable".to_string(),
+            "id-0".to_string(),
+            HashSet::new(),
+            &mut result,
+        )
+        .unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result["A"], "a-1".as_bytes());
+        assert_eq!(result["B"], "b-1".as_bytes());
+        assert_eq!(result["C"], "c-1".as_bytes());
     }
 }
