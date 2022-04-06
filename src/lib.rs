@@ -350,8 +350,6 @@ pub mod app {
 pub mod framework {
     pub mod busy_poll;
     pub mod dpdk;
-    #[cfg(any(feature = "tokio", test))]
-    pub mod tokio;
     /// Convenient library for latency measurement.
     ///
     /// This module is a thin wrapper around [quanta] and [hdrhistogram]. It
@@ -359,6 +357,9 @@ pub mod framework {
     /// library, especially for multithreaded usage.
     pub mod latency;
     pub mod sqlite;
+    #[cfg(any(feature = "tokio", test))]
+    pub mod tokio;
+    pub mod ycsb_workload;
 }
 
 #[cfg(test)]

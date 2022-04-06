@@ -199,14 +199,18 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
 
         self.request_buffer.push(message);
-        if self.request_buffer.len() == self.batch_size {
+        while self.request_buffer.len() >= self.batch_size
+            && self.op_number
+                < self.commit_number + 2 * (Self::CHECKPOINT_INTERVAL / self.batch_size) as OpNumber
+        {
             self.close_batch();
         }
     }
 
     fn close_batch(&mut self) {
         assert!(self.config.view_primary(self.view_number) == self.id);
-        let batch: Vec<_> = self.request_buffer.drain(..).collect();
+        let batch = ..self.batch_size.min(self.request_buffer.len());
+        let batch: Vec<_> = self.request_buffer.drain(batch).collect();
         self.op_number += 1;
 
         // to ensure history digest to be correct it has to be updated in
@@ -441,6 +445,14 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
                 self.app.commit(checkpoint.op_number);
                 self.commit_number = checkpoint.op_number;
+
+                while self.request_buffer.len() >= self.batch_size
+                    && self.op_number
+                        < self.commit_number
+                            + 2 * (Self::CHECKPOINT_INTERVAL / self.batch_size) as OpNumber
+                {
+                    self.close_batch();
+                }
             }
         }
     }
