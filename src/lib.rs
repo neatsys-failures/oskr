@@ -333,7 +333,7 @@ pub mod protocol {
 /// to proceed communication.
 pub mod app {
     pub mod mock;
-    pub mod ycsb_database;
+    pub mod ycsb;
 }
 
 /// Engineering components.
