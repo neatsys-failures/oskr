@@ -42,8 +42,8 @@ project's logo.
 |PBFT               |14 |Adaptive   |121.200    |716.799    |
 |HotStuff           |14 |1          |1.836      |2179.071   |
 |HotStuff           |14 |Adaptive   |98.654     |2179.071   |
-|Zyzzyva            |14 |1          |67.696     |323.583    |
-|Zyzzyva            |14 |100        |138.400    |-          |
+|Zyzzyva            |14 |1          |66.817     |323.583    |
+|Zyzzyva            |14 |100        |135.600    |-          |
 
 
 ----

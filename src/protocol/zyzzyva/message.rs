@@ -74,6 +74,7 @@ pub struct ConfirmRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Checkpoint {
+    pub replica_id: ReplicaId,
     pub op_number: OpNumber,
     pub history_digest: Digest,
     // omit application snapshot, we don't have application support this

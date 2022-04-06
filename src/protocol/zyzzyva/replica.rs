@@ -29,6 +29,8 @@ pub struct Replica<T: Transport> {
     commit_number: OpNumber, // last stable checkpoint up to
     history: Vec<LogItem>,
     client_table: HashMap<ClientId, (RequestNumber, ToClient)>,
+    checkpoint_quorum:
+        HashMap<(OpNumber, Digest), HashMap<ReplicaId, SignedMessage<message::Checkpoint>>>,
 
     request_buffer: Vec<message::Request>,
     // op number => (item, batch digest, order request)
@@ -95,6 +97,7 @@ impl<T: Transport> Replica<T> {
             commit_number: 0,
             history: Vec::new(),
             client_table: HashMap::new(),
+            checkpoint_quorum: HashMap::new(),
             request_buffer: Vec::new(),
             reorder_history: HashMap::new(),
             route_table: HashMap::new(),
@@ -148,12 +151,35 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                     .stateful(move |state| state.handle_order_request(order_request, batch));
                 return;
             }
+            Ok(ToReplica::Checkpoint(checkpoint)) => {
+                let verifying_key = if let Some(key) = self.config.verifying_key(&remote) {
+                    key
+                } else {
+                    warn!("checkpoint without identity");
+                    return;
+                };
+                let checkpoint = if let Ok(checkpoint) = checkpoint.verify(verifying_key) {
+                    checkpoint
+                } else {
+                    warn!("fail to verify checkpoint");
+                    return;
+                };
+                self.submit
+                    .stateful(move |state| state.handle_checkpoint(remote, checkpoint));
+                return;
+            }
             _ => {}
         }
         warn!("fail to handle received buffer");
     }
 }
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
+    // the interval per request not per op number, i.e. divided by batch size
+    // when used
+    // for my benchmark platform under maximum throughput, checkpoint is
+    // generated once per ~0.15s at 1 batch, and once per ~0.075s at 100 batch
+    const CHECKPOINT_INTERVAL: usize = 10000;
+
     fn handle_request(&mut self, remote: T::Address, message: message::Request) {
         self.route_table.insert(message.client_id, remote.clone());
 
@@ -324,11 +350,33 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
 
         let item_number = item.op_number;
+        let history_digest = item.history_digest;
         self.history.push(item);
 
         if let Some((item, digest, order_request)) = self.reorder_history.remove(&(item_number + 1))
         {
-            self.speculative_execute(item, digest, &order_request); // TODO
+            self.speculative_execute(item, digest, &order_request);
+        }
+
+        if item_number % (Self::CHECKPOINT_INTERVAL / self.batch_size) as OpNumber == 0 {
+            debug!("checkpoint op number {}", item_number);
+            let checkpoint = message::Checkpoint {
+                replica_id: self.id,
+                op_number: item_number,
+                history_digest,
+            };
+            self.submit.stateless(move |shared| {
+                let signed =
+                    SignedMessage::sign(checkpoint.clone(), shared.config.signing_key(shared));
+                shared.transport.send_message_to_all(
+                    shared,
+                    shared.config.replica(..),
+                    serialize(ToReplica::Checkpoint(signed.clone())),
+                );
+                shared.submit.stateful(move |state| {
+                    state.insert_checkpoint(&checkpoint, &signed);
+                });
+            });
         }
     }
 
@@ -354,5 +402,46 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             order_request.digest,
             order_request.signed_message(),
         );
+    }
+
+    fn handle_checkpoint(
+        &mut self,
+        _remote: T::Address,
+        checkpoint: VerifiedMessage<message::Checkpoint>,
+    ) {
+        if checkpoint.op_number <= self.commit_number {
+            return;
+        }
+
+        self.insert_checkpoint(&*checkpoint, checkpoint.signed_message());
+    }
+
+    fn insert_checkpoint(
+        &mut self,
+        checkpoint: &message::Checkpoint,
+        signed: &SignedMessage<message::Checkpoint>,
+    ) {
+        assert!(self.commit_number < checkpoint.op_number);
+
+        self.checkpoint_quorum
+            .entry((checkpoint.op_number, checkpoint.history_digest))
+            .or_default()
+            .insert(checkpoint.replica_id, signed.clone());
+        if let Some(item) = self.history.get(checkpoint.op_number as usize - 1) {
+            assert_eq!(item.op_number, checkpoint.op_number);
+            if self
+                .checkpoint_quorum
+                .get(&(checkpoint.op_number, item.history_digest))
+                .map(|quorum| quorum.len())
+                .unwrap_or(0)
+                >= self.config.f + 1
+            {
+                debug!("checkpoint commit {}", checkpoint.op_number);
+                // TODO garbage collect
+
+                self.app.commit(checkpoint.op_number);
+                self.commit_number = checkpoint.op_number;
+            }
+        }
     }
 }
