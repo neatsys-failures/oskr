@@ -1,10 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
+use async_trait::async_trait;
 use serde_derive::{Deserialize, Serialize};
+use tracing::info;
 
 use crate::{
     common::{deserialize, serialize, OpNumber, Opaque},
-    facade::App,
+    facade::{App, Invoke, Receiver, Transport},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,5 +119,21 @@ impl<A: Database> App for A {
         let mut buffer = Opaque::new();
         serialize(result)(&mut buffer);
         buffer
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct TraceClient;
+#[async_trait]
+impl Invoke for TraceClient {
+    async fn invoke(&mut self, op: Opaque) -> Opaque {
+        let op: Op = deserialize(&*op).unwrap();
+        info!("{:?}", op);
+        Opaque::default()
+    }
+}
+impl<T: Transport> Receiver<T> for TraceClient {
+    fn get_address(&self) -> &T::Address {
+        unreachable!()
     }
 }

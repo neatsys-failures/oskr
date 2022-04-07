@@ -18,6 +18,7 @@ use clap::{ArgEnum, Parser};
 use futures::{channel::oneshot, select, task::noop_waker_ref, FutureExt};
 use hdrhistogram::SyncHistogram;
 use oskr::{
+    app::ycsb,
     common::{panic_abort, Config, Opaque},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{self, AsyncEcosystem as _, Invoke, Receiver},
@@ -34,7 +35,7 @@ fn main() {
     tracing_subscriber::fmt::init();
     panic_abort();
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
     #[allow(clippy::upper_case_acronyms)]
     enum Mode {
         Unreplicated,
@@ -42,6 +43,14 @@ fn main() {
         PBFT,
         HotStuff,
         Zyzzyva,
+        YCSB,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
+    #[allow(clippy::upper_case_acronyms)]
+    enum Workload {
+        Null,
+        YCSB,
     }
 
     #[derive(Parser, Debug)]
@@ -249,6 +258,12 @@ fn main() {
         ),
         Mode::Zyzzyva => WorkerData::launch(
             || zyzzyva::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
+            args,
+            status.clone(),
+            latency.local(),
+        ),
+        Mode::YCSB => WorkerData::launch(
+            || ycsb::TraceClient::default(),
             args,
             status.clone(),
             latency.local(),

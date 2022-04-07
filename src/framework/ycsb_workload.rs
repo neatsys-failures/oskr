@@ -19,6 +19,7 @@ use crate::{
     facade::Invoke,
 };
 
+#[derive(Debug, Clone)]
 pub struct Property {
     pub field_count: usize,
     pub field_length: usize,
