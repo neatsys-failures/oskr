@@ -1,6 +1,11 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
+    hash::{Hash, Hasher},
     iter::repeat_with,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Mutex, Once,
+    },
 };
 
 use rand::{
@@ -37,6 +42,8 @@ pub struct Property {
 
     pub table: String,
     pub record_count: u64,
+    pub data_integrity: bool,
+    pub do_transaction: bool,
 }
 
 impl Default for Property {
@@ -64,6 +71,8 @@ impl Default for Property {
 
             table: "usertable".to_string(),
             record_count: 0, // expect user to override
+            data_integrity: false,
+            do_transaction: true,
         }
     }
 }
@@ -104,7 +113,64 @@ pub enum OpKind {
     ReadModifyWrite,
 }
 
+struct AcknowledgedCounterGenerator {
+    counter: AtomicU64,
+    limit: AtomicU64,
+    window: Mutex<[bool; Self::WINDOW_SIZE]>,
+}
+impl AcknowledgedCounterGenerator {
+    const WINDOW_SIZE: usize = 1 << 20;
+    const WINDOW_MASK: usize = Self::WINDOW_SIZE - 1;
+    fn init(&self, start: u64) {
+        let counter = self.counter.load(Ordering::SeqCst);
+        if counter != 0 {
+            assert_eq!(counter, start);
+        } else {
+            self.counter.store(start, Ordering::SeqCst);
+            self.limit.store(start, Ordering::SeqCst);
+        }
+    }
+
+    fn next_value(&self) -> u64 {
+        self.counter.fetch_add(1, Ordering::SeqCst)
+    }
+
+    fn last_value(&self) -> u64 {
+        self.limit.load(Ordering::SeqCst)
+    }
+
+    fn acknowledge(&self, value: u64) {
+        let mut window = self.window.lock().unwrap();
+        assert!(!window[value as usize & Self::WINDOW_MASK]);
+        window[value as usize & Self::WINDOW_MASK] = true;
+
+        let mut out_index = 0;
+        for index in self.limit.load(Ordering::SeqCst).. {
+            if !window[index as usize & Self::WINDOW_MASK] {
+                out_index = index;
+                break;
+            }
+            window[index as usize & Self::WINDOW_MASK] = false;
+        }
+        assert_ne!(out_index, 0);
+        self.limit.store(out_index, Ordering::SeqCst);
+    }
+}
+
 impl Workload {
+    fn transaction_insert_key_sequence() -> &'static AcknowledgedCounterGenerator {
+        static mut SINGLETON: Option<AcknowledgedCounterGenerator> = None;
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| unsafe {
+            SINGLETON = Some(AcknowledgedCounterGenerator {
+                counter: AtomicU64::default(),
+                limit: AtomicU64::default(),
+                window: Mutex::new([false; 1 << 20]),
+            })
+        });
+        unsafe { SINGLETON.as_ref() }.unwrap()
+    }
+
     fn uniform_generator<U: SampleUniform + Clone>(low: U, high: U) -> impl FnMut() -> U {
         let mut rng = thread_rng();
         move || rng.sample(Uniform::new(low.clone(), high.clone()))
@@ -116,6 +182,21 @@ impl Workload {
             counter += 1;
             n
         }
+    }
+
+    fn zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
+        // let mut rng = thread_rng();
+        // move || {
+        //     let zipf: f32 = rng.sample(Zipf::new(max - min, 1.0 / 0.99).unwrap());
+        //     assert_eq!(zipf.fract(), 0.0);
+        //     min + zipf as u64
+        // }
+        move || todo!()
+    }
+
+    fn scrambled_zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
+        let mut zipfian = Self::zipfian_generator(0, 10000000000);
+        move || min + Self::fnvhash64(zipfian()) % (max - min)
     }
 
     fn build_key_name(mut key_number: u64, zero_padding: usize, order: Order) -> String {
@@ -202,13 +283,15 @@ impl Workload {
     fn build_single_value(&mut self, key: &str) -> HashMap<String, Opaque> {
         let mut value_table = HashMap::new();
         let field = (self.field_chooser)();
-        let field_length = (self.field_length_generator)();
         let field = self.field_name_list[field].clone();
         let mut rng = thread_rng();
-        value_table.insert(
-            field,
-            repeat_with(|| rng.gen()).take(field_length).collect(),
-        );
+        let value = if self.property.data_integrity {
+            self.build_deterministic_value(key, &field)
+        } else {
+            let field_length = (self.field_length_generator)();
+            repeat_with(|| rng.gen()).take(field_length).collect()
+        };
+        value_table.insert(field, value);
         value_table
     }
 
@@ -216,30 +299,60 @@ impl Workload {
         let mut value_table = HashMap::new();
         let mut rng = thread_rng();
         for field in self.field_name_list.clone() {
-            let field_length = (self.field_length_generator)();
-            value_table.insert(
-                field,
-                repeat_with(|| rng.gen()).take(field_length).collect(),
-            );
+            let value = if self.property.data_integrity {
+                self.build_deterministic_value(key, &field)
+            } else {
+                let field_length = (self.field_length_generator)();
+                repeat_with(|| rng.gen()).take(field_length).collect()
+            };
+            value_table.insert(field, value);
         }
         value_table
     }
 
+    fn build_deterministic_value(&mut self, key: &str, field: &str) -> Opaque {
+        let field_length = (self.field_length_generator)();
+        let mut value = format!("{key}:{field}").as_bytes().to_vec();
+        while value.len() < field_length {
+            value.extend(b":");
+            value.extend(
+                {
+                    let mut hasher = DefaultHasher::new();
+                    value.hash(&mut hasher);
+                    hasher.finish()
+                }
+                .to_string()
+                .as_bytes(),
+            )
+        }
+        value.truncate(field_length);
+        value
+    }
+
     pub fn new(mut property: Property) -> Self {
         assert_ne!(property.record_count, 0);
+        if property.do_transaction {
+            // i didn't read this, but infer it from usage
+            assert_eq!(property.insert_start, 0);
+            assert_eq!(property.insert_count, 0);
+        }
         if property.insert_count == 0 {
             property.insert_count = property.record_count - property.insert_start;
         }
+        Self::transaction_insert_key_sequence().init(property.record_count);
 
-        let key_chooser = if property.request_distribution == Distribution::Uniform {
-            Box::new(Self::uniform_generator(
+        let key_chooser: Box<dyn FnMut() -> _> = match property.request_distribution {
+            Distribution::Uniform => Box::new(Self::uniform_generator(
                 property.insert_start,
                 property.insert_start + property.insert_count,
-            ))
-        } else {
-            todo!()
+            )),
+            Distribution::Zipfian => Box::new(Self::scrambled_zipfian_generator(
+                property.insert_start,
+                property.insert_count,
+            )),
+            _ => todo!(),
         };
-        let scan_length = match property.scan_length_distribution {
+        let scan_length: Box<dyn FnMut() -> _> = match property.scan_length_distribution {
             Distribution::Uniform => Box::new(Self::uniform_generator(
                 property.min_scan_length,
                 property.max_scan_length,
@@ -262,28 +375,28 @@ impl Workload {
     }
 
     fn next_key_number(&mut self) -> u64 {
+        let mut last_value;
+        let mut next_value;
+        while {
+            last_value = Self::transaction_insert_key_sequence().last_value();
+            next_value = (self.key_chooser)();
+            last_value < next_value
+        } {}
         if self.property.request_distribution == Distribution::Exponential {
-            todo!()
-        } else if self.property.insert_proportion != 0.0 {
-            todo!()
+            last_value - next_value
         } else {
-            let mut key;
-            while {
-                key = (self.key_chooser)();
-                key >= self.property.record_count
-            } {}
-            key
+            next_value
         }
     }
 
-    pub async fn next(&mut self, client: &mut dyn Invoke, load: bool) -> OpKind {
+    pub async fn one_op(&mut self, client: &mut dyn Invoke) -> OpKind {
         async fn invoke(client: &mut dyn Invoke, op: Op) {
             let mut buffer = Vec::new();
             serialize(op)(&mut buffer);
             client.invoke(buffer).await;
         }
 
-        if load {
+        if !self.property.do_transaction {
             let key_number = (self.key_sequence)();
             assert!(key_number < self.property.insert_start + self.property.insert_count);
             let key = Self::build_key_name(
@@ -301,16 +414,16 @@ impl Workload {
         }
 
         let op_kind = (self.operation_chooser)();
-        let key = if op_kind != OpKind::Insert {
-            let key_number = self.next_key_number();
-            Self::build_key_name(
-                key_number,
-                self.property.zero_padding,
-                self.property.insert_order,
-            )
+        let key_number = if op_kind != OpKind::Insert {
+            self.next_key_number()
         } else {
-            todo!()
+            Self::transaction_insert_key_sequence().next_value()
         };
+        let key = Self::build_key_name(
+            key_number,
+            self.property.zero_padding,
+            self.property.insert_order,
+        );
         let field_set = if !self.property.read_all_field {
             let field = (self.field_chooser)();
             [self.field_name_list[field].clone()].into_iter().collect()
@@ -327,6 +440,7 @@ impl Workload {
         match op_kind {
             OpKind::Read => {
                 invoke(client, Op::Read(table, key, field_set)).await;
+                // TODO data integrity
             }
             OpKind::ReadModifyWrite => {
                 invoke(client, Op::Read(table.clone(), key.clone(), field_set)).await;
@@ -340,7 +454,8 @@ impl Workload {
                 invoke(client, Op::Update(table, key, value_table)).await;
             }
             OpKind::Insert => {
-                todo!()
+                invoke(client, Op::Insert(table, key, value_table)).await;
+                Self::transaction_insert_key_sequence().acknowledge(key_number);
             }
         }
         op_kind
