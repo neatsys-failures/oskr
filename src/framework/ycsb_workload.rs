@@ -10,7 +10,7 @@ use std::{
 
 use rand::{
     distributions::{uniform::SampleUniform, Uniform},
-    thread_rng, Rng,
+    random, thread_rng, Rng,
 };
 
 use crate::{
@@ -44,6 +44,7 @@ pub struct Property {
     pub record_count: u64,
     pub data_integrity: bool,
     pub do_transaction: bool,
+    pub operation_count: usize,
 }
 
 impl Default for Property {
@@ -73,6 +74,7 @@ impl Default for Property {
             record_count: 0, // expect user to override
             data_integrity: false,
             do_transaction: true,
+            operation_count: 0,
         }
     }
 }
@@ -157,6 +159,87 @@ impl AcknowledgedCounterGenerator {
     }
 }
 
+// there is a Zipf distribution from rand_distr, the reason not to use:
+// * not sure how to understand the relationship of the factors between it and
+//   YCSB version
+// * it has no support to adjust item count, and closure cannot be the interface
+//   anyway
+struct ZipfianGenerator {
+    item_count: u64,
+    base: u64,
+    alpha: f64,
+    zetan: f64,
+    eta: f64,
+    theta: f64,
+    zeta2theta: f64,
+    count_for_zeta: u64,
+    allow_item_count_decrease: bool,
+    last_value: u64,
+}
+
+impl ZipfianGenerator {
+    fn new(min: u64, max: u64) -> Self {
+        let item_count = max - min;
+        let zipfian_constant = 0.99;
+        let theta = zipfian_constant;
+        let zeta2theta = Self::zeta_static(0, 2, theta, 0.0);
+        let zetan = Self::zeta_static(0, item_count, zipfian_constant, 0.0);
+        let mut s = Self {
+            item_count,
+            base: min,
+            theta,
+            zeta2theta,
+            alpha: 1.0 / (1.0 - theta),
+            zetan,
+            count_for_zeta: item_count,
+            eta: (1.0 - (2.0 / item_count as f64).powf(1.0 - theta)) / (1.0 - zeta2theta / zetan),
+            allow_item_count_decrease: false,
+            last_value: Default::default(),
+        };
+        s.next_value();
+        s
+    }
+
+    fn zeta_static(st: u64, n: u64, theta: f64, initial_sum: f64) -> f64 {
+        let mut sum = initial_sum;
+        for i in st..n {
+            sum += 1.0 / ((i + 1) as f64).powf(theta);
+        }
+        sum
+    }
+
+    fn next_value(&mut self) -> u64 {
+        self.next_long(self.item_count)
+    }
+
+    fn next_long(&mut self, item_count: u64) -> u64 {
+        if item_count != self.count_for_zeta {
+            // YCSB's zeta method is too OOP so I use zeta_static instead
+            if item_count > self.count_for_zeta {
+                self.zetan =
+                    Self::zeta_static(self.count_for_zeta, item_count, self.theta, self.zetan);
+            } else if self.allow_item_count_decrease {
+                self.zetan = Self::zeta_static(0, item_count, self.theta, 0.0);
+            }
+            self.count_for_zeta = item_count;
+            self.eta = (1.0 - (2.0 / self.item_count as f64).powf(1.0 - self.theta))
+                / (1.0 - self.zeta2theta / self.zetan);
+        }
+        let u: f64 = random();
+        let uz = u * self.zetan;
+        if uz < 1.0 {
+            self.base
+        } else if uz < 1.0 + 0.5_f64.powf(self.theta) {
+            self.base + 1
+        } else {
+            let ret = self.base
+                + (self.item_count * (self.eta * u - self.eta + 1.0).powf(self.alpha) as u64);
+            self.last_value = ret;
+            ret
+        }
+    }
+}
+
 impl Workload {
     fn transaction_insert_key_sequence() -> &'static AcknowledgedCounterGenerator {
         static mut SINGLETON: Option<AcknowledgedCounterGenerator> = None;
@@ -184,19 +267,19 @@ impl Workload {
         }
     }
 
-    fn zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
-        // let mut rng = thread_rng();
-        // move || {
-        //     let zipf: f32 = rng.sample(Zipf::new(max - min, 1.0 / 0.99).unwrap());
-        //     assert_eq!(zipf.fract(), 0.0);
-        //     min + zipf as u64
-        // }
-        move || todo!()
+    fn scrambled_zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
+        let mut zipfian = ZipfianGenerator::new(0, 10000000000);
+        move || min + Self::fnvhash64(zipfian.next_value()) % (max - min)
     }
 
-    fn scrambled_zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
-        let mut zipfian = Self::zipfian_generator(0, 10000000000);
-        move || min + Self::fnvhash64(zipfian()) % (max - min)
+    // take basis directly from Self::transaction_insert_key_sequence()
+    fn skewed_latest_generator() -> impl FnMut() -> u64 {
+        let mut zipfian =
+            ZipfianGenerator::new(0, Self::transaction_insert_key_sequence().last_value());
+        move || {
+            let max = Self::transaction_insert_key_sequence().last_value();
+            max - zipfian.next_long(max) - 1
+        }
     }
 
     fn build_key_name(mut key_number: u64, zero_padding: usize, order: Order) -> String {
@@ -346,10 +429,15 @@ impl Workload {
                 property.insert_start,
                 property.insert_start + property.insert_count,
             )),
-            Distribution::Zipfian => Box::new(Self::scrambled_zipfian_generator(
-                property.insert_start,
-                property.insert_count,
-            )),
+            Distribution::Zipfian => {
+                let expected_new_key =
+                    (property.operation_count as f32 * property.insert_proportion * 2.0) as u64;
+                Box::new(Self::scrambled_zipfian_generator(
+                    property.insert_start,
+                    property.insert_start + property.insert_count + expected_new_key,
+                ))
+            }
+            Distribution::Latest => Box::new(Self::skewed_latest_generator()),
             _ => todo!(),
         };
         let scan_length: Box<dyn FnMut() -> _> = match property.scan_length_distribution {
