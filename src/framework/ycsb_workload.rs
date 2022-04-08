@@ -1,7 +1,9 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
+    convert::Infallible,
     hash::{Hash, Hasher},
     iter::repeat_with,
+    str::FromStr,
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc, Mutex,
@@ -79,6 +81,44 @@ impl Default for Property {
     }
 }
 
+impl Property {
+    pub fn rewrite_load(&mut self) {
+        self.do_transaction = false;
+    }
+
+    pub fn rewrite(&mut self, key: &str, value: &str) {
+        match key {
+            "workload" => assert_eq!(value, "site.ycsb.workloads.CoreWorkload"),
+            "fieldcount" => self.field_count = value.parse().unwrap(),
+            "fieldlength" => self.field_length = value.parse().unwrap(),
+            "minfieldlength" => self.min_field_length = value.parse().unwrap(),
+            "readallfields" => self.read_all_field = value.parse().unwrap(),
+            "writeallfields" => self.write_all_field = value.parse().unwrap(),
+            "readproportion" => self.read_proportion = value.parse().unwrap(),
+            "updateproportion" => self.update_proportion = value.parse().unwrap(),
+            "insertproportion" => self.insert_proportion = value.parse().unwrap(),
+            "scanproportion" => self.scan_proportion = value.parse().unwrap(),
+            "readmodifywriteproportion" => {
+                self.read_modify_write_proportion = value.parse().unwrap()
+            }
+            "requestdistribution" => self.request_distribution = value.parse().unwrap(),
+            "minscanlength" => self.min_scan_length = value.parse().unwrap(),
+            "maxscanlength" => self.max_scan_length = value.parse().unwrap(),
+            "scanlengthdistribution" => self.scan_length_distribution = value.parse().unwrap(),
+            "insertstart" => self.insert_start = value.parse().unwrap(),
+            "insertcount" => self.insert_count = value.parse().unwrap(),
+            "zeropadding" => self.zero_padding = value.parse().unwrap(),
+            "insertorder" => self.insert_order = value.parse().unwrap(),
+            "fieldnameprefix" => self.field_name_prefix = value.parse().unwrap(),
+            "table" => self.table = value.parse().unwrap(),
+            "recordcount" => self.record_count = value.parse().unwrap(),
+            "dataintegrity" => self.data_integrity = value.parse().unwrap(),
+            "operationcount" => self.operation_count = value.parse().unwrap(),
+            _ => unreachable!(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Distribution {
     Uniform,
@@ -88,11 +128,35 @@ pub enum Distribution {
     Exponential,
     Latest,
 }
+impl FromStr for Distribution {
+    type Err = Infallible;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "uniform" => Self::Uniform,
+            "zipfian" => Self::Zipfian,
+            "hotspot" => Self::Hotspot,
+            "sequential" => Self::Sequential,
+            "exponential" => Self::Exponential,
+            "latest" => Self::Latest,
+            _ => unreachable!(),
+        })
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Order {
     Ordered,
     Hashed,
+}
+impl FromStr for Order {
+    type Err = Infallible;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "ordered" => Self::Ordered,
+            "hashed" => Self::Hashed,
+            _ => unreachable!(),
+        })
+    }
 }
 
 pub struct Workload {

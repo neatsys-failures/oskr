@@ -96,9 +96,11 @@ fn main() {
         #[clap(short, long = "warm-up", default_value_t = 0)]
         warm_up_duration: u64,
         #[clap(short = 'P')]
-        property_file: PathBuf,
+        property_file: Option<PathBuf>,
         #[clap(short = 'p')]
         property_list: Vec<String>,
+        #[clap(long)]
+        load: bool,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -118,7 +120,20 @@ fn main() {
     config.collect_signing_key(&args.config);
     let config = Config::for_shard(config, 0); // TODO
 
-    let property = Property::default();
+    let mut property = Property::default();
+    if let Some(property_file) = &args.property_file {
+        let rewrite_table = java_properties::read(File::open(property_file).unwrap()).unwrap();
+        for (key, value) in rewrite_table {
+            property.rewrite(&key, &value);
+        }
+    }
+    for property_item in &args.property_list {
+        let (key, value) = property_item.split_once('=').unwrap();
+        property.rewrite(key, value);
+    }
+    if args.load {
+        property.rewrite_load();
+    }
 
     let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
 
