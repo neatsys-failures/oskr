@@ -52,12 +52,34 @@ fn main() {
         Null,
         YCSB,
     }
+    impl Workload {
+        // seems like no better way but it still feels like go back to 90's
+        const ALL: usize = 0;
+        const NULL_TAG: &'static [&'static str] = &["all"];
+        const YCSB_READ: usize = 1;
+        const YCSB_UPDATE: usize = 2;
+        const YCSB_SCAN: usize = 3;
+        const YCSB_INSERT: usize = 4;
+        const YCSB_READ_MODIFY_WRITE: usize = 5;
+        const YCSB_DELETE: usize = 6;
+        const YCSB_TAG: &'static [&'static str] = &[
+            "all",
+            "ycsb.read",
+            "ycsb.update",
+            "ycsb.scan",
+            "ycsb.insert",
+            "ycsb.read_modify_write",
+            "ycsb.delete",
+        ];
+    }
 
     #[derive(Parser, Debug)]
     #[clap(name = "Oskr Client", version)]
     struct Args {
         #[clap(short, long, arg_enum)]
         mode: Mode,
+        #[clap(short, long, arg_enum)]
+        workload: Workload,
         #[clap(short, long, parse(from_os_str))]
         config: PathBuf,
         #[clap(long, default_value = "000000ff")]
@@ -105,7 +127,7 @@ fn main() {
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
-        latency: LocalLatency,
+        latency: Vec<LocalLatency>,
         status: Arc<AtomicU32>,
         args: Arc<Args>,
     }
@@ -148,7 +170,7 @@ fn main() {
                                     _ = shutdown => return,
                                 }
                                 if status.load(Ordering::SeqCst) == Status::Run as _ {
-                                    latency += measure;
+                                    latency[Workload::ALL] += measure;
                                     count.fetch_add(1, Ordering::SeqCst);
                                 }
                             }
@@ -191,7 +213,7 @@ fn main() {
             mut client: impl FnMut() -> C,
             args: Args,
             status: Arc<AtomicU32>,
-            latency: LocalLatency,
+            latency: Vec<LocalLatency>,
         ) {
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
                 .map(|i| {
@@ -219,7 +241,13 @@ fn main() {
     }
 
     let status = Arc::new(AtomicU32::new(Status::WarmUp as _));
-    let mut latency = Latency::new("latency");
+    let latency: Vec<_> = match args.workload {
+        Workload::Null => Workload::NULL_TAG,
+        Workload::YCSB => Workload::YCSB_TAG,
+    }
+    .iter()
+    .map(|latency| Latency::new(latency))
+    .collect();
     match args.mode {
         Mode::Unreplicated => WorkerData::launch(
             || {
@@ -231,7 +259,7 @@ fn main() {
             },
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
         Mode::UnreplicatedSigned => WorkerData::launch(
             || {
@@ -243,44 +271,46 @@ fn main() {
             },
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
         Mode::HotStuff => WorkerData::launch(
             || hotstuff::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
         Mode::Zyzzyva => WorkerData::launch(
             || zyzzyva::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
         Mode::YCSB => WorkerData::launch(
             || ycsb::TraceClient::default(),
             args,
             status.clone(),
-            latency.local(),
+            latency.iter().map(|latency| latency.local()).collect(),
         ),
     }
 
     transport.run(0, || status.load(Ordering::SeqCst) == Status::Shutdown as _);
     unsafe { rte_eal_mp_wait_lcore() };
 
-    latency.refresh();
-    println!("{}", latency);
-    let hist: SyncHistogram<_> = latency.into();
-    println!(
-        "p50(mean) {:?}({:?}) p99 {:?}",
-        Duration::from_nanos(hist.value_at_quantile(0.5)),
-        Duration::from_nanos(hist.mean() as _),
-        Duration::from_nanos(hist.value_at_quantile(0.99))
-    );
+    for mut latency in latency {
+        latency.refresh();
+        println!("{}", latency);
+        let hist: SyncHistogram<_> = latency.into();
+        println!(
+            "p50(mean) {:?}({:?}) p99 {:?}",
+            Duration::from_nanos(hist.value_at_quantile(0.5)),
+            Duration::from_nanos(hist.mean() as _),
+            Duration::from_nanos(hist.value_at_quantile(0.99))
+        );
+    }
 }

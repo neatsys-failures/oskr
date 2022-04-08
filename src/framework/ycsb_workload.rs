@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
     hash::{Hash, Hasher},
     iter::repeat_with,
@@ -260,11 +261,17 @@ impl Workload {
         move || rng.sample(Uniform::new(low.clone(), high.clone()))
     }
 
-    fn counter_generator(mut counter: u64) -> impl FnMut() -> u64 {
-        move || {
-            let n = counter;
-            counter += 1;
-            n
+    // make a little hacking here: pass Some(x) to init to x, pass None to
+    // get next counting
+    fn key_sequence() -> impl Fn(Option<u64>) -> u64 {
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        |start| {
+            if let Some(start) = start {
+                COUNTER.store(start, Ordering::SeqCst);
+                0
+            } else {
+                COUNTER.fetch_add(1, Ordering::SeqCst)
+            }
         }
     }
 
@@ -273,12 +280,12 @@ impl Workload {
         move || min + Self::fnvhash64(zipfian.next_value()) % (max - min)
     }
 
-    // take basis directly from Self::transaction_insert_key_sequence()
-    fn skewed_latest_generator() -> impl FnMut() -> u64 {
-        let mut zipfian =
-            ZipfianGenerator::new(0, Self::transaction_insert_key_sequence().last_value());
+    fn skewed_latest_generator(
+        basis: impl Borrow<AcknowledgedCounterGenerator>,
+    ) -> impl FnMut() -> u64 {
+        let mut zipfian = ZipfianGenerator::new(0, basis.borrow().last_value());
         move || {
-            let max = Self::transaction_insert_key_sequence().last_value();
+            let max = basis.borrow().last_value();
             max - zipfian.next_long(max) - 1
         }
     }
@@ -438,7 +445,9 @@ impl Workload {
                     property.insert_start + property.insert_count + expected_new_key,
                 ))
             }
-            Distribution::Latest => Box::new(Self::skewed_latest_generator()),
+            Distribution::Latest => Box::new(Self::skewed_latest_generator(
+                Self::transaction_insert_key_sequence(),
+            )),
             _ => todo!(),
         };
         let scan_length: Box<dyn FnMut() -> _> = match property.scan_length_distribution {
@@ -455,7 +464,11 @@ impl Workload {
                 .collect(),
             field_chooser: Box::new(Self::uniform_generator(0, property.field_count)),
             field_length_generator: Box::new(Self::get_field_length_generator(&property)),
-            key_sequence: Box::new(Self::counter_generator(property.insert_start)),
+            key_sequence: Box::new({
+                let seq = Self::key_sequence();
+                seq(Some(property.insert_start));
+                move || seq(None)
+            }),
             key_chooser,
             operation_chooser: Box::new(Self::create_operation_generator(&property)),
             scan_length,
