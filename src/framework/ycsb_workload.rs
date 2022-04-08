@@ -16,7 +16,6 @@ use rand::{
 use crate::{
     app::ycsb::Op,
     common::{serialize, Opaque},
-    facade::Invoke,
 };
 
 #[derive(Debug, Clone)]
@@ -108,13 +107,13 @@ pub struct Workload {
     scan_length: Box<dyn Fn() -> usize + Send + Sync>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OpKind {
-    Read,
-    Update,
-    Insert,
-    Scan,
-    ReadModifyWrite,
+    Read(Opaque),
+    Update(Opaque),
+    Insert(Opaque),
+    Scan(Opaque),
+    ReadModifyWrite(Opaque, Opaque),
 }
 
 struct AcknowledgedCounterGenerator {
@@ -301,7 +300,7 @@ impl Workload {
         let mut add_value = move |predicate_list: &mut Vec<_>, proportion, value: OpKind| {
             predicate_list.push(Box::new(move |p| {
                 if (low..low + proportion).contains(&p) {
-                    Some(value)
+                    Some(value.clone())
                 } else {
                     None
                 }
@@ -310,30 +309,38 @@ impl Workload {
         };
 
         if property.read_proportion > 0.0 {
-            add_value(&mut predicate_list, property.read_proportion, OpKind::Read);
+            add_value(
+                &mut predicate_list,
+                property.read_proportion,
+                OpKind::Read(Opaque::default()),
+            );
         }
         if property.update_proportion > 0.0 {
             add_value(
                 &mut predicate_list,
                 property.update_proportion,
-                OpKind::Update,
+                OpKind::Update(Opaque::default()),
             );
         }
         if property.insert_proportion > 0.0 {
             add_value(
                 &mut predicate_list,
                 property.insert_proportion,
-                OpKind::Insert,
+                OpKind::Insert(Opaque::default()),
             );
         }
         if property.scan_proportion > 0.0 {
-            add_value(&mut predicate_list, property.scan_proportion, OpKind::Scan);
+            add_value(
+                &mut predicate_list,
+                property.scan_proportion,
+                OpKind::Scan(Opaque::default()),
+            );
         }
         if property.read_modify_write_proportion > 0.0 {
             add_value(
                 &mut predicate_list,
                 property.read_modify_write_proportion,
-                OpKind::ReadModifyWrite,
+                OpKind::ReadModifyWrite(Opaque::default(), Opaque::default()),
             );
         }
 
@@ -467,13 +474,7 @@ impl Workload {
         }
     }
 
-    pub async fn one_op(&self, client: &mut dyn Invoke) -> OpKind {
-        async fn invoke(client: &mut dyn Invoke, op: Op) {
-            let mut buffer = Vec::new();
-            serialize(op)(&mut buffer);
-            client.invoke(buffer).await;
-        }
-
+    pub fn one_op(&self) -> (OpKind, Box<dyn FnOnce(&Self) + Send>) {
         if !self.property.do_transaction {
             let key_number = (self.key_sequence)();
             assert!(key_number < self.property.insert_start + self.property.insert_count);
@@ -483,16 +484,13 @@ impl Workload {
                 self.property.insert_order,
             );
             let value_table = self.build_value_table(&key);
-            invoke(
-                client,
-                Op::Insert(self.property.table.clone(), key, value_table),
-            )
-            .await;
-            return OpKind::Insert;
+            let mut buffer = Opaque::new();
+            serialize(Op::Insert(self.property.table.clone(), key, value_table))(&mut buffer);
+            return (OpKind::Insert(buffer), Box::new(|_| {}));
         }
 
-        let op_kind = (self.operation_chooser)();
-        let key_number = if op_kind != OpKind::Insert {
+        let mut op_kind = (self.operation_chooser)();
+        let key_number = if !matches!(op_kind, OpKind::Insert(_)) {
             self.next_key_number()
         } else {
             self.transaction_insert_key_sequence.next_value()
@@ -515,27 +513,32 @@ impl Workload {
         };
         let table = self.property.table.clone();
 
-        match op_kind {
-            OpKind::Read => {
-                invoke(client, Op::Read(table, key, field_set)).await;
+        let mut post_action: Box<dyn FnOnce(&Self) + Send> = Box::new(|_| {});
+        match &mut op_kind {
+            OpKind::Read(op) => {
+                serialize(Op::Read(table, key, field_set))(op);
                 // TODO data integrity
             }
-            OpKind::ReadModifyWrite => {
-                invoke(client, Op::Read(table.clone(), key.clone(), field_set)).await;
-                invoke(client, Op::Update(table, key, value_table)).await;
+            OpKind::ReadModifyWrite(read_op, update_op) => {
+                serialize(Op::Read(table.clone(), key.clone(), field_set))(read_op);
+                serialize(Op::Update(table, key, value_table))(update_op);
             }
-            OpKind::Scan => {
+            OpKind::Scan(op) => {
                 let len = (self.scan_length)();
-                invoke(client, Op::Scan(table, key, len, field_set)).await;
+                serialize(Op::Scan(table, key, len, field_set))(op);
             }
-            OpKind::Update => {
-                invoke(client, Op::Update(table, key, value_table)).await;
+            OpKind::Update(op) => {
+                serialize(Op::Update(table, key, value_table))(op);
             }
-            OpKind::Insert => {
-                invoke(client, Op::Insert(table, key, value_table)).await;
-                self.transaction_insert_key_sequence.acknowledge(key_number);
+            OpKind::Insert(op) => {
+                serialize(Op::Insert(table, key, value_table))(op);
+                post_action = Box::new(move |context| {
+                    context
+                        .transaction_insert_key_sequence
+                        .acknowledge(key_number)
+                });
             }
         }
-        op_kind
+        (op_kind, post_action)
     }
 }

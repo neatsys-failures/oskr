@@ -26,6 +26,7 @@ use oskr::{
         busy_poll::AsyncEcosystem,
         dpdk::Transport,
         latency::{Latency, LocalLatency, MeasureClock},
+        ycsb_workload::{OpKind, Property, Workload},
     },
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
 };
@@ -48,11 +49,11 @@ fn main() {
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
     #[allow(clippy::upper_case_acronyms)]
-    enum Workload {
+    enum WorkloadName {
         Null,
         YCSB,
     }
-    impl Workload {
+    impl WorkloadName {
         // seems like no better way but it still feels like go back to 90's
         const ALL: usize = 0;
         const NULL_TAG: &'static [&'static str] = &["all"];
@@ -61,7 +62,6 @@ fn main() {
         const YCSB_SCAN: usize = 3;
         const YCSB_INSERT: usize = 4;
         const YCSB_READ_MODIFY_WRITE: usize = 5;
-        const YCSB_DELETE: usize = 6;
         const YCSB_TAG: &'static [&'static str] = &[
             "all",
             "ycsb.read",
@@ -69,7 +69,6 @@ fn main() {
             "ycsb.scan",
             "ycsb.insert",
             "ycsb.read_modify_write",
-            "ycsb.delete",
         ];
     }
 
@@ -79,7 +78,7 @@ fn main() {
         #[clap(short, long, arg_enum)]
         mode: Mode,
         #[clap(short, long, arg_enum)]
-        workload: Workload,
+        workload: WorkloadName,
         #[clap(short, long, parse(from_os_str))]
         config: PathBuf,
         #[clap(long, default_value = "000000ff")]
@@ -96,6 +95,10 @@ fn main() {
         duration: u64,
         #[clap(short, long = "warm-up", default_value_t = 0)]
         warm_up_duration: u64,
+        #[clap(short = 'P')]
+        property_file: PathBuf,
+        #[clap(short = 'p')]
+        property_list: Vec<String>,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -115,6 +118,8 @@ fn main() {
     config.collect_signing_key(&args.config);
     let config = Config::for_shard(config, 0); // TODO
 
+    let property = Property::default();
+
     let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -130,6 +135,7 @@ fn main() {
         latency: Vec<LocalLatency>,
         status: Arc<AtomicU32>,
         args: Arc<Args>,
+        ycsb_workload: Arc<Workload>,
     }
     impl<C: Receiver<Transport> + Invoke + Send + 'static> WorkerData<C> {
         extern "C" fn worker(arg: *mut c_void) -> i32 {
@@ -147,6 +153,7 @@ fn main() {
             let count = worker_data.count.clone();
             let status = worker_data.status.clone();
             let latency = worker_data.latency.clone();
+            let ycsb_workload = worker_data.ycsb_workload.clone();
             let args = worker_data.args.clone();
 
             // I want a broadcast :|
@@ -160,18 +167,61 @@ fn main() {
                     let status = status.clone();
                     let mut latency = latency.clone();
                     let clock = MeasureClock::default();
+                    let workload = args.workload;
+                    let ycsb_workload = ycsb_workload.clone();
                     (
                         AsyncEcosystem::spawn(async move {
                             debug!("{}", client.get_address());
                             loop {
                                 let measure = clock.measure();
-                                select! {
-                                    _ = client.invoke(Opaque::default()).fuse() => {},
-                                    _ = shutdown => return,
-                                }
-                                if status.load(Ordering::SeqCst) == Status::Run as _ {
-                                    latency[Workload::ALL] += measure;
-                                    count.fetch_add(1, Ordering::SeqCst);
+                                match workload {
+                                    WorkloadName::Null => {
+                                        select! {
+                                            _ = client.invoke(Opaque::default()).fuse() => {
+                                                if status.load(Ordering::SeqCst) == Status::Run as _ {
+                                                    latency[WorkloadName::ALL] += measure;
+                                                    count.fetch_add(1, Ordering::SeqCst);
+                                                }
+                                            },
+                                            _ = shutdown => return,
+                                        }
+                                    }
+                                    WorkloadName::YCSB => {
+                                        let (op, post_action) = ycsb_workload.one_op();
+                                        let invoke = async {
+                                            match op {
+                                                OpKind::Read(op) => {
+                                                    client.invoke(op).await;
+                                                    WorkloadName::YCSB_READ
+                                                }
+                                                OpKind::Update(op) => {
+                                                    client.invoke(op).await;
+                                                    WorkloadName::YCSB_UPDATE
+                                                }
+                                                OpKind::ReadModifyWrite(read_op, update_op) => {
+                                                    client.invoke(read_op).await;
+                                                    client.invoke(update_op).await;
+                                                    WorkloadName::YCSB_READ_MODIFY_WRITE
+                                                }
+                                                OpKind::Scan(op) => {
+                                                    client.invoke(op).await;
+                                                    WorkloadName::YCSB_SCAN
+                                                }
+                                                OpKind::Insert(op) => {
+                                                    client.invoke(op).await;
+                                                    WorkloadName::YCSB_INSERT
+                                                }
+                                            }
+                                        };
+                                        select! {
+                                            row = invoke.fuse() => {
+                                                latency[row] += measure;
+                                                latency[WorkloadName::ALL] += measure;
+                                                post_action(&*ycsb_workload);
+                                            },
+                                            _ = shutdown => return,
+                                        }
+                                    }
                                 }
                             }
                         }),
@@ -214,6 +264,7 @@ fn main() {
             args: Args,
             status: Arc<AtomicU32>,
             latency: Vec<LocalLatency>,
+            property: Property,
         ) {
             let client_list: Vec<Vec<_>> = (0..args.n_worker)
                 .map(|i| {
@@ -229,6 +280,7 @@ fn main() {
                 latency,
                 status,
                 args: Arc::new(args),
+                ycsb_workload: Arc::new(Workload::new(property)),
             };
             unsafe {
                 rte_eal_mp_remote_launch(
@@ -242,8 +294,8 @@ fn main() {
 
     let status = Arc::new(AtomicU32::new(Status::WarmUp as _));
     let latency: Vec<_> = match args.workload {
-        Workload::Null => Workload::NULL_TAG,
-        Workload::YCSB => Workload::YCSB_TAG,
+        WorkloadName::Null => WorkloadName::NULL_TAG,
+        WorkloadName::YCSB => WorkloadName::YCSB_TAG,
     }
     .iter()
     .map(|latency| Latency::new(latency))
@@ -260,6 +312,7 @@ fn main() {
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
         Mode::UnreplicatedSigned => WorkerData::launch(
             || {
@@ -272,30 +325,35 @@ fn main() {
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
         Mode::PBFT => WorkerData::launch(
             || pbft::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
         Mode::HotStuff => WorkerData::launch(
             || hotstuff::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
         Mode::Zyzzyva => WorkerData::launch(
             || zyzzyva::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
         Mode::YCSB => WorkerData::launch(
             || ycsb::TraceClient::default(),
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
+            property,
         ),
     }
 

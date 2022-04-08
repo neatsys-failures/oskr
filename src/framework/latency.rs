@@ -51,6 +51,7 @@ impl Latency {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Measure(u64);
 impl MeasureClock {
     pub fn measure(&self) -> Measure {
