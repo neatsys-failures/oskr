@@ -1,11 +1,10 @@
 use std::{
-    borrow::Borrow,
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
     hash::{Hash, Hasher},
     iter::repeat_with,
     sync::{
         atomic::{AtomicU64, Ordering},
-        Mutex, Once,
+        Arc, Mutex,
     },
 };
 
@@ -100,12 +99,13 @@ pub enum Order {
 pub struct Workload {
     property: Property,
     field_name_list: Vec<String>,
-    field_chooser: Box<dyn FnMut() -> usize>,
-    field_length_generator: Box<dyn FnMut() -> usize>,
-    key_sequence: Box<dyn FnMut() -> u64>,
-    key_chooser: Box<dyn FnMut() -> u64>,
-    operation_chooser: Box<dyn FnMut() -> OpKind>,
-    scan_length: Box<dyn FnMut() -> usize>,
+    field_chooser: Box<dyn Fn() -> usize + Send + Sync>,
+    field_length_generator: Box<dyn Fn() -> usize + Send + Sync>,
+    key_sequence: Box<dyn Fn() -> u64 + Send + Sync>,
+    transaction_insert_key_sequence: Arc<AcknowledgedCounterGenerator>,
+    key_chooser: Box<dyn Fn() -> u64 + Send + Sync>,
+    operation_chooser: Box<dyn Fn() -> OpKind + Send + Sync>,
+    scan_length: Box<dyn Fn() -> usize + Send + Sync>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -125,13 +125,11 @@ struct AcknowledgedCounterGenerator {
 impl AcknowledgedCounterGenerator {
     const WINDOW_SIZE: usize = 1 << 20;
     const WINDOW_MASK: usize = Self::WINDOW_SIZE - 1;
-    fn init(&self, start: u64) {
-        let counter = self.counter.load(Ordering::SeqCst);
-        if counter != 0 {
-            assert_eq!(counter, start);
-        } else {
-            self.counter.store(start, Ordering::SeqCst);
-            self.limit.store(start, Ordering::SeqCst);
+    fn new(start: u64) -> Self {
+        Self {
+            counter: AtomicU64::new(start),
+            limit: AtomicU64::new(start),
+            window: Mutex::new([false; Self::WINDOW_SIZE]),
         }
     }
 
@@ -243,50 +241,30 @@ impl ZipfianGenerator {
 }
 
 impl Workload {
-    fn transaction_insert_key_sequence() -> &'static AcknowledgedCounterGenerator {
-        static mut SINGLETON: Option<AcknowledgedCounterGenerator> = None;
-        static ONCE: Once = Once::new();
-        ONCE.call_once(|| unsafe {
-            SINGLETON = Some(AcknowledgedCounterGenerator {
-                counter: AtomicU64::default(),
-                limit: AtomicU64::default(),
-                window: Mutex::new([false; 1 << 20]),
-            })
-        });
-        unsafe { SINGLETON.as_ref() }.unwrap()
+    fn uniform_generator<U: SampleUniform + Clone + Send + Sync>(
+        low: U,
+        high: U,
+    ) -> impl Fn() -> U + Send + Sync {
+        move || thread_rng().sample(Uniform::new(low.clone(), high.clone()))
     }
 
-    fn uniform_generator<U: SampleUniform + Clone>(low: U, high: U) -> impl FnMut() -> U {
-        let mut rng = thread_rng();
-        move || rng.sample(Uniform::new(low.clone(), high.clone()))
+    fn counter_generator(start: u64) -> impl Fn() -> u64 + Send + Sync {
+        let counter = AtomicU64::new(start);
+        move || counter.fetch_add(1, Ordering::SeqCst)
     }
 
-    // make a little hacking here: pass Some(x) to init to x, pass None to
-    // get next counting
-    fn key_sequence() -> impl Fn(Option<u64>) -> u64 {
-        static COUNTER: AtomicU64 = AtomicU64::new(0);
-        |start| {
-            if let Some(start) = start {
-                COUNTER.store(start, Ordering::SeqCst);
-                0
-            } else {
-                COUNTER.fetch_add(1, Ordering::SeqCst)
-            }
-        }
-    }
-
-    fn scrambled_zipfian_generator(min: u64, max: u64) -> impl FnMut() -> u64 {
-        let mut zipfian = ZipfianGenerator::new(0, 10000000000);
-        move || min + Self::fnvhash64(zipfian.next_value()) % (max - min)
+    fn scrambled_zipfian_generator(min: u64, max: u64) -> impl Fn() -> u64 + Send + Sync {
+        let zipfian = Mutex::new(ZipfianGenerator::new(0, 10000000000));
+        move || min + Self::fnvhash64(zipfian.lock().unwrap().next_value()) % (max - min)
     }
 
     fn skewed_latest_generator(
-        basis: impl Borrow<AcknowledgedCounterGenerator>,
-    ) -> impl FnMut() -> u64 {
-        let mut zipfian = ZipfianGenerator::new(0, basis.borrow().last_value());
+        basis: Arc<AcknowledgedCounterGenerator>,
+    ) -> impl Fn() -> u64 + Send + Sync {
+        let zipfian = Mutex::new(ZipfianGenerator::new(0, basis.last_value()));
         move || {
-            let max = basis.borrow().last_value();
-            max - zipfian.next_long(max) - 1
+            let max = basis.last_value();
+            max - zipfian.lock().unwrap().next_long(max) - 1
         }
     }
 
@@ -311,13 +289,13 @@ impl Workload {
         hashval
     }
 
-    fn get_field_length_generator(property: &Property) -> impl FnMut() -> usize {
+    fn get_field_length_generator(property: &Property) -> impl Fn() -> usize + Send + Sync {
         let field_length = property.field_length;
         // TODO other distributions
         move || field_length
     }
 
-    fn create_operation_generator(property: &Property) -> impl FnMut() -> OpKind {
+    fn create_operation_generator(property: &Property) -> impl Fn() -> OpKind + Send + Sync {
         let mut low = 0.0;
         let mut predicate_list = Vec::new();
         let mut add_value = move |predicate_list: &mut Vec<_>, proportion, value: OpKind| {
@@ -359,9 +337,8 @@ impl Workload {
             );
         }
 
-        let mut rng = thread_rng();
         move || {
-            let p = rng.gen();
+            let p = random();
             for predicate in &predicate_list {
                 if let Some(op_kind) = predicate(p) {
                     return op_kind;
@@ -371,29 +348,29 @@ impl Workload {
         }
     }
 
-    fn build_single_value(&mut self, key: &str) -> HashMap<String, Opaque> {
+    fn build_single_value(&self, key: &str) -> HashMap<String, Opaque> {
         let mut value_table = HashMap::new();
         let field = (self.field_chooser)();
         let field = self.field_name_list[field].clone();
-        let mut rng = thread_rng();
         let value = if self.property.data_integrity {
             self.build_deterministic_value(key, &field)
         } else {
             let field_length = (self.field_length_generator)();
+            let mut rng = thread_rng();
             repeat_with(|| rng.gen()).take(field_length).collect()
         };
         value_table.insert(field, value);
         value_table
     }
 
-    fn build_value_table(&mut self, key: &str) -> HashMap<String, Opaque> {
+    fn build_value_table(&self, key: &str) -> HashMap<String, Opaque> {
         let mut value_table = HashMap::new();
-        let mut rng = thread_rng();
         for field in self.field_name_list.clone() {
             let value = if self.property.data_integrity {
                 self.build_deterministic_value(key, &field)
             } else {
                 let field_length = (self.field_length_generator)();
+                let mut rng = thread_rng();
                 repeat_with(|| rng.gen()).take(field_length).collect()
             };
             value_table.insert(field, value);
@@ -401,7 +378,7 @@ impl Workload {
         value_table
     }
 
-    fn build_deterministic_value(&mut self, key: &str, field: &str) -> Opaque {
+    fn build_deterministic_value(&self, key: &str, field: &str) -> Opaque {
         let field_length = (self.field_length_generator)();
         let mut value = format!("{key}:{field}").as_bytes().to_vec();
         while value.len() < field_length {
@@ -430,9 +407,10 @@ impl Workload {
         if property.insert_count == 0 {
             property.insert_count = property.record_count - property.insert_start;
         }
-        Self::transaction_insert_key_sequence().init(property.record_count);
 
-        let key_chooser: Box<dyn FnMut() -> _> = match property.request_distribution {
+        let transaction_insert_key_sequence =
+            Arc::new(AcknowledgedCounterGenerator::new(property.record_count));
+        let key_chooser: Box<dyn Fn() -> _ + Send + Sync> = match property.request_distribution {
             Distribution::Uniform => Box::new(Self::uniform_generator(
                 property.insert_start,
                 property.insert_start + property.insert_count,
@@ -446,11 +424,12 @@ impl Workload {
                 ))
             }
             Distribution::Latest => Box::new(Self::skewed_latest_generator(
-                Self::transaction_insert_key_sequence(),
+                transaction_insert_key_sequence.clone(),
             )),
             _ => todo!(),
         };
-        let scan_length: Box<dyn FnMut() -> _> = match property.scan_length_distribution {
+        let scan_length: Box<dyn Fn() -> _ + Send + Sync> = match property.scan_length_distribution
+        {
             Distribution::Uniform => Box::new(Self::uniform_generator(
                 property.min_scan_length,
                 property.max_scan_length,
@@ -464,11 +443,8 @@ impl Workload {
                 .collect(),
             field_chooser: Box::new(Self::uniform_generator(0, property.field_count)),
             field_length_generator: Box::new(Self::get_field_length_generator(&property)),
-            key_sequence: Box::new({
-                let seq = Self::key_sequence();
-                seq(Some(property.insert_start));
-                move || seq(None)
-            }),
+            key_sequence: Box::new(Self::counter_generator(property.insert_start)),
+            transaction_insert_key_sequence,
             key_chooser,
             operation_chooser: Box::new(Self::create_operation_generator(&property)),
             scan_length,
@@ -476,11 +452,11 @@ impl Workload {
         }
     }
 
-    fn next_key_number(&mut self) -> u64 {
+    fn next_key_number(&self) -> u64 {
         let mut last_value;
         let mut next_value;
         while {
-            last_value = Self::transaction_insert_key_sequence().last_value();
+            last_value = self.transaction_insert_key_sequence.last_value();
             next_value = (self.key_chooser)();
             last_value < next_value
         } {}
@@ -491,7 +467,7 @@ impl Workload {
         }
     }
 
-    pub async fn one_op(&mut self, client: &mut dyn Invoke) -> OpKind {
+    pub async fn one_op(&self, client: &mut dyn Invoke) -> OpKind {
         async fn invoke(client: &mut dyn Invoke, op: Op) {
             let mut buffer = Vec::new();
             serialize(op)(&mut buffer);
@@ -519,7 +495,7 @@ impl Workload {
         let key_number = if op_kind != OpKind::Insert {
             self.next_key_number()
         } else {
-            Self::transaction_insert_key_sequence().next_value()
+            self.transaction_insert_key_sequence.next_value()
         };
         let key = Self::build_key_name(
             key_number,
@@ -557,7 +533,7 @@ impl Workload {
             }
             OpKind::Insert => {
                 invoke(client, Op::Insert(table, key, value_table)).await;
-                Self::transaction_insert_key_sequence().acknowledge(key_number);
+                self.transaction_insert_key_sequence.acknowledge(key_number);
             }
         }
         op_kind
