@@ -9,7 +9,7 @@ use crossbeam::{
     utils::Backoff,
 };
 
-use crate::framework::latency::Latency;
+use crate::framework::latency::{Latency, MeasureClock};
 
 pub trait State {
     type Shared;
@@ -190,18 +190,19 @@ impl<S: State> Handle<S> {
 
         let mut stateful_latency = self.metric.stateful.local();
         let mut stateless_latency = self.metric.stateless.local();
+        let clock = MeasureClock::default();
 
         let mut steal = self.steal_without_state(context, &mut shutdown);
         loop {
             match steal {
                 Task::Stateful(task, mut context) => {
-                    let measure = stateful_latency.measure();
+                    let measure = clock.measure();
                     task(&mut context);
                     stateful_latency += measure;
                     steal = self.steal_with_state(context, &mut shutdown);
                 }
                 Task::Stateless(task, context) => {
-                    let measure = stateless_latency.measure();
+                    let measure = clock.measure();
                     task(&context);
                     stateless_latency += measure;
                     steal = self.steal_without_state(context, &mut shutdown);

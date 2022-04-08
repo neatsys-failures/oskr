@@ -17,6 +17,9 @@ pub struct LocalLatency {
     clock: Clock,
 }
 
+#[derive(Clone, Default)]
+pub struct MeasureClock(Clock);
+
 impl Latency {
     pub fn new(name: &str) -> Self {
         Self {
@@ -49,9 +52,9 @@ impl Latency {
 }
 
 pub struct Measure(u64);
-impl LocalLatency {
+impl MeasureClock {
     pub fn measure(&self) -> Measure {
-        Measure(self.clock.start())
+        Measure(self.0.start())
     }
 }
 

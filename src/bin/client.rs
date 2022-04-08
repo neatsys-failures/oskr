@@ -25,7 +25,7 @@ use oskr::{
     framework::{
         busy_poll::AsyncEcosystem,
         dpdk::Transport,
-        latency::{Latency, LocalLatency},
+        latency::{Latency, LocalLatency, MeasureClock},
     },
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
 };
@@ -137,11 +137,12 @@ fn main() {
                     let (shutdown_tx, mut shutdown) = oneshot::channel();
                     let status = status.clone();
                     let mut latency = latency.clone();
+                    let clock = MeasureClock::default();
                     (
                         AsyncEcosystem::spawn(async move {
                             debug!("{}", client.get_address());
                             loop {
-                                let measure = latency.measure();
+                                let measure = clock.measure();
                                 select! {
                                     _ = client.invoke(Opaque::default()).fuse() => {},
                                     _ = shutdown => return,
