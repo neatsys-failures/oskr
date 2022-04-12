@@ -33,18 +33,30 @@ project's logo.
 
 **Benchmark result.** Detailed explaination work in progress.
 
-|Protocol|Worker number|Batch size|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
-|-------------------|---|-----------|-----------|-----------|
-|Unreplicated       |1  |-          |2011.256   |10.751     |
-|Unreplicated Signed|1  |-          |11.799     |91.647     |
-|Unreplicated Signed|14 |-          |154.064    |99.327     |
-|PBFT               |14 |1          |4.875      |716.799    |
-|PBFT               |14 |Adaptive   |121.200    |716.799    |
-|HotStuff           |14 |1          |1.836      |2179.071   |
-|HotStuff           |14 |Adaptive   |98.654     |2179.071   |
-|Zyzzyva            |14 |1          |66.817     |323.583    |
-|Zyzzyva            |14 |100        |135.600    |-          |
+0/0 RPC without batching
 
+|Protocol|Worker number|Maximum throughput (Kops/sec)|Minimum medium latency (us)|
+|-------------------|---|-----------|-----------|
+|Unreplicated       |1  |2011.256   |10.751     |
+|Unreplicated Signed|1  |11.799     |91.647     |
+|Unreplicated Signed|14 |154.064    |99.327     |
+|PBFT               |14 |4.875      |716.799    |
+|HotStuff           |14 |1.836      |2179.071   |
+|Zyzzyva            |14 |66.817     |323.583    |
+
+0/0 RPC with batch size up to 100
+
+|Protocol|Adaptive batching|Maximum throughput (Kops/sec)|
+|-------------------|---|-----------|
+|PBFT               |Yes|121.200    |
+|HotStuff           |Yes|98.654     |
+|Zyzzyva            |No |135.600    |
+
+YCSB workload A with sqlite as backend
+
+|Protocol|Maximum throughput (Kops/sec)|Minimum read latency (us)|Minimum update latency (us)|
+|---------------|-------|-------|-------|
+|Unreplicated   |70.512 |34.815 |27.775 |
 
 ----
 

@@ -201,6 +201,9 @@ fn main() {
                     let count = count.load(Ordering::SeqCst);
                     println!("{}", count - prev);
                     prev = count;
+                    if count > limit {
+                        break;
+                    }
                 }
                 status.store(Status::Shutdown as _, Ordering::SeqCst);
             } else {

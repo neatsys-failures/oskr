@@ -15,7 +15,7 @@ use oskr::{
     common::{panic_abort, Config, OpNumber, Opaque, ReplicaId},
     dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
     facade::{self, App},
-    framework::dpdk::Transport,
+    framework::{dpdk::Transport, sqlite::Database, ycsb_workload::Property},
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
     stage::{Handle, State},
 };
@@ -32,7 +32,7 @@ fn main() {
     tracing_subscriber::fmt::init();
     panic_abort();
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
     #[allow(clippy::upper_case_acronyms)]
     enum Mode {
         Unreplicated,
@@ -42,18 +42,28 @@ fn main() {
         Zyzzyva,
     }
 
+    // should be `AppName` which is more pricese
+    // just try to match client side
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
+    enum WorkloadName {
+        Null,
+        YCSB,
+    }
+
     #[derive(Parser, Debug)]
     #[clap(name = "Oskr Replica", version)]
     struct Args {
         #[clap(short, long, arg_enum)]
         mode: Mode,
+        #[clap(short, long, arg_enum, default_value_t = WorkloadName::Null)]
+        workload: WorkloadName,
         #[clap(short, long, parse(from_os_str))]
         config: PathBuf,
         #[clap(short = 'i')]
         replica_id: ReplicaId,
         #[clap(long, default_value = "000000ff")]
         mask: String,
-        #[clap(short, long, default_value_t = 0)]
+        #[clap(long = "port", default_value_t = 0)]
         port_id: u16,
         #[clap(short, long = "worker-number", default_value_t = 1)]
         n_worker: usize,
@@ -63,6 +73,7 @@ fn main() {
         batch_size: usize,
         #[clap(long)]
         adaptive: bool,
+        // property list if necessary
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -138,66 +149,92 @@ fn main() {
         }
     }
 
-    let unpark = match args.mode {
-        Mode::Unreplicated => WorkerData::launch(
-            unreplicated::Replica::register_new(
-                config,
-                &mut transport,
-                args.replica_id,
-                NullApp,
-                false,
+    fn launch_app(
+        app: impl App + Send + 'static,
+        args: Args,
+        config: Config<Transport>,
+        transport: &mut Transport,
+        shutdown: Arc<AtomicBool>,
+    ) -> impl FnOnce() {
+        match args.mode {
+            Mode::Unreplicated => WorkerData::launch(
+                unreplicated::Replica::register_new(config, transport, args.replica_id, app, false),
+                args,
+                shutdown.clone(),
             ),
-            args,
-            shutdown.clone(),
-        ),
-        Mode::UnreplicatedSigned => WorkerData::launch(
-            unreplicated::Replica::register_new(
-                config,
-                &mut transport,
-                args.replica_id,
-                NullApp,
-                true,
+            Mode::UnreplicatedSigned => WorkerData::launch(
+                unreplicated::Replica::register_new(config, transport, args.replica_id, app, true),
+                args,
+                shutdown.clone(),
             ),
-            args,
-            shutdown.clone(),
-        ),
-        Mode::PBFT => WorkerData::launch(
-            pbft::Replica::register_new(
-                config,
-                &mut transport,
-                args.replica_id,
-                NullApp,
-                args.batch_size,
-                args.adaptive,
+            Mode::PBFT => WorkerData::launch(
+                pbft::Replica::register_new(
+                    config,
+                    transport,
+                    args.replica_id,
+                    app,
+                    args.batch_size,
+                    args.adaptive,
+                ),
+                args,
+                shutdown.clone(),
             ),
-            args,
-            shutdown.clone(),
-        ),
-        Mode::HotStuff => WorkerData::launch(
-            hotstuff::Replica::register_new(
-                config,
-                &mut transport,
-                args.replica_id,
-                NullApp,
-                args.batch_size,
-                args.adaptive,
+            Mode::HotStuff => WorkerData::launch(
+                hotstuff::Replica::register_new(
+                    config,
+                    transport,
+                    args.replica_id,
+                    NullApp,
+                    args.batch_size,
+                    args.adaptive,
+                ),
+                args,
+                shutdown.clone(),
             ),
-            args,
-            shutdown.clone(),
-        ),
-        Mode::Zyzzyva => WorkerData::launch(
-            zyzzyva::Replica::register_new(
-                config,
-                &mut transport,
-                args.replica_id,
-                NullApp,
-                args.batch_size,
+            Mode::Zyzzyva => WorkerData::launch(
+                zyzzyva::Replica::register_new(
+                    config,
+                    transport,
+                    args.replica_id,
+                    app,
+                    args.batch_size,
+                ),
+                args,
+                shutdown.clone(),
             ),
-            args,
-            shutdown.clone(),
-        ),
-    };
+        }
+    }
 
+    let unpark: Box<dyn FnOnce()> = match args.workload {
+        WorkloadName::Null => Box::new(launch_app(
+            NullApp,
+            args,
+            config,
+            &mut transport,
+            shutdown.clone(),
+        )),
+        WorkloadName::YCSB => {
+            let property = Property::default(); // TODO
+            let app = Database::default();
+            app.create_table(
+                &property.table,
+                // what the hell
+                &*(0..property.field_count)
+                    .map(|i| format!("field{}", i))
+                    .collect::<Vec<_>>()
+                    .iter()
+                    .map(|s| &**s)
+                    .collect::<Vec<_>>(),
+            );
+            Box::new(launch_app(
+                app,
+                args,
+                config,
+                &mut transport,
+                shutdown.clone(),
+            ))
+        }
+    };
     transport.run1(|| shutdown.load(Ordering::SeqCst));
     unpark();
     unsafe { rte_eal_mp_wait_lcore() };
