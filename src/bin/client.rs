@@ -1,8 +1,8 @@
 use std::{
     ffi::c_void,
-    fs::File,
+    fs::{self, File},
     future::Future,
-    io::Read,
+    io::{BufReader, Read},
     mem::take,
     path::PathBuf,
     pin::Pin,
@@ -32,6 +32,38 @@ use oskr::{
 };
 use tracing::{debug, info};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
+#[allow(clippy::upper_case_acronyms)]
+enum WorkloadName {
+    Null,
+    YCSB,
+}
+impl WorkloadName {
+    // seems like no better way but it still feels like go back to 90's
+    const ALL: usize = 0;
+    const NULL_TAG: &'static [&'static str] = &["all"];
+    const YCSB_READ: usize = 1;
+    const YCSB_UPDATE: usize = 2;
+    const YCSB_SCAN: usize = 3;
+    const YCSB_INSERT: usize = 4;
+    const YCSB_READ_MODIFY_WRITE: usize = 5;
+    const YCSB_TAG: &'static [&'static str] = &[
+        "all",
+        "ycsb.read",
+        "ycsb.update",
+        "ycsb.scan",
+        "ycsb.insert",
+        "ycsb.read_modify_write",
+    ];
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Status {
+    WarmUp,
+    Run,
+    Shutdown,
+}
+
 fn main() {
     tracing_subscriber::fmt::init();
     panic_abort();
@@ -46,44 +78,18 @@ fn main() {
         Zyzzyva,
         YCSB,
     }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum WorkloadName {
-        Null,
-        YCSB,
-    }
-    impl WorkloadName {
-        // seems like no better way but it still feels like go back to 90's
-        const ALL: usize = 0;
-        const NULL_TAG: &'static [&'static str] = &["all"];
-        const YCSB_READ: usize = 1;
-        const YCSB_UPDATE: usize = 2;
-        const YCSB_SCAN: usize = 3;
-        const YCSB_INSERT: usize = 4;
-        const YCSB_READ_MODIFY_WRITE: usize = 5;
-        const YCSB_TAG: &'static [&'static str] = &[
-            "all",
-            "ycsb.read",
-            "ycsb.update",
-            "ycsb.scan",
-            "ycsb.insert",
-            "ycsb.read_modify_write",
-        ];
-    }
-
     #[derive(Parser, Debug)]
     #[clap(name = "Oskr Client", version)]
     struct Args {
         #[clap(short, long, arg_enum)]
         mode: Mode,
-        #[clap(short, long, arg_enum)]
+        #[clap(short, long, arg_enum, default_value_t = WorkloadName::Null)]
         workload: WorkloadName,
         #[clap(short, long, parse(from_os_str))]
         config: PathBuf,
         #[clap(long, default_value = "000000ff")]
         mask: String,
-        #[clap(short, long, default_value_t = 0)]
+        #[clap(long = "port", default_value_t = 0)]
         port_id: u16,
         #[clap(short, long = "worker-number", default_value_t = 1)]
         n_worker: usize,
@@ -121,12 +127,12 @@ fn main() {
     let config = Config::for_shard(config, 0); // TODO
 
     let mut property = Property::default();
-    if let Some(property_file) = &args.property_file {
-        let rewrite_table = java_properties::read(File::open(property_file).unwrap()).unwrap();
-        for (key, value) in rewrite_table {
-            property.rewrite(&key, &value);
-        }
-    }
+    // if let Some(property_file) = &args.property_file {
+    //     let rewrite_table = java_properties::read(&*fs::read(property_file).unwrap()).unwrap();
+    //     for (key, value) in rewrite_table {
+    //         property.rewrite(&key, &value);
+    //     }
+    // }
     for property_item in &args.property_list {
         let (key, value) = property_item.split_once('=').unwrap();
         property.rewrite(key, value);
@@ -136,14 +142,6 @@ fn main() {
     }
 
     let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    enum Status {
-        WarmUp,
-        Run,
-        Shutdown,
-    }
-
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,
@@ -266,11 +264,11 @@ fn main() {
                 shutdown.send(()).unwrap();
             }
             AsyncEcosystem::poll_all();
-            client_list.into_iter().for_each(|mut client| {
-                assert!(Pin::new(&mut client)
-                    .poll(&mut Context::from_waker(noop_waker_ref()))
-                    .is_ready())
-            });
+            // client_list.into_iter().for_each(|mut client| {
+            //     assert!(Pin::new(&mut client)
+            //         .poll(&mut Context::from_waker(noop_waker_ref()))
+            //         .is_ready())
+            // });
             0
         }
 
@@ -386,4 +384,78 @@ fn main() {
             Duration::from_nanos(hist.value_at_quantile(0.99))
         );
     }
+}
+
+fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
+    mut client: C,
+    count: Arc<AtomicU32>,
+    status: Arc<AtomicU32>,
+    mut latency: Vec<LocalLatency>,
+    workload: WorkloadName,
+    ycsb_workload: Arc<Workload>,
+) -> oneshot::Sender<()> {
+    let (shutdown_tx, mut shutdown) = oneshot::channel();
+    AsyncEcosystem::spawn(async move {
+        debug!("{}", client.get_address());
+        let clock = MeasureClock::default();
+
+        let limit = match workload {
+            WorkloadName::Null => u32::MAX,
+            WorkloadName::YCSB => ycsb_workload.property.record_count as _,
+        };
+        while count.fetch_add(1, Ordering::SeqCst) < limit {
+            let measure = clock.measure();
+            match workload {
+                WorkloadName::Null => {
+                    select! {
+                        _ = client.invoke(Opaque::default()).fuse() => {
+                            if status.load(Ordering::SeqCst) == Status::Run as _ {
+                                latency[WorkloadName::ALL] += measure;
+                            }
+                        },
+                        _ = shutdown => return,
+                    }
+                }
+                WorkloadName::YCSB => {
+                    let (op, post_action) = ycsb_workload.one_op();
+                    let invoke = async {
+                        match op {
+                            OpKind::Read(op) => {
+                                client.invoke(op).await;
+                                WorkloadName::YCSB_READ
+                            }
+                            OpKind::Update(op) => {
+                                client.invoke(op).await;
+                                WorkloadName::YCSB_UPDATE
+                            }
+                            OpKind::ReadModifyWrite(read_op, update_op) => {
+                                client.invoke(read_op).await;
+                                client.invoke(update_op).await;
+                                WorkloadName::YCSB_READ_MODIFY_WRITE
+                            }
+                            OpKind::Scan(op) => {
+                                client.invoke(op).await;
+                                WorkloadName::YCSB_SCAN
+                            }
+                            OpKind::Insert(op) => {
+                                client.invoke(op).await;
+                                WorkloadName::YCSB_INSERT
+                            }
+                        }
+                    };
+                    select! {
+                        row = invoke.fuse() => {
+                            if status.load(Ordering::SeqCst) == Status::Run as _ {
+                                latency[row] += measure;
+                                latency[WorkloadName::ALL] += measure;
+                            }
+                            post_action(&*ycsb_workload);
+                        },
+                        _ = shutdown => return,
+                    }
+                }
+            }
+        }
+    });
+    shutdown_tx
 }

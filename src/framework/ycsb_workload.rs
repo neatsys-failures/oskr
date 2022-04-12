@@ -160,7 +160,7 @@ impl FromStr for Order {
 }
 
 pub struct Workload {
-    property: Property,
+    pub property: Property,
     field_name_list: Vec<String>,
     field_chooser: Box<dyn Fn() -> usize + Send + Sync>,
     field_length_generator: Box<dyn Fn() -> usize + Send + Sync>,
