@@ -14,6 +14,7 @@ use rand::{
     distributions::{uniform::SampleUniform, Uniform},
     random, thread_rng, Rng,
 };
+use tracing::debug;
 
 use crate::{
     app::ycsb::Op,
@@ -241,12 +242,17 @@ struct ZipfianGenerator {
 }
 
 impl ZipfianGenerator {
+    const SCRAMBLED_ITEM_COUNT: u64 = 10000000000;
     fn new(min: u64, max: u64) -> Self {
         let item_count = max - min;
         let zipfian_constant = 0.99;
         let theta = zipfian_constant;
         let zeta2theta = Self::zeta_static(0, 2, theta, 0.0);
-        let zetan = Self::zeta_static(0, item_count, zipfian_constant, 0.0);
+        let zetan = if item_count == Self::SCRAMBLED_ITEM_COUNT {
+            26.46902820178302
+        } else {
+            Self::zeta_static(0, item_count, zipfian_constant, 0.0)
+        };
         let mut s = Self {
             item_count,
             base: min,
@@ -266,6 +272,9 @@ impl ZipfianGenerator {
     fn zeta_static(st: u64, n: u64, theta: f64, initial_sum: f64) -> f64 {
         let mut sum = initial_sum;
         for i in st..n {
+            if n / 1000 != 0 && i % (n / 1000) == 0 {
+                debug!("zeta static: {}/{}", i, n);
+            }
             sum += 1.0 / ((i + 1) as f64).powf(theta);
         }
         sum
@@ -317,7 +326,10 @@ impl Workload {
     }
 
     fn scrambled_zipfian_generator(min: u64, max: u64) -> impl Fn() -> u64 + Send + Sync {
-        let zipfian = Mutex::new(ZipfianGenerator::new(0, 10000000000));
+        let zipfian = Mutex::new(ZipfianGenerator::new(
+            0,
+            ZipfianGenerator::SCRAMBLED_ITEM_COUNT,
+        ));
         move || min + Self::fnvhash64(zipfian.lock().unwrap().next_value()) % (max - min)
     }
 

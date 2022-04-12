@@ -139,6 +139,7 @@ where
     );
 
     fn ephemeral_address(&self) -> Self::Address;
+    fn null_address() -> Self::Address;
 }
 
 pub trait Receiver<T: Transport> {

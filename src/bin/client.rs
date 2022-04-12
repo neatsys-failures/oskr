@@ -1,21 +1,17 @@
 use std::{
     ffi::c_void,
-    fs::{self, File},
-    future::Future,
-    io::{BufReader, Read},
+    fs,
     mem::take,
     path::PathBuf,
-    pin::Pin,
     sync::{
         atomic::{AtomicU32, Ordering},
         Arc,
     },
-    task::Context,
     time::Duration,
 };
 
 use clap::{ArgEnum, Parser};
-use futures::{channel::oneshot, select, task::noop_waker_ref, FutureExt};
+use futures::{channel::oneshot, select, FutureExt};
 use hdrhistogram::SyncHistogram;
 use oskr::{
     app::ycsb,
@@ -30,6 +26,7 @@ use oskr::{
     },
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
 };
+use quanta::Clock;
 use tracing::{debug, info};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
@@ -115,24 +112,20 @@ fn main() {
 
     let prefix = args.config.file_name().unwrap().to_str().unwrap();
     let config = args.config.with_file_name(format!("{}.config", prefix));
-    let mut config: facade::Config<_> = {
-        let mut buf = String::new();
-        File::open(config)
-            .unwrap()
-            .read_to_string(&mut buf)
-            .unwrap();
-        buf.parse().unwrap()
-    };
+    let mut config: facade::Config<_> = std::str::from_utf8(&*fs::read(config).unwrap())
+        .unwrap()
+        .parse()
+        .unwrap();
     config.collect_signing_key(&args.config);
     let config = Config::for_shard(config, 0); // TODO
 
     let mut property = Property::default();
-    // if let Some(property_file) = &args.property_file {
-    //     let rewrite_table = java_properties::read(&*fs::read(property_file).unwrap()).unwrap();
-    //     for (key, value) in rewrite_table {
-    //         property.rewrite(&key, &value);
-    //     }
-    // }
+    if let Some(property_file) = &args.property_file {
+        let rewrite_table = java_properties::read(&*fs::read(property_file).unwrap()).unwrap();
+        for (key, value) in rewrite_table {
+            property.rewrite(&key, &value);
+        }
+    }
     for property_item in &args.property_list {
         let (key, value) = property_item.split_once('=').unwrap();
         property.rewrite(key, value);
@@ -172,96 +165,56 @@ fn main() {
             // I want a broadcast :|
             let (client_list, shutdown_list): (Vec<_>, Vec<_>) = client_list
                 .into_iter()
-                .map(|mut client| {
-                    let count = count.clone();
-                    // we send shutdown actively, for the case when system stuck
-                    // and cause client invoking never finish
-                    let (shutdown_tx, mut shutdown) = oneshot::channel();
-                    let status = status.clone();
-                    let mut latency = latency.clone();
-                    let clock = MeasureClock::default();
-                    let workload = args.workload;
-                    let ycsb_workload = ycsb_workload.clone();
-                    (
-                        AsyncEcosystem::spawn(async move {
-                            debug!("{}", client.get_address());
-                            loop {
-                                let measure = clock.measure();
-                                match workload {
-                                    WorkloadName::Null => {
-                                        select! {
-                                            _ = client.invoke(Opaque::default()).fuse() => {
-                                                if status.load(Ordering::SeqCst) == Status::Run as _ {
-                                                    latency[WorkloadName::ALL] += measure;
-                                                    count.fetch_add(1, Ordering::SeqCst);
-                                                }
-                                            },
-                                            _ = shutdown => return,
-                                        }
-                                    }
-                                    WorkloadName::YCSB => {
-                                        let (op, post_action) = ycsb_workload.one_op();
-                                        let invoke = async {
-                                            match op {
-                                                OpKind::Read(op) => {
-                                                    client.invoke(op).await;
-                                                    WorkloadName::YCSB_READ
-                                                }
-                                                OpKind::Update(op) => {
-                                                    client.invoke(op).await;
-                                                    WorkloadName::YCSB_UPDATE
-                                                }
-                                                OpKind::ReadModifyWrite(read_op, update_op) => {
-                                                    client.invoke(read_op).await;
-                                                    client.invoke(update_op).await;
-                                                    WorkloadName::YCSB_READ_MODIFY_WRITE
-                                                }
-                                                OpKind::Scan(op) => {
-                                                    client.invoke(op).await;
-                                                    WorkloadName::YCSB_SCAN
-                                                }
-                                                OpKind::Insert(op) => {
-                                                    client.invoke(op).await;
-                                                    WorkloadName::YCSB_INSERT
-                                                }
-                                            }
-                                        };
-                                        select! {
-                                            row = invoke.fuse() => {
-                                                latency[row] += measure;
-                                                latency[WorkloadName::ALL] += measure;
-                                                post_action(&*ycsb_workload);
-                                            },
-                                            _ = shutdown => return,
-                                        }
-                                    }
-                                }
-                            }
-                        }),
-                        shutdown_tx,
+                .map(|client| {
+                    spawn_client(
+                        client,
+                        count.clone(),
+                        status.clone(),
+                        latency.clone(),
+                        args.workload,
+                        ycsb_workload.clone(),
                     )
                 })
                 .unzip();
 
+            // track client exit or not directly?
+            let limit = match args.workload {
+                WorkloadName::Null => u32::MAX,
+                WorkloadName::YCSB => ycsb_workload.property.record_count as _,
+            };
+            let clock = Clock::new();
+            let start = clock.start();
             if worker_id == 0 {
-                AsyncEcosystem::poll(Duration::from_secs(args.warm_up_duration));
+                AsyncEcosystem::poll_until(|| {
+                    clock.delta(start, clock.end()) >= Duration::from_secs(args.warm_up_duration)
+                });
                 status.store(Status::Run as _, Ordering::SeqCst);
                 info!("warm up finish");
 
+                let mut prev = 0;
                 for _ in 0..args.duration {
-                    AsyncEcosystem::poll(Duration::from_secs(1));
-                    let count = count.swap(0, Ordering::SeqCst);
-                    println!("{}", count);
+                    let start = clock.start();
+                    AsyncEcosystem::poll_until(|| {
+                        count.load(Ordering::SeqCst) > limit
+                            || clock.delta(start, clock.end()) >= Duration::from_secs(1)
+                    });
+                    let count = count.load(Ordering::SeqCst);
+                    println!("{}", count - prev);
+                    prev = count;
                 }
                 status.store(Status::Shutdown as _, Ordering::SeqCst);
             } else {
-                AsyncEcosystem::poll(Duration::from_secs(args.warm_up_duration + args.duration));
+                AsyncEcosystem::poll_until(|| {
+                    count.load(Ordering::SeqCst) > limit
+                        || clock.delta(start, clock.end())
+                            >= Duration::from_secs(args.warm_up_duration + args.duration)
+                });
             }
 
             // with new latency there is no need to join tasks
             // save it here for debug and future use
             for shutdown in shutdown_list {
-                shutdown.send(()).unwrap();
+                let _ = shutdown.send(());
             }
             AsyncEcosystem::poll_all();
             // client_list.into_iter().for_each(|mut client| {
@@ -269,6 +222,7 @@ fn main() {
             //         .poll(&mut Context::from_waker(noop_waker_ref()))
             //         .is_ready())
             // });
+            drop(client_list);
             0
         }
 
@@ -393,9 +347,12 @@ fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
     mut latency: Vec<LocalLatency>,
     workload: WorkloadName,
     ycsb_workload: Arc<Workload>,
-) -> oneshot::Sender<()> {
+) -> (
+    <AsyncEcosystem as facade::AsyncEcosystem<()>>::JoinHandle,
+    oneshot::Sender<()>,
+) {
     let (shutdown_tx, mut shutdown) = oneshot::channel();
-    AsyncEcosystem::spawn(async move {
+    let handle = AsyncEcosystem::spawn(async move {
         debug!("{}", client.get_address());
         let clock = MeasureClock::default();
 
@@ -403,10 +360,12 @@ fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
             WorkloadName::Null => u32::MAX,
             WorkloadName::YCSB => ycsb_workload.property.record_count as _,
         };
-        while count.fetch_add(1, Ordering::SeqCst) < limit {
-            let measure = clock.measure();
+        while status.load(Ordering::SeqCst) == Status::WarmUp as _
+            || count.fetch_add(1, Ordering::SeqCst) < limit
+        {
             match workload {
                 WorkloadName::Null => {
+                    let measure = clock.measure();
                     select! {
                         _ = client.invoke(Opaque::default()).fuse() => {
                             if status.load(Ordering::SeqCst) == Status::Run as _ {
@@ -418,6 +377,7 @@ fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
                 }
                 WorkloadName::YCSB => {
                     let (op, post_action) = ycsb_workload.one_op();
+                    let measure = clock.measure();
                     let invoke = async {
                         match op {
                             OpKind::Read(op) => {
@@ -457,5 +417,5 @@ fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
             }
         }
     });
-    shutdown_tx
+    (handle, shutdown_tx)
 }

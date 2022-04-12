@@ -185,6 +185,10 @@ impl facade::Transport for Transport {
         receiver: &impl Receiver<Self>,
         rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
+        if *receiver.get_address() == Self::null_address() {
+            return;
+        }
+
         let mut port_mac = MaybeUninit::uninit();
         let ret = unsafe {
             rte_eth_macaddr_get(self.port_id, NonNull::new(port_mac.as_mut_ptr()).unwrap())
@@ -214,6 +218,10 @@ impl facade::Transport for Transport {
             }
         }
         unreachable!();
+    }
+
+    fn null_address() -> Self::Address {
+        Self::Address::default() // good enough?
     }
 }
 

@@ -122,18 +122,25 @@ impl<A: Database> App for A {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct TraceClient;
+#[derive(Debug, Clone, Copy)]
+pub struct TraceClient<T: Transport>(T::Address);
+impl<T: Transport> Default for TraceClient<T> {
+    fn default() -> Self {
+        Self(T::null_address())
+    }
+}
+
 #[async_trait]
-impl Invoke for TraceClient {
+impl<T: Transport> Invoke for TraceClient<T> {
     async fn invoke(&mut self, op: Opaque) -> Opaque {
         let op: Op = deserialize(&*op).unwrap();
         info!("{:?}", op);
         Opaque::default()
     }
 }
-impl<T: Transport> Receiver<T> for TraceClient {
+
+impl<T: Transport> Receiver<T> for TraceClient<T> {
     fn get_address(&self) -> &T::Address {
-        unreachable!()
+        &self.0
     }
 }

@@ -115,8 +115,10 @@ impl facade::Transport for Transport {
     ) where
         Self: Sized,
     {
-        self.recv_table
-            .insert(receiver.get_address().clone(), Box::new(rx_agent));
+        if *receiver.get_address() != Self::null_address() {
+            self.recv_table
+                .insert(receiver.get_address().clone(), Box::new(rx_agent));
+        }
     }
 
     fn register_multicast(
@@ -135,6 +137,10 @@ impl facade::Transport for Transport {
             }
             label += 1;
         }
+    }
+
+    fn null_address() -> Self::Address {
+        format!("null")
     }
 }
 

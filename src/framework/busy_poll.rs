@@ -4,11 +4,10 @@ use std::{
     pin::Pin,
     sync::atomic::{AtomicU32, Ordering},
     task::{Context, Poll},
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 use futures::{channel::oneshot, future::BoxFuture, task::noop_waker_ref, Future};
-use quanta::Clock;
 
 use crate::facade;
 
@@ -35,10 +34,8 @@ impl AsyncEcosystem {
         }
     }
 
-    pub fn poll(duration: Duration) {
-        let clock = Clock::new();
-        let start = clock.start();
-        while clock.delta(start, clock.end()) < duration {
+    pub fn poll_until(predict: impl Fn() -> bool) {
+        while !predict() {
             Self::poll_once();
         }
     }
