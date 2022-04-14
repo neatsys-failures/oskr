@@ -425,7 +425,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         checkpoint: &message::Checkpoint,
         signed: &SignedMessage<message::Checkpoint>,
     ) {
-        assert!(self.commit_number < checkpoint.op_number);
+        // there could be some case when next checkpoint get stablized first
+        // assert!(self.commit_number < checkpoint.op_number);
 
         self.checkpoint_quorum
             .entry((checkpoint.op_number, checkpoint.history_digest))

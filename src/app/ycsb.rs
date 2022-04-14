@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use async_trait::async_trait;
 use serde_derive::{Deserialize, Serialize};
@@ -18,10 +18,15 @@ pub enum Op {
     Delete(String, String),
 }
 
+// we are using BTreeMap instead of HashMap to maintain a deterministic order
+// during serialization, so the serialized messages can match each other which
+// is required by BFT protocols.
+// we could also use vector of pair instead of map, but that is not what 
+// expected by database backends
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Result {
-    ReadOk(HashMap<String, Opaque>),
-    ScanOk(Vec<HashMap<String, Opaque>>),
+    ReadOk(BTreeMap<String, Opaque>),
+    ScanOk(Vec<BTreeMap<String, Opaque>>),
     UpdateOk,
     InsertOk,
     DeleteOk,
@@ -47,7 +52,7 @@ pub trait Database {
         table: String,
         key: String,
         field_set: HashSet<String>,
-        result: &mut HashMap<String, Opaque>,
+        result: &mut BTreeMap<String, Opaque>,
     ) -> DatabaseResult;
     fn scan(
         &mut self,
@@ -55,7 +60,7 @@ pub trait Database {
         start_key: String,
         record_count: usize,
         field_set: HashSet<String>,
-        result: &mut Vec<HashMap<String, Opaque>>,
+        result: &mut Vec<BTreeMap<String, Opaque>>,
     ) -> DatabaseResult;
     fn update(
         &mut self,
@@ -77,7 +82,7 @@ impl<A: Database> App for A {
     fn execute(&mut self, _op_number: OpNumber, op: Opaque) -> Opaque {
         let result = match deserialize(&*op).unwrap() {
             Op::Read(table, key, field_set) => {
-                let mut result = HashMap::new();
+                let mut result = BTreeMap::new();
                 if let Err(error) = self.read(table, key, field_set, &mut result) {
                     Result::Error(error)
                 } else {

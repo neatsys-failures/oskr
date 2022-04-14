@@ -1,6 +1,7 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     iter::repeat,
+    path::Path,
 };
 
 use rusqlite::{params, Connection, ToSql};
@@ -19,6 +20,10 @@ impl Default for Database {
 }
 
 impl Database {
+    pub fn open(path: impl AsRef<Path>) -> Self {
+        Self(Connection::open(path).unwrap())
+    }
+
     pub fn create_table(&self, table: &str, field_set: &[&str]) {
         self.0
             .execute(&format!("DROP TABLE IF EXISTS {};", table), [])
@@ -77,7 +82,7 @@ impl ycsb::Database for Database {
         table: String,
         key: String,
         field_set: HashSet<String>,
-        result: &mut HashMap<String, Opaque>,
+        result: &mut BTreeMap<String, Opaque>,
     ) -> DatabaseResult {
         let mut stmt = self
             .0
@@ -100,7 +105,7 @@ impl ycsb::Database for Database {
         start_key: String,
         record_count: usize,
         field_set: HashSet<String>,
-        result: &mut Vec<HashMap<String, Opaque>>,
+        result: &mut Vec<BTreeMap<String, Opaque>>,
     ) -> DatabaseResult {
         let mut stmt = self
             .0
@@ -115,7 +120,7 @@ impl ycsb::Database for Database {
             if result.len() == record_count {
                 break;
             }
-            let mut value_table = HashMap::new();
+            let mut value_table = BTreeMap::new();
             for field in &field_list {
                 value_table.insert(field.clone(), row.get_unwrap(&**field));
             }
@@ -219,7 +224,7 @@ mod tests {
             .collect(),
         )
         .unwrap();
-        let mut result = HashMap::new();
+        let mut result = BTreeMap::new();
         db.read(
             "usertable".to_string(),
             "id-0".to_string(),
@@ -260,7 +265,7 @@ mod tests {
             .collect(),
         )
         .unwrap();
-        let mut result = HashMap::new();
+        let mut result = BTreeMap::new();
         db.read(
             "usertable".to_string(),
             "id-0".to_string(),

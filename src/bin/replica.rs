@@ -74,6 +74,8 @@ fn main() {
         #[clap(long)]
         adaptive: bool,
         // property list if necessary
+        #[clap(long = "db")]
+        database_file: Option<PathBuf>,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -215,17 +217,28 @@ fn main() {
         )),
         WorkloadName::YCSB => {
             let property = Property::default(); // TODO
-            let app = Database::default();
-            app.create_table(
-                &property.table,
-                // what the hell
-                &*(0..property.field_count)
-                    .map(|i| format!("field{}", i))
-                    .collect::<Vec<_>>()
-                    .iter()
-                    .map(|s| &**s)
-                    .collect::<Vec<_>>(),
-            );
+            let create_table = args
+                .database_file
+                .as_ref()
+                .map(|db| !db.exists())
+                .unwrap_or(true);
+            let app = if let Some(db) = args.database_file.as_ref() {
+                Database::open(db)
+            } else {
+                Database::default()
+            };
+            if create_table {
+                app.create_table(
+                    &property.table,
+                    // what the hell
+                    &*(0..property.field_count)
+                        .map(|i| format!("field{}", i))
+                        .collect::<Vec<_>>()
+                        .iter()
+                        .map(|s| &**s)
+                        .collect::<Vec<_>>(),
+                );
+            }
             Box::new(launch_app(
                 app,
                 args,

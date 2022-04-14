@@ -103,6 +103,10 @@ where
                     // TODO proof of misbehavior (not really planned actually)
                     ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
                         let (response, signed) = (response.assume_verified(), response);
+                        debug!(
+                            "spec request number {} replica id {}",
+                            response.request_number, replica_id
+                        );
                         if (response.client_id, response.request_number)
                             != (client.id, client.request_number)
                         {
@@ -134,6 +138,7 @@ where
                                     && response.result == result
                             })
                             .collect();
+                        debug!("cert size {}", certification.len());
                         if certification.len() == 3 * client.config.f + 1 {
                             Status::Committed(result)
                         } else if certification.len() >= 2 * client.config.f + 1 {
