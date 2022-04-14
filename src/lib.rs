@@ -316,6 +316,7 @@ pub mod common;
 pub mod protocol {
     pub mod hotstuff;
     pub mod pbft;
+    pub mod tombft;
     pub mod unreplicated;
     pub mod zyzzyva;
 }
@@ -333,6 +334,14 @@ pub mod protocol {
 /// to proceed communication.
 pub mod app {
     pub mod mock;
+    /// An application adapter for YCSB database.
+    ///
+    /// Currently, YCSB's database interface, i.e. `site.ycsb.DB` abstract
+    /// class, is used as the standard database representation in this codebase.
+    /// You may find serveral implementation of
+    /// [`Database`](app::ycsb::Database) in framework module. Thanks to the
+    /// adapter provided in this module, they become [`App`](facade::App)
+    /// automatically.
     pub mod ycsb;
 }
 

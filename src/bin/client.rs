@@ -180,7 +180,13 @@ fn main() {
             // track client exit or not directly?
             let limit = match args.workload {
                 WorkloadName::Null => u32::MAX,
-                WorkloadName::YCSB => ycsb_workload.property.record_count as _,
+                WorkloadName::YCSB => {
+                    if ycsb_workload.property.do_transaction {
+                        ycsb_workload.property.operation_count as _
+                    } else {
+                        ycsb_workload.property.record_count as _
+                    }
+                }
             };
             let clock = Clock::new();
             let start = clock.start();
@@ -361,7 +367,13 @@ fn spawn_client<C: Receiver<Transport> + Invoke + Send + 'static>(
 
         let limit = match workload {
             WorkloadName::Null => u32::MAX,
-            WorkloadName::YCSB => ycsb_workload.property.record_count as _,
+            WorkloadName::YCSB => {
+                if ycsb_workload.property.do_transaction {
+                    ycsb_workload.property.operation_count as _
+                } else {
+                    ycsb_workload.property.record_count as _
+                }
+            }
         };
         while status.load(Ordering::SeqCst) == Status::WarmUp as _
             || count.fetch_add(1, Ordering::SeqCst) < limit
