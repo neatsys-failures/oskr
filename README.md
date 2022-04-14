@@ -54,13 +54,13 @@ project's logo.
 
 YCSB workload C with sqlite as backend, batch size up to 20
 
-|Protocol|Maximum throughput (Kops/sec)|Minimum read latency (us)|Minimum update latency (us)|
-|-------------------|-------|-----------|-----------|
-|Unreplicated       |70.512 |34.815     |27.775     |
-|Unreplicated Signed|38.547 |141.311    |141.311    |
-|Zyzzyva            |37.894 |382.975    |382.975    |
-|PBFT               |28.986 |770.047    |770.047    |
-|HotStuff           |35.780 |2179.071   |2179.071   |
+|Protocol|Maximum throughput (Kops/sec)|Minimum latency (us)|
+|-------------------|-------|-----------|
+|Unreplicated       |34.515 |39.679     |
+|Unreplicated Signed|38.547 |141.311    |
+|Zyzzyva            |37.894 |382.975    |
+|PBFT               |28.986 |770.047    |
+|HotStuff           |35.780 |2179.071   |
 
 ----
 
