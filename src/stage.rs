@@ -212,6 +212,22 @@ impl<S: State> Handle<S> {
         }
     }
 
+    pub fn run_stateless_worker(&self, mut shutdown: impl FnMut() -> bool) {
+        let context = StatelessContext {
+            shared: self.state.lock().unwrap().shared(),
+            submit: self.submit.clone(),
+        };
+        let mut stateless_latency = self.metric.stateless.local();
+        let clock = MeasureClock::default();
+        while !shutdown() {
+            if let Some(task) = self.submit.stateless_list.pop() {
+                let measure = clock.measure();
+                task(&context);
+                stateless_latency += measure;
+            }
+        }
+    }
+
     pub fn unpark_all(&self) {
         while let Some(thread) = self.submit.will_park_list.pop() {
             thread.unpark();

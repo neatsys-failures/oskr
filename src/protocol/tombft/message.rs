@@ -4,8 +4,9 @@ use std::{
 };
 
 use serde::{de::DeserializeOwned, Serialize};
+use sha2::{Digest as _, Sha256};
 
-use crate::common::{deserialize, serialize, signed::InauthenticMessage};
+use crate::common::{deserialize, serialize, signed::InauthenticMessage, Digest};
 
 // this struct is not designed to be transfered, so it is not (de)serailizable
 // but it is still suitable for bookkeeping
@@ -20,9 +21,10 @@ pub struct TrustedOrderedMulticast<M> {
 }
 
 pub struct VerifiedOrderedMulticast<M> {
-    pub trusted: TrustedOrderedMulticast<M>,
+    pub trusted: Option<TrustedOrderedMulticast<M>>,
     pub sequence_number: u32,
     pub session_number: u8,
+    pub chain_hash: Digest,
     message: M,
 }
 
@@ -37,8 +39,12 @@ impl<M> TrustedOrderedMulticast<M> {
     where
         M: Serialize,
     {
-        buffer[..Self::OFFSET_END].fill(0);
-        Self::OFFSET_END as u16 + serialize(message)(&mut buffer[Self::OFFSET_END..])
+        buffer[Self::OFFSET_SEQUENCE..Self::OFFSET_END].fill(0);
+        let message_length = serialize(message)(&mut buffer[Self::OFFSET_END..]);
+        let digest =
+            Sha256::digest(&buffer[Self::OFFSET_END..Self::OFFSET_END + message_length as usize]);
+        buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32].clone_from_slice(&digest);
+        message_length + Self::OFFSET_END as u16
     }
 
     pub fn new(buffer: &[u8]) -> Self {
@@ -56,7 +62,13 @@ impl<M> TrustedOrderedMulticast<M> {
     where
         M: DeserializeOwned,
     {
-        // TODO verify
+        let signed = if self.buffer[Self::OFFSET_SIGNATURE..Self::OFFSET_SIGNATURE + 64] == [0; 64]
+        {
+            false
+        } else {
+            // TODO verify
+            true
+        };
 
         let message = if let Ok(message) = deserialize(&*self.message) {
             message
@@ -71,7 +83,10 @@ impl<M> TrustedOrderedMulticast<M> {
             ),
             session_number: self.buffer[Self::OFFSET_SESSION],
             message,
-            trusted: self,
+            chain_hash: self.buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32]
+                .try_into()
+                .unwrap(),
+            trusted: if signed { Some(self) } else { None },
         })
     }
 }
