@@ -365,6 +365,7 @@ pub mod framework {
     /// provides a similar but more user-friendly interface to specpaxos's latency
     /// library, especially for multithreaded usage.
     pub mod latency;
+    pub mod memory_database;
     pub mod sqlite;
     #[cfg(any(feature = "tokio", test))]
     pub mod tokio;

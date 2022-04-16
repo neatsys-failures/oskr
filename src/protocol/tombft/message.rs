@@ -41,8 +41,10 @@ impl<M> TrustedOrderedMulticast<M> {
     {
         buffer[Self::OFFSET_SEQUENCE..Self::OFFSET_END].fill(0);
         let message_length = serialize(message)(&mut buffer[Self::OFFSET_END..]);
-        let digest =
-            Sha256::digest(&buffer[Self::OFFSET_END..Self::OFFSET_END + message_length as usize]);
+        let mut digest: [_; 32] =
+            Sha256::digest(&buffer[Self::OFFSET_END..Self::OFFSET_END + message_length as usize])
+                .into();
+        digest[28..].fill(0); // required by switch p4 program
         buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32].clone_from_slice(&digest);
         message_length + Self::OFFSET_END as u16
     }
