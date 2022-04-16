@@ -1,7 +1,6 @@
 use std::{
     ffi::c_void,
-    fs::File,
-    io::Read,
+    fs,
     path::PathBuf,
     process,
     sync::{
@@ -13,7 +12,10 @@ use std::{
 use clap::{ArgEnum, Parser};
 use oskr::{
     common::{panic_abort, Config, OpNumber, Opaque, ReplicaId},
-    dpdk_shim::{rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_rmt_call_main_t},
+    dpdk_shim::{
+        rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_eth_dev_socket_id,
+        rte_rmt_call_main_t, rte_socket_id,
+    },
     facade::{self, App},
     framework::{dpdk::Transport, sqlite::Database, ycsb_workload::Property},
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
@@ -84,14 +86,7 @@ fn main() {
 
     let prefix = args.config.file_name().unwrap().to_str().unwrap();
     let config = args.config.with_file_name(format!("{}.config", prefix));
-    let mut config: facade::Config<_> = {
-        let mut buf = String::new();
-        File::open(config)
-            .unwrap()
-            .read_to_string(&mut buf)
-            .unwrap();
-        buf.parse().unwrap()
-    };
+    let mut config: facade::Config<_> = fs::read_to_string(config).unwrap().parse().unwrap();
     config.collect_signing_key(&args.config);
     let config = Config::for_shard(config, 0); // TODO
 
@@ -111,6 +106,9 @@ fn main() {
     .unwrap();
 
     let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
+    if let Some(address) = config.multicast {
+        transport.set_multicast_address(address);
+    }
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,
@@ -125,7 +123,11 @@ fn main() {
             let shutdown = worker_data.shutdown.clone();
 
             if Transport::worker_id() < args.n_worker {
-                replica.run_worker(|| shutdown.load(Ordering::SeqCst));
+                if unsafe { rte_socket_id() == rte_eth_dev_socket_id(args.port_id) } {
+                    replica.run_worker(|| shutdown.load(Ordering::SeqCst));
+                } else {
+                    replica.run_stateless_worker(|| shutdown.load(Ordering::SeqCst));
+                }
             }
             0
         }

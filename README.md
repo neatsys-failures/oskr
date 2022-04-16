@@ -39,18 +39,18 @@ project's logo.
 |-------------------|---|-----------|-----------|
 |Unreplicated       |1  |2011.256   |10.751     |
 |Unreplicated Signed|1  |11.799     |91.647     |
-|Unreplicated Signed|14 |154.064    |99.327     |
-|PBFT               |14 |4.875      |716.799    |
-|HotStuff           |14 |1.836      |2179.071   |
-|Zyzzyva            |14 |66.817     |323.583    |
+|Unreplicated Signed|30 |327.876    |99.327     |
+|PBFT               |30 |8.060      |724.991    |
+|HotStuff           |30 |1.833      |2185.454   |
+|Zyzzyva            |30 |66.817*    |348.159    |
 
 0/0 RPC with batch size up to 100
 
 |Protocol|Adaptive batching|Maximum throughput (Kops/sec)|
 |-------------------|---|-----------|
-|PBFT               |Yes|121.200    |
-|HotStuff           |Yes|98.654     |
-|Zyzzyva            |No |135.600    |
+|PBFT               |Yes|215.835    |
+|HotStuff           |Yes|147.704    |
+|Zyzzyva            |No |257.692    |
 
 YCSB workload C with sqlite as backend, batch size up to 20
 

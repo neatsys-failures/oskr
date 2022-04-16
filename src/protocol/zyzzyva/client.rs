@@ -183,7 +183,7 @@ where
         // the timer detail may influence client strategy significantly which
         // results in major difference of overall system performance. hope
         // this do not hurt our reproducible :|
-        let mut commit_timeout = Instant::now() + Duration::from_millis(100);
+        let mut commit_timeout = Instant::now() + Duration::from_millis(500);
         let mut resend_timeout = Instant::now() + Duration::from_millis(1000);
         let mut certification = None;
         loop {
@@ -204,8 +204,8 @@ where
                     }
                     self.transport
                         .send_message_to_all(self, self.config.replica(..), serialize(ToReplica::Request(request.clone())));
-                    resend_timeout = Instant::now() + Duration::from_millis(1000);
                     commit_timeout = Instant::now() + Duration::from_millis(100);
+                    resend_timeout = Instant::now() + Duration::from_millis(1000);
                 }
                 _ = E::sleep_until(commit_timeout).fuse() => {
                     if self.request_number > 1 {

@@ -18,7 +18,7 @@ use oskr::{
     protocol::tombft::message::TrustedOrderedMulticast,
     stage::{Handle, State},
 };
-use quanta::{Clock, Instant};
+use quanta::Clock;
 use tracing::debug;
 
 struct MulticastReceiver<T: Transport>(Arc<(AtomicU32, AtomicU32)>, T::Address);
@@ -41,6 +41,7 @@ impl<T: Transport> MulticastReceiver<T> {
         if verified.trusted.is_some() {
             shared.1.fetch_add(1, Ordering::SeqCst);
         }
+        debug!("received: {}", &*verified);
     }
 }
 
@@ -82,7 +83,7 @@ fn main() {
                 });
             });
             transport.register(&**state, move |_remote, _buffer| {
-                debug!("receive baseline unicast");
+                // debug!("receive baseline unicast");
                 START.store(clock0.start(), Ordering::SeqCst);
             });
         });
@@ -124,10 +125,10 @@ fn main() {
         } else {
             for i in 0..10 as u32 {
                 println!("send #{}", i);
+                transport.send_message_to_all(&receiver, config.replica(..), |_| 0);
                 transport.send_message(&receiver, &config.multicast.unwrap(), |buffer| {
                     TrustedOrderedMulticast::send(i, buffer)
                 });
-                transport.send_message_to_all(&receiver, config.replica(..), |_| 0);
                 thread::sleep(Duration::from_secs(1));
             }
         }
