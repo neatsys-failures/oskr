@@ -550,16 +550,21 @@ impl Workload {
         }
     }
 
+    pub fn next_insert_entry(&self) -> (String, HashMap<String, Opaque>) {
+        let key_number = (self.key_sequence)();
+        assert!(key_number < self.property.insert_start + self.property.insert_count);
+        let key = Self::build_key_name(
+            key_number,
+            self.property.zero_padding,
+            self.property.insert_order,
+        );
+        let value_table = self.build_value_table(&key);
+        (key, value_table)
+    }
+
     pub fn one_op(&self) -> (OpKind, Box<dyn FnOnce(&Self) + Send>) {
         if !self.property.do_transaction {
-            let key_number = (self.key_sequence)();
-            assert!(key_number < self.property.insert_start + self.property.insert_count);
-            let key = Self::build_key_name(
-                key_number,
-                self.property.zero_padding,
-                self.property.insert_order,
-            );
-            let value_table = self.build_value_table(&key);
+            let (key, value_table) = self.next_insert_entry();
             let mut buffer = Opaque::new();
             serialize(Op::Insert(self.property.table.clone(), key, value_table))(&mut buffer);
             return (OpKind::Insert(buffer), Box::new(|_| {}));

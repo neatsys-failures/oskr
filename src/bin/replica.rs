@@ -11,13 +11,19 @@ use std::{
 
 use clap::{ArgEnum, Parser};
 use oskr::{
+    app::ycsb::Database as _,
     common::{panic_abort, Config, OpNumber, Opaque, ReplicaId},
     dpdk_shim::{
         rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_eth_dev_socket_id,
         rte_rmt_call_main_t, rte_socket_id,
     },
     facade::{self, App},
-    framework::{dpdk::Transport, sqlite::Database, ycsb_workload::Property},
+    framework::{
+        dpdk::Transport,
+        memory_database,
+        sqlite::Database,
+        ycsb_workload::{Property, Workload},
+    },
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
     stage::{Handle, State},
 };
@@ -47,9 +53,10 @@ fn main() {
     // should be `AppName` which is more pricese
     // just try to match client side
     #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
-    enum WorkloadName {
+    enum AppName {
         Null,
         YCSB,
+        YCSBMemory,
     }
 
     #[derive(Parser, Debug)]
@@ -57,8 +64,8 @@ fn main() {
     struct Args {
         #[clap(short, long, arg_enum)]
         mode: Mode,
-        #[clap(short, long, arg_enum, default_value_t = WorkloadName::Null)]
-        workload: WorkloadName,
+        #[clap(short, long, arg_enum, default_value_t = AppName::Null)]
+        app: AppName,
         #[clap(short, long, parse(from_os_str))]
         config: PathBuf,
         #[clap(short = 'i')]
@@ -75,7 +82,8 @@ fn main() {
         batch_size: usize,
         #[clap(long)]
         adaptive: bool,
-        // property list if necessary
+        #[clap(short)]
+        property_list: Vec<String>,
         #[clap(long = "db")]
         database_file: Option<PathBuf>,
     }
@@ -89,6 +97,13 @@ fn main() {
     let mut config: facade::Config<_> = fs::read_to_string(config).unwrap().parse().unwrap();
     config.collect_signing_key(&args.config);
     let config = Config::for_shard(config, 0); // TODO
+
+    let mut property = Property::default();
+    // TODO property file
+    for property_item in &args.property_list {
+        let (key, value) = property_item.split_once('=').unwrap();
+        property.rewrite(key, value);
+    }
 
     let shutdown = Arc::new(AtomicBool::new(false));
     ctrlc::set_handler({
@@ -209,16 +224,15 @@ fn main() {
         }
     }
 
-    let unpark: Box<dyn FnOnce()> = match args.workload {
-        WorkloadName::Null => Box::new(launch_app(
+    let unpark: Box<dyn FnOnce()> = match args.app {
+        AppName::Null => Box::new(launch_app(
             NullApp,
             args,
             config,
             &mut transport,
             shutdown.clone(),
         )),
-        WorkloadName::YCSB => {
-            let property = Property::default(); // TODO
+        AppName::YCSB => {
             let create_table = args
                 .database_file
                 .as_ref()
@@ -241,6 +255,33 @@ fn main() {
                         .collect::<Vec<_>>(),
                 );
             }
+            Box::new(launch_app(
+                app,
+                args,
+                config,
+                &mut transport,
+                shutdown.clone(),
+            ))
+        }
+        AppName::YCSBMemory => {
+            let mut app = memory_database::Database::default();
+            // TODO more real setup
+            property.do_transaction = false;
+            let table = property.table.clone();
+            let op_count = property.record_count;
+            let workload = Workload::new(property);
+            for _ in 0..op_count {
+                let (key, mut value_table) = workload.next_insert_entry();
+                // overwrite values to make replication has matching database
+                for value in value_table.values_mut() {
+                    for (i, b) in value.iter_mut().enumerate() {
+                        *b = i.to_le_bytes()[0];
+                    }
+                }
+                app.insert(table.clone(), key, value_table).unwrap();
+            }
+            info!("finish building database");
+
             Box::new(launch_app(
                 app,
                 args,

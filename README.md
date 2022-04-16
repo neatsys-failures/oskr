@@ -52,15 +52,15 @@ project's logo.
 |HotStuff           |Yes|147.704    |
 |Zyzzyva            |No |257.692    |
 
-YCSB workload C with sqlite as backend, batch size up to 20
+YCSB workload C with in-memory B-Tree map as backend, 1M 64 bytes * 10 records, batch size up to 20
 
 |Protocol|Maximum throughput (Kops/sec)|Minimum latency (us)|
 |-------------------|-------|-----------|
-|Unreplicated       |34.515 |39.679     |
-|Unreplicated Signed|38.547 |141.311    |
-|Zyzzyva            |37.894 |382.975    |
-|PBFT               |28.986 |770.047    |
-|HotStuff           |35.780 |2179.071   |
+|Unreplicated       |80.788 |31.999     |
+|Unreplicated Signed|88.268 |121.855    |
+|Zyzzyva            |74.400 |362.495    |
+|PBFT               |47.367 |737.279    |
+|HotStuff           |35.180 |2211.839   |
 
 ----
 

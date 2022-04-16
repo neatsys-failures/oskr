@@ -96,11 +96,11 @@ fn main() {
         n_client: usize,
         #[clap(short, long, default_value_t = 1)]
         duration: u64,
-        #[clap(short, long = "warm-up", default_value_t = 0)]
+        #[clap(long = "warm", default_value_t = 0)]
         warm_up_duration: u64,
         #[clap(short = 'P')]
         property_file: Option<PathBuf>,
-        #[clap(short = 'p')]
+        #[clap(short)]
         property_list: Vec<String>,
         #[clap(long)]
         load: bool,

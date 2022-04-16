@@ -5,6 +5,7 @@ use crate::{
     common::Opaque,
 };
 
+#[derive(Debug, Clone, Default)]
 pub struct Database {
     // outer level B-Tree for supporting scan operation
     // inner level using B-Tree instead of hashed, because the database
