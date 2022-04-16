@@ -160,7 +160,8 @@ pub struct Transport {
     mbuf_pool: NonNull<rte_mempool>,
     port_id: u16,
     recv_table: RecvTable,
-    // multicast recv table
+    multicast_address: Option<Address>,
+    multicast_recv: Box<dyn Fn(Address, RxBuffer) + Send>,
     rr: Arc<RoundRobin>,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
@@ -207,7 +208,7 @@ impl facade::Transport for Transport {
         &mut self,
         rx_agent: impl Fn(Self::Address, Self::RxBuffer) + 'static + Send,
     ) {
-        todo!()
+        self.multicast_recv = Box::new(rx_agent);
     }
 
     fn ephemeral_address(&self) -> Self::Address {
@@ -267,9 +268,15 @@ impl Transport {
                 port_id,
                 mbuf_pool,
                 recv_table: HashMap::new(),
+                multicast_address: None,
+                multicast_recv: Box::new(|_, _| {}),
                 rr: Arc::new(RoundRobin::new(n_tx as u32)),
             }
         }
+    }
+
+    pub fn set_multicast_address(&mut self, address: Address) {
+        self.multicast_address = Some(address);
     }
 
     pub fn worker_id() -> usize {
@@ -314,6 +321,10 @@ impl Transport {
 
     pub fn poll(&self, queue_id: u16) {
         self.run_internal(queue_id, |source, dest, buffer| {
+            if Some(dest) == self.multicast_address {
+                (self.multicast_recv)(source, buffer);
+                return true;
+            }
             if let Some(rx_agent) = self.recv_table.get(&dest) {
                 rx_agent(source, buffer);
                 true
@@ -337,6 +348,9 @@ impl Transport {
             self.run_internal(0, |source, dest, buffer| {
                 if dest == *address {
                     rx_agent(source, buffer);
+                    true
+                } else if Some(dest) == self.multicast_address {
+                    (self.multicast_recv)(source, buffer);
                     true
                 } else {
                     false
