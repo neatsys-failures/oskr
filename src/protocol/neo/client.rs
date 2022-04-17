@@ -81,6 +81,7 @@ where
                 if reply.request_number != client.request_number {
                     return None;
                 }
+                debug!("{:?}", reply);
 
                 let matcher = (
                     reply.view_number,

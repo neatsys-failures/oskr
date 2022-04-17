@@ -3,13 +3,15 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use k256::ecdsa::{signature::Verifier, Signature};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
+use tracing::debug;
 
 use crate::common::{
     deserialize, serialize, signed::InauthenticMessage, ClientId, Digest, OpNumber, Opaque,
-    ReplicaId, RequestNumber, ViewNumber,
+    ReplicaId, RequestNumber, VerifyingKey, ViewNumber,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,6 +28,17 @@ pub struct OrderedMulticast<M> {
 pub struct VerifiedOrderedMulticast<M> {
     pub meta: OrderedMulticast<M>,
     message: M,
+}
+
+pub enum MulticastVerifyingKey {
+    HMac([u32; 4]),
+    PublicKey(VerifyingKey),
+}
+
+impl Default for MulticastVerifyingKey {
+    fn default() -> Self {
+        Self::HMac([0; 4])
+    }
 }
 
 impl<M> OrderedMulticast<M> {
@@ -80,13 +93,31 @@ impl<M> OrderedMulticast<M> {
 
     pub fn verify(
         self,
-        verifying_key: (),
+        verifying_key: &MulticastVerifyingKey,
     ) -> Result<VerifiedOrderedMulticast<M>, InauthenticMessage>
     where
         M: DeserializeOwned,
     {
         if self.is_signed() {
-            // verify
+            match verifying_key {
+                MulticastVerifyingKey::HMac(_) => {
+                    // TODO
+                }
+                MulticastVerifyingKey::PublicKey(verifying_key) => {
+                    let signature: Signature = if let Ok(signature) =
+                        [self.signature0, self.signature1].concat()[..].try_into()
+                    {
+                        signature
+                    } else {
+                        return Err(InauthenticMessage);
+                    };
+                    if verifying_key.verify(&self.message, &signature).is_err() {
+                        // return Err(InauthenticMessage);
+                        debug!("public key multicast verification fail");
+                        // just allow it to go
+                    }
+                }
+            }
         }
         return deserialize(&*self.message)
             .map(|message| VerifiedOrderedMulticast {

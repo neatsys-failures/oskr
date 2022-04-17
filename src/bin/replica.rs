@@ -12,7 +12,7 @@ use std::{
 use clap::{ArgEnum, Parser};
 use oskr::{
     app::ycsb::Database as _,
-    common::{panic_abort, Config, OpNumber, Opaque, ReplicaId},
+    common::{panic_abort, Config, OpNumber, Opaque, ReplicaId, SigningKey},
     dpdk_shim::{
         rte_eal_mp_remote_launch, rte_eal_mp_wait_lcore, rte_eth_dev_socket_id,
         rte_rmt_call_main_t, rte_socket_id,
@@ -24,7 +24,11 @@ use oskr::{
         sqlite::Database,
         ycsb_workload::{Property, Workload},
     },
-    protocol::{hotstuff, pbft, unreplicated, zyzzyva},
+    protocol::{
+        hotstuff,
+        neo::{self, message::MulticastVerifyingKey},
+        pbft, unreplicated, zyzzyva,
+    },
     stage::{Handle, State},
 };
 use tracing::{debug, info, warn};
@@ -48,6 +52,7 @@ fn main() {
         PBFT,
         HotStuff,
         Zyzzyva,
+        Neo,
     }
 
     // should be `AppName` which is more pricese
@@ -57,6 +62,12 @@ fn main() {
         Null,
         YCSB,
         YCSBMemory,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
+    enum MulticastKey {
+        HMac,
+        PublicKey,
     }
 
     #[derive(Parser, Debug)]
@@ -86,6 +97,10 @@ fn main() {
         property_list: Vec<String>,
         #[clap(long = "db")]
         database_file: Option<PathBuf>,
+        #[clap(long = "check-eq")]
+        check_equivocation: bool,
+        #[clap(long = "multi-key", arg_enum, default_value_t = MulticastKey::HMac)]
+        multicast_key: MulticastKey,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -225,6 +240,27 @@ fn main() {
                 args,
                 shutdown.clone(),
             ),
+            Mode::Neo => {
+                let multicast_key = match args.multicast_key {
+                    MulticastKey::HMac => MulticastVerifyingKey::HMac([0; 4]),
+                    MulticastKey::PublicKey => MulticastVerifyingKey::PublicKey(
+                        SigningKey::from_bytes(&[0xaa; 32]).unwrap().verifying_key(),
+                    ),
+                };
+                WorkerData::launch(
+                    neo::Replica::register_new(
+                        config,
+                        transport,
+                        args.replica_id,
+                        app,
+                        args.batch_size,
+                        multicast_key,
+                        args.check_equivocation,
+                    ),
+                    args,
+                    shutdown.clone(),
+                )
+            }
         }
     }
 

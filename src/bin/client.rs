@@ -24,7 +24,7 @@ use oskr::{
         latency::{Latency, LocalLatency, MeasureClock},
         ycsb_workload::{OpKind, Property, Workload},
     },
-    protocol::{hotstuff, pbft, unreplicated, zyzzyva},
+    protocol::{hotstuff, neo, pbft, unreplicated, zyzzyva},
 };
 use quanta::Clock;
 use tracing::{debug, info};
@@ -74,6 +74,7 @@ fn main() {
         HotStuff,
         Zyzzyva,
         YCSB,
+        Neo,
     }
     #[derive(Parser, Debug)]
     #[clap(name = "Oskr Client", version)]
@@ -326,6 +327,13 @@ fn main() {
         ),
         Mode::YCSB => WorkerData::launch(
             || ycsb::TraceClient::default(),
+            args,
+            status.clone(),
+            latency.iter().map(|latency| latency.local()).collect(),
+            property,
+        ),
+        Mode::Neo => WorkerData::launch(
+            || neo::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
