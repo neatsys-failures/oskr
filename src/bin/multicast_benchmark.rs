@@ -15,7 +15,7 @@ use oskr::{
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     facade::{self, Receiver, Transport, TxAgent},
     framework::dpdk,
-    protocol::tombft::message::TrustedOrderedMulticast,
+    protocol::neo::message::OrderedMulticast,
     stage::{Handle, State},
 };
 use quanta::Clock;
@@ -35,10 +35,10 @@ impl<T: Transport> Receiver<T> for MulticastReceiver<T> {
 }
 impl<T: Transport> MulticastReceiver<T> {
     fn receive_buffer(shared: &Arc<(AtomicU32, AtomicU32)>, buffer: T::RxBuffer) {
-        let message = TrustedOrderedMulticast::<u32>::new(buffer.as_ref());
+        let message = OrderedMulticast::<u32>::parse(buffer.as_ref());
         let verified = message.verify(()).unwrap();
         shared.0.fetch_add(1, Ordering::SeqCst);
-        if verified.trusted.is_some() {
+        if verified.meta.is_signed() {
             shared.1.fetch_add(1, Ordering::SeqCst);
         }
         debug!("received: {}", &*verified);
@@ -119,7 +119,7 @@ fn main() {
         if throughput_benchmark {
             for i in 0..10000000 as u32 {
                 transport.send_message(&receiver, &config.multicast.unwrap(), |buffer| {
-                    TrustedOrderedMulticast::send(i, buffer)
+                    OrderedMulticast::send(i, buffer)
                 });
             }
         } else {
@@ -127,7 +127,7 @@ fn main() {
                 println!("send #{}", i);
                 transport.send_message_to_all(&receiver, config.replica(..), |_| 0);
                 transport.send_message(&receiver, &config.multicast.unwrap(), |buffer| {
-                    TrustedOrderedMulticast::send(i, buffer)
+                    OrderedMulticast::send(i, buffer)
                 });
                 thread::sleep(Duration::from_secs(1));
             }

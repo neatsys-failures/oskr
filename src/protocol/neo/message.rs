@@ -4,36 +4,36 @@ use std::{
 };
 
 use serde::{de::DeserializeOwned, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 
 use crate::common::{deserialize, serialize, signed::InauthenticMessage, Digest};
 
-// this struct is not designed to be transfered, so it is not (de)serailizable
-// but it is still suitable for bookkeeping
-#[derive(Debug, Clone)]
-pub struct TrustedOrderedMulticast<M> {
-    // in order to keep the format absolutely stable to be exposed to hardware
-    // we are using untyped array as representation, instead of C-style struct
-    // as layout
-    buffer: [u8; 101], // cannot use OFFSET_END?
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OrderedMulticast<M> {
+    pub chain_hash: Digest,
+    pub sequence_number: u32,
+    pub session_number: u8,
+    signature0: [u8; 32],
+    signature1: [u8; 32],
     message: Vec<u8>,
     _m: PhantomData<M>,
 }
 
 pub struct VerifiedOrderedMulticast<M> {
-    pub trusted: Option<TrustedOrderedMulticast<M>>,
-    pub sequence_number: u32,
-    pub session_number: u8,
-    pub chain_hash: Digest,
+    pub meta: OrderedMulticast<M>,
     message: M,
 }
 
-impl<M> TrustedOrderedMulticast<M> {
+impl<M> OrderedMulticast<M> {
     const OFFSET_DIGEST: usize = 0;
     const OFFSET_SEQUENCE: usize = 32;
     const OFFSET_SESSION: usize = 36;
     const OFFSET_SIGNATURE: usize = 37;
     const OFFSET_END: usize = 101;
+
+    // the (de)ser interface pair for working with hardware
+    // use bincode when transfer between nodes
 
     pub fn send(message: M, buffer: &mut [u8]) -> u16
     where
@@ -49,12 +49,30 @@ impl<M> TrustedOrderedMulticast<M> {
         message_length + Self::OFFSET_END as u16
     }
 
-    pub fn new(buffer: &[u8]) -> Self {
+    pub fn parse(buffer: &[u8]) -> Self {
         Self {
-            buffer: buffer[..Self::OFFSET_END].try_into().unwrap(),
+            chain_hash: buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32]
+                .try_into()
+                .unwrap(),
+            sequence_number: u32::from_be_bytes(
+                buffer[Self::OFFSET_SEQUENCE..Self::OFFSET_SEQUENCE + 4]
+                    .try_into()
+                    .unwrap(),
+            ),
+            session_number: buffer[Self::OFFSET_SESSION],
+            signature0: buffer[Self::OFFSET_SIGNATURE..Self::OFFSET_SIGNATURE + 32]
+                .try_into()
+                .unwrap(),
+            signature1: buffer[Self::OFFSET_SIGNATURE + 32..Self::OFFSET_SIGNATURE + 64]
+                .try_into()
+                .unwrap(),
             message: buffer[Self::OFFSET_END..].to_vec(),
             _m: PhantomData,
         }
+    }
+
+    pub fn is_signed(&self) -> bool {
+        self.signature0 != [0; 32] || self.signature1 != [0; 32]
     }
 
     pub fn verify(
@@ -64,32 +82,15 @@ impl<M> TrustedOrderedMulticast<M> {
     where
         M: DeserializeOwned,
     {
-        let signed = if self.buffer[Self::OFFSET_SIGNATURE..Self::OFFSET_SIGNATURE + 64] == [0; 64]
-        {
-            false
-        } else {
-            // TODO verify
-            true
-        };
-
-        let message = if let Ok(message) = deserialize(&*self.message) {
-            message
-        } else {
-            return Err(InauthenticMessage);
-        };
-        Ok(VerifiedOrderedMulticast {
-            sequence_number: u32::from_be_bytes(
-                self.buffer[Self::OFFSET_SEQUENCE..Self::OFFSET_SEQUENCE + 4]
-                    .try_into()
-                    .unwrap(),
-            ),
-            session_number: self.buffer[Self::OFFSET_SESSION],
-            message,
-            chain_hash: self.buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32]
-                .try_into()
-                .unwrap(),
-            trusted: if signed { Some(self) } else { None },
-        })
+        if self.is_signed() {
+            // verify
+        }
+        return deserialize(&*self.message)
+            .map(|message| VerifiedOrderedMulticast {
+                message,
+                meta: self,
+            })
+            .map_err(|_| InauthenticMessage);
     }
 }
 
