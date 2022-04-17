@@ -42,15 +42,15 @@ project's logo.
 |Unreplicated Signed|30 |327.876    |99.327     |
 |PBFT               |30 |8.060      |724.991    |
 |HotStuff           |30 |1.833      |2185.454   |
-|Zyzzyva            |30 |66.817*    |348.159    |
+|Zyzzyva            |30 |135.900    |348.159    |
 
 0/0 RPC with batch size up to 100
 
 |Protocol|Adaptive batching|Maximum throughput (Kops/sec)|
 |-------------------|---|-----------|
-|PBFT               |Yes|215.835    |
+|PBFT               |Yes|221.189    |
 |HotStuff           |Yes|147.704    |
-|Zyzzyva            |No |257.692    |
+|Zyzzyva            |No |243.387    |
 
 YCSB workload C with in-memory B-Tree map as backend, 1M 64 bytes * 10 records, batch size up to 20
 
@@ -58,7 +58,7 @@ YCSB workload C with in-memory B-Tree map as backend, 1M 64 bytes * 10 records, 
 |-------------------|-------|-----------|
 |Unreplicated       |80.788 |31.999     |
 |Unreplicated Signed|88.268 |121.855    |
-|Zyzzyva            |74.400 |362.495    |
+|Zyzzyva            |89.080 |362.495    |
 |PBFT               |47.367 |737.279    |
 |HotStuff           |35.180 |2211.839   |
 

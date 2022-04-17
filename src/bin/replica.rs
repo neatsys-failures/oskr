@@ -27,7 +27,7 @@ use oskr::{
     protocol::{hotstuff, pbft, unreplicated, zyzzyva},
     stage::{Handle, State},
 };
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 struct NullApp;
 impl App for NullApp {
@@ -141,6 +141,10 @@ fn main() {
                 if unsafe { rte_socket_id() == rte_eth_dev_socket_id(args.port_id) } {
                     replica.run_worker(|| shutdown.load(Ordering::SeqCst));
                 } else {
+                    debug!(
+                        "start stateless worker {} on remote socket",
+                        Transport::worker_id()
+                    );
                     replica.run_stateless_worker(|| shutdown.load(Ordering::SeqCst));
                 }
             }

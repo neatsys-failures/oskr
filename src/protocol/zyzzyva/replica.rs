@@ -269,7 +269,9 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         order_request: &SignedMessage<message::OrderRequest>,
     ) {
         if item.op_number as usize != self.history.len() + 1 {
-            info!("reorder history: op number = {}", item.op_number);
+            // this reordering happens too much on fast path so logging affect
+            // performance very much
+            debug!("reorder history: op number = {}", item.op_number);
             // here, it is possible that the op number already present in the
             // reorder history (reorder future maybe?), and get replaced
             // because of the prefix gap we have no way to determine which item

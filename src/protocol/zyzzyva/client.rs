@@ -97,6 +97,7 @@ where
             Certified(Vec<(ReplicaId, SignedMessage<message::SpeculativeResponse>)>), // TODO
             Other,
         }
+        let client_id = self.id;
         let mut receive_buffer =
             move |client: &mut Self, _remote: T::Address, buffer: T::RxBuffer| {
                 match deserialize(buffer.as_ref()).unwrap() {
@@ -104,8 +105,8 @@ where
                     ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
                         let (response, signed) = (response.assume_verified(), response);
                         debug!(
-                            "spec request number {} replica id {}",
-                            response.request_number, replica_id
+                            "[{:?}] spec request number {} replica id {}",
+                            client_id, response.request_number, replica_id
                         );
                         if (response.client_id, response.request_number)
                             != (client.id, client.request_number)
@@ -138,7 +139,7 @@ where
                                     && response.result == result
                             })
                             .collect();
-                        debug!("cert size {}", certification.len());
+                        // debug!("cert size {}", certification.len());
                         if certification.len() == 3 * client.config.f + 1 {
                             Status::Committed(result)
                         } else if certification.len() >= 2 * client.config.f + 1 {
@@ -183,7 +184,7 @@ where
         // the timer detail may influence client strategy significantly which
         // results in major difference of overall system performance. hope
         // this do not hurt our reproducible :|
-        let mut commit_timeout = Instant::now() + Duration::from_millis(500);
+        let mut commit_timeout = Instant::now() + Duration::from_millis(100);
         let mut resend_timeout = Instant::now() + Duration::from_millis(1000);
         let mut certification = None;
         loop {
@@ -216,7 +217,8 @@ where
                     if let Some(certification) = &certification {
                         todo!()
                     }
-                    commit_timeout = Instant::now() + Duration::from_secs(100); // TODO
+                    // set next commit to "forever" (will be set back in resend)
+                    commit_timeout = Instant::now() + Duration::from_secs(1000000); // TODO
                 }
             }
         }
