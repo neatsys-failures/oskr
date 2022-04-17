@@ -7,7 +7,10 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 
-use crate::common::{deserialize, serialize, signed::InauthenticMessage, Digest};
+use crate::common::{
+    deserialize, serialize, signed::InauthenticMessage, ClientId, Digest, OpNumber, Opaque,
+    ReplicaId, RequestNumber, ViewNumber,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderedMulticast<M> {
@@ -35,7 +38,7 @@ impl<M> OrderedMulticast<M> {
     // the (de)ser interface pair for working with hardware
     // use bincode when transfer between nodes
 
-    pub fn send(message: M, buffer: &mut [u8]) -> u16
+    pub fn assemble(message: M, buffer: &mut [u8]) -> u16
     where
         M: Serialize,
     {
@@ -105,4 +108,26 @@ impl<M> DerefMut for VerifiedOrderedMulticast<M> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.message
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ToReplica {
+    // multicast is not here
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Request {
+    pub client_id: ClientId,
+    pub request_number: RequestNumber,
+    pub op: Opaque,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Reply {
+    pub view_number: ViewNumber,
+    pub replica_id: ReplicaId,
+    pub op_number: OpNumber, // log slot number is so...
+    pub log_hash: Digest,
+    pub request_number: RequestNumber,
+    pub result: Opaque,
 }

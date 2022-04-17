@@ -119,7 +119,7 @@ fn main() {
         if throughput_benchmark {
             for i in 0..10000000 as u32 {
                 transport.send_message(&receiver, &config.multicast.unwrap(), |buffer| {
-                    OrderedMulticast::send(i, buffer)
+                    OrderedMulticast::assemble(i, buffer)
                 });
             }
         } else {
@@ -127,7 +127,7 @@ fn main() {
                 println!("send #{}", i);
                 transport.send_message_to_all(&receiver, config.replica(..), |_| 0);
                 transport.send_message(&receiver, &config.multicast.unwrap(), |buffer| {
-                    OrderedMulticast::send(i, buffer)
+                    OrderedMulticast::assemble(i, buffer)
                 });
                 thread::sleep(Duration::from_secs(1));
             }
