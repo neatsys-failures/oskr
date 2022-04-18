@@ -28,8 +28,8 @@ pub struct Replica<T: Transport> {
     check_equivocation: bool,
     op_number: OpNumber,
     log: Vec<VerifiedOrderedMulticast<message::Request>>,
-    chain_request: HashMap<Digest, VerifiedOrderedMulticast<message::Request>>,
-    reorder_request: HashMap<OpNumber, VerifiedOrderedMulticast<message::Request>>,
+    received_buffer: HashMap<OpNumber, VerifiedOrderedMulticast<message::Request>>,
+    verified_buffer: HashMap<OpNumber, VerifiedOrderedMulticast<message::Request>>,
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     route_table: HashMap<ClientId, T::Address>,
     shared: Arc<Shared<T>>,
@@ -83,8 +83,8 @@ impl<T: Transport> Replica<T> {
             check_equivocation,
             op_number: 0,
             log: Vec::new(),
-            chain_request: HashMap::new(),
-            reorder_request: HashMap::new(),
+            received_buffer: HashMap::new(),
+            verified_buffer: HashMap::new(),
             client_table: HashMap::new(),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -142,32 +142,60 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.route_table.insert(request.client_id, remote);
 
         if !request.meta.is_signed() {
-            debug!("insert chain");
-            if self
-                .chain_request
-                .insert(request.meta.chain_hash, request)
-                .is_some()
-            {
-                warn!("duplicated chain hash");
-            }
+            self.insert_chain(request);
             self.unsigned_count += 1;
             return;
         }
-        debug!("insert signed");
+        debug!("insert signed {}", request.meta.sequence_number);
         self.signed_count += 1;
 
         if self.check_equivocation {
             todo!()
         }
 
-        self.insert_chain(&request.meta.chain_hash);
+        self.verify_chain(&request.meta);
         self.insert_request(request);
     }
 
-    fn insert_chain(&mut self, chain_hash: &Digest) {
-        while let Some(request) = self.chain_request.remove(chain_hash) {
-            self.insert_chain(&request.meta.chain_hash);
-            self.insert_request(request);
+    fn insert_chain(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
+        assert!(!request.meta.is_signed());
+        let child = if let Some(child) = self.log.get(request.meta.sequence_number as usize) {
+            assert_eq!(child.meta.sequence_number, request.meta.sequence_number + 1);
+            child
+        } else if let Some(child) = self
+            .verified_buffer
+            .get(&(request.meta.sequence_number + 1))
+        {
+            child
+        } else {
+            // child not verified yet
+            debug!("insert chain {}", request.meta.sequence_number);
+            // TODO don't let a faulty chain to cause unnecessary query
+            if self
+                .received_buffer
+                .insert(request.meta.sequence_number, request)
+                .is_some()
+            {
+                warn!("duplicated chain hash");
+            }
+            return;
+        };
+        if let Ok(verified) = child.meta.verify_parent(request) {
+            self.verify_chain(&verified.meta);
+            self.insert_request(verified);
+        } else {
+            warn!("broken chain");
+        }
+    }
+
+    fn verify_chain(&mut self, child: &OrderedMulticast<message::Request>) {
+        if let Some(request) = self.received_buffer.remove(&(child.sequence_number - 1)) {
+            if let Ok(verified) = child.verify_parent(request) {
+                self.verify_chain(&verified.meta);
+                self.insert_request(verified);
+            } else {
+                warn!("broken chain");
+            }
         }
     }
 
@@ -179,16 +207,20 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             op_number, self.op_number
         );
         if op_number != self.op_number + 1 {
-            if self.reorder_request.insert(op_number, request).is_some() {
+            if self
+                .verified_buffer
+                .insert(sequence_number, request)
+                .is_some()
+            {
                 warn!("duplicated sequence number {sequence_number}");
             }
             return;
         }
         self.insert_log(request);
-        let mut insert_number = self.op_number + 1;
-        while let Some(request) = self.reorder_request.remove(&insert_number) {
+        let mut insert_number = sequence_number + 1;
+        while let Some(request) = self.verified_buffer.remove(&insert_number) {
+            insert_number = request.meta.sequence_number + 1;
             self.insert_log(request);
-            insert_number = self.op_number + 1;
         }
     }
 
@@ -249,16 +281,16 @@ impl<T: Transport> Drop for Replica<T> {
             "signed/unsigned: {}/{}",
             self.signed_count, self.unsigned_count
         );
-        if !self.chain_request.is_empty() {
+        if !self.received_buffer.is_empty() {
             warn!(
-                "not inserted chain request: {} remain",
-                self.chain_request.len()
+                "not inserted chain request: {:?} remain",
+                self.received_buffer.keys()
             );
         }
-        if !self.reorder_request.is_empty() {
+        if !self.verified_buffer.is_empty() {
             warn!(
                 "not inserted reorder request: {} remain",
-                self.reorder_request.len()
+                self.verified_buffer.len()
             );
         }
     }

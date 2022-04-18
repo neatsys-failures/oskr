@@ -17,6 +17,7 @@ use crate::common::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderedMulticast<M> {
     pub chain_hash: Digest,
+    pub digest: Digest,
     pub sequence_number: u32,
     pub session_number: u8,
     signature0: [u8; 32],
@@ -25,6 +26,7 @@ pub struct OrderedMulticast<M> {
     _m: PhantomData<M>,
 }
 
+// TODO make a enum for signed and unsigned variants
 pub struct VerifiedOrderedMulticast<M> {
     pub meta: OrderedMulticast<M>,
     message: M,
@@ -66,10 +68,14 @@ impl<M> OrderedMulticast<M> {
     }
 
     pub fn parse(buffer: &[u8]) -> Self {
+        let message = buffer[Self::OFFSET_END..].to_vec();
+        let mut digest: [_; 32] = Sha256::digest(&*message).into();
+        digest[28..].fill(0); // same as above
         Self {
             chain_hash: buffer[Self::OFFSET_DIGEST..Self::OFFSET_DIGEST + 32]
                 .try_into()
                 .unwrap(),
+            digest,
             sequence_number: u32::from_be_bytes(
                 buffer[Self::OFFSET_SEQUENCE..Self::OFFSET_SEQUENCE + 4]
                     .try_into()
@@ -82,7 +88,7 @@ impl<M> OrderedMulticast<M> {
             signature1: buffer[Self::OFFSET_SIGNATURE + 32..Self::OFFSET_SIGNATURE + 64]
                 .try_into()
                 .unwrap(),
-            message: buffer[Self::OFFSET_END..].to_vec(),
+            message,
             _m: PhantomData,
         }
     }
@@ -125,6 +131,31 @@ impl<M> OrderedMulticast<M> {
                 meta: self,
             })
             .map_err(|_| InauthenticMessage);
+    }
+
+    pub fn verify_parent(
+        &self,
+        // actually can work on a different M type but not required by now
+        parent: VerifiedOrderedMulticast<M>,
+    ) -> Result<VerifiedOrderedMulticast<M>, InauthenticMessage>
+    where
+        M: DeserializeOwned,
+    {
+        assert!(!parent.meta.is_signed());
+        let mut chain_hash = self.digest;
+        for (i, b) in self.sequence_number.to_le_bytes().into_iter().enumerate() {
+            chain_hash[i] ^= b;
+        }
+        chain_hash[4] ^= self.session_number;
+        for (i, b) in parent.meta.chain_hash.iter().enumerate() {
+            chain_hash[i] ^= b;
+        }
+        if chain_hash != self.chain_hash {
+            debug!("chain hash verification failed");
+            // TODO
+            // return Err(InauthenticMessage);
+        }
+        Ok(parent)
     }
 }
 

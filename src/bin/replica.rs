@@ -66,8 +66,8 @@ fn main() {
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, ArgEnum)]
     enum MulticastKey {
-        HMac,
-        PublicKey,
+        HMAC,
+        PKEY,
     }
 
     #[derive(Parser, Debug)]
@@ -99,7 +99,7 @@ fn main() {
         database_file: Option<PathBuf>,
         #[clap(long = "check-eq")]
         check_equivocation: bool,
-        #[clap(long = "multi-key", arg_enum, default_value_t = MulticastKey::HMac)]
+        #[clap(long = "multi-key", arg_enum, default_value_t = MulticastKey::HMAC)]
         multicast_key: MulticastKey,
     }
     let args = Args::parse();
@@ -242,8 +242,8 @@ fn main() {
             ),
             Mode::Neo => {
                 let multicast_key = match args.multicast_key {
-                    MulticastKey::HMac => MulticastVerifyingKey::HMac([0; 4]),
-                    MulticastKey::PublicKey => MulticastVerifyingKey::PublicKey(
+                    MulticastKey::HMAC => MulticastVerifyingKey::HMac([0; 4]),
+                    MulticastKey::PKEY => MulticastVerifyingKey::PublicKey(
                         SigningKey::from_bytes(&[0xaa; 32]).unwrap().verifying_key(),
                     ),
                 };
