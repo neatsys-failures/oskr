@@ -151,6 +151,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                     .stateful(move |state| state.handle_order_request(order_request, batch));
                 return;
             }
+            Ok(ToReplica::Commit(_)) => {
+                todo!()
+            }
             Ok(ToReplica::Checkpoint(checkpoint)) => {
                 let verifying_key = if let Some(key) = self.config.verifying_key(&remote) {
                     key

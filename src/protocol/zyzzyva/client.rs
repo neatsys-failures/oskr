@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     marker::PhantomData,
     time::{Duration, Instant},
 };
@@ -32,6 +32,24 @@ pub struct Client<T: Transport, E> {
 
     request_number: RequestNumber,
     view_number: ViewNumber,
+    response_table: HashMap<ReplicaId, Response>,
+    certification: Option<(
+        Opaque,
+        Digest,
+        Digest,
+        Vec<(ReplicaId, SignedMessage<message::SpeculativeResponse>)>,
+    )>,
+    commit_set: HashSet<ReplicaId>,
+}
+
+struct Response {
+    signed: SignedMessage<message::SpeculativeResponse>,
+    view_number: ViewNumber,
+    op_number: OpNumber,
+    history_digest: Digest,
+    digest: Digest,
+    // client id and request number is compared on the fly so omitted
+    result: Opaque,
 }
 
 impl<T: Transport, E> Receiver<T> for Client<T, E> {
@@ -51,6 +69,9 @@ impl<T: Transport, E> Client<T, E> {
             rx,
             request_number: 0,
             view_number: 0,
+            response_table: HashMap::new(),
+            certification: None,
+            commit_set: HashSet::new(),
             _executor: PhantomData,
         };
         transport.register(&client, move |remote, buffer| {
@@ -82,83 +103,6 @@ where
             serialize(ToReplica::Request(request.clone())),
         );
 
-        struct Response {
-            signed: SignedMessage<message::SpeculativeResponse>,
-            view_number: ViewNumber,
-            op_number: OpNumber,
-            history_digest: Digest,
-            digest: Digest,
-            // client id and request number is compared on the fly so omitted
-            result: Opaque,
-        }
-        let mut response_table = HashMap::new();
-        enum Status {
-            Committed(Opaque),
-            Certified(Vec<(ReplicaId, SignedMessage<message::SpeculativeResponse>)>), // TODO
-            Other,
-        }
-        let client_id = self.id;
-        let mut receive_buffer =
-            move |client: &mut Self, _remote: T::Address, buffer: T::RxBuffer| {
-                match deserialize(buffer.as_ref()).unwrap() {
-                    // TODO proof of misbehavior (not really planned actually)
-                    ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
-                        let (response, signed) = (response.assume_verified(), response);
-                        debug!(
-                            "[{:?}] spec request number {} replica id {}",
-                            client_id, response.request_number, replica_id
-                        );
-                        if (response.client_id, response.request_number)
-                            != (client.id, client.request_number)
-                        {
-                            return Status::Other;
-                        }
-                        response_table.insert(
-                            replica_id,
-                            Response {
-                                signed,
-                                view_number: response.view_number,
-                                op_number: response.op_number,
-                                history_digest: response.history_digest,
-                                digest: response.digest,
-                                result: result.clone(),
-                            },
-                        );
-                        // TODO save order request message
-                        if response.view_number > client.view_number {
-                            client.view_number = response.view_number;
-                        }
-                        let response0 = response;
-                        let certification: Vec<_> = response_table
-                            .iter()
-                            .filter(|(_, response)| {
-                                response.view_number == response0.view_number
-                                    && response.op_number == response0.op_number
-                                    && response.history_digest == response0.history_digest
-                                    && response.digest == response0.digest
-                                    && response.result == result
-                            })
-                            .collect();
-                        // debug!("cert size {}", certification.len());
-                        if certification.len() == 3 * client.config.f + 1 {
-                            Status::Committed(result)
-                        } else if certification.len() >= 2 * client.config.f + 1 {
-                            Status::Certified(
-                                certification
-                                    .into_iter()
-                                    .map(|(replica_id, response)| {
-                                        (*replica_id, response.signed.clone())
-                                    })
-                                    .collect(),
-                            )
-                        } else {
-                            Status::Other
-                        }
-                    }
-                    ToClient::LocalCommit(commit) => todo!(),
-                }
-            };
-
         // Zyzzyva paper is a little bit complicated on client side timers
         // there should be at least two ways to trigger broadcast resending,
         // i.e. step 4c. depends on how many spec response we got:
@@ -186,15 +130,16 @@ where
         // this do not hurt our reproducible :|
         let mut commit_timeout = Instant::now() + Duration::from_millis(100);
         let mut resend_timeout = Instant::now() + Duration::from_millis(1000);
-        let mut certification = None;
         loop {
             select! {
                 recv = self.rx.next() => {
                     let (remote, buffer) = recv.unwrap();
-                    match (receive_buffer(self, remote, buffer), &mut certification) {
-                        (Status::Committed(result), _) => return result,
-                        (Status::Certified(cert), None) => certification = Some(cert),
-                        _ => {}
+                    if let Some(result) = self.receive_buffer(remote, buffer) {
+                        // clean up
+                        self.response_table.clear();
+                        self.certification = None;
+                        self.commit_set.clear();
+                        return result;
                     }
                 }
                 _ = E::sleep_until(resend_timeout).fuse() => {
@@ -214,12 +159,104 @@ where
                     } else {
                         debug!("commit timeout for request {}", self.request_number);
                     }
-                    if let Some(certification) = &certification {
-                        todo!()
+                    if let Some((_, _, _, certification)) = &self.certification {
+                        let commit = message::Commit {
+                            client_id: self.id,
+                            certification: certification.clone(),
+                        };
+                        self.transport.send_message_to_all(
+                            self,
+                            self.config.replica(..),
+                            serialize(ToReplica::Commit(commit)),
+                        );
                     }
                     // set next commit to "forever" (will be set back in resend)
                     commit_timeout = Instant::now() + Duration::from_secs(1000000); // TODO
                 }
+            }
+        }
+    }
+}
+
+impl<T: Transport, A> Client<T, A> {
+    fn receive_buffer(&mut self, _remote: T::Address, buffer: T::RxBuffer) -> Option<Opaque> {
+        match deserialize(buffer.as_ref()).unwrap() {
+            // TODO proof of misbehavior (not really planned actually)
+            ToClient::SpeculativeResponse(response, replica_id, result, _order_request) => {
+                let (response, signed) = (response.assume_verified(), response);
+                debug!(
+                    "[{:?}] spec request number {} replica id {}",
+                    self.id, response.request_number, replica_id
+                );
+                if (response.client_id, response.request_number) != (self.id, self.request_number) {
+                    return None;
+                }
+                self.response_table.insert(
+                    replica_id,
+                    Response {
+                        signed,
+                        view_number: response.view_number,
+                        op_number: response.op_number,
+                        history_digest: response.history_digest,
+                        digest: response.digest,
+                        result: result.clone(),
+                    },
+                );
+                // TODO save order request message
+                if response.view_number > self.view_number {
+                    self.view_number = response.view_number;
+                }
+                let response0 = response;
+                let certification: Vec<_> = self
+                    .response_table
+                    .iter()
+                    .filter(|(_, response)| {
+                        response.view_number == response0.view_number
+                            && response.op_number == response0.op_number
+                            && response.history_digest == response0.history_digest
+                            && response.digest == response0.digest
+                            && response.result == result
+                    })
+                    .collect();
+                // debug!("cert size {}", certification.len());
+                if certification.len() == 3 * self.config.f + 1 {
+                    self.view_number = response0.view_number;
+                    return Some(result);
+                } else if certification.len() >= 2 * self.config.f + 1
+                    && self.certification.is_none()
+                {
+                    self.certification = Some((
+                        result,
+                        response0.digest,
+                        response0.history_digest,
+                        certification
+                            .into_iter()
+                            .take(2 * self.config.f + 1)
+                            .map(|(replica_id, response)| (*replica_id, response.signed.clone()))
+                            .collect(),
+                    ));
+                    self.view_number = response0.view_number;
+                }
+                None
+            }
+            ToClient::LocalCommit(commit) => {
+                if let Some((result, digest, history_digest, _)) = &self.certification {
+                    let commit = commit.assume_verified();
+                    if (
+                        commit.client_id,
+                        commit.view_number,
+                        commit.digest,
+                        commit.history_digest,
+                    ) != (self.id, self.view_number, *digest, *history_digest)
+                    {
+                        return None;
+                    }
+                    self.commit_set.insert(commit.replica_id);
+                    if self.commit_set.len() == 2 * self.config.f + 1 {
+                        return Some(result.clone());
+                    }
+                }
+                None
             }
         }
     }
