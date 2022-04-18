@@ -23,6 +23,7 @@ pub struct Client<T: Transport, E> {
     config: Config<T>,
     transport: T::TxAgent,
     rx: UnboundedReceiver<(T::Address, T::RxBuffer)>,
+    wait_all: bool,
     _executor: PhantomData<E>,
 
     request_number: RequestNumber,
@@ -35,7 +36,7 @@ impl<T: Transport, E> Receiver<T> for Client<T, E> {
 }
 
 impl<T: Transport, E> Client<T, E> {
-    pub fn register_new(config: Config<T>, transport: &mut T) -> Self {
+    pub fn register_new(config: Config<T>, transport: &mut T, wait_all: bool) -> Self {
         let (tx, rx) = unbounded();
         let client = Self {
             address: transport.ephemeral_address(),
@@ -44,6 +45,7 @@ impl<T: Transport, E> Client<T, E> {
             transport: transport.tx_agent(),
             rx,
             request_number: 0,
+            wait_all,
             _executor: PhantomData,
         };
         transport.register(&client, move |remote, buffer| {
@@ -73,6 +75,11 @@ where
                 OrderedMulticast::assemble(request.clone(), buffer)
             });
 
+        let wait_count = if self.wait_all {
+            self.config.replica(..).len()
+        } else {
+            2 * self.config.f + 1
+        };
         let mut result_table = HashMap::new();
         let mut receive_buffer =
             move |client: &mut Self, _remote: T::Address, buffer: T::RxBuffer| {
@@ -95,7 +102,7 @@ where
                     .values()
                     .filter(|record| **record == matcher)
                     .count()
-                    == 2 * client.config.f + 1
+                    == wait_count
                 {
                     Some(matcher.3)
                 } else {

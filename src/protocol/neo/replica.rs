@@ -249,10 +249,17 @@ impl<T: Transport> Drop for Replica<T> {
             "signed/unsigned: {}/{}",
             self.signed_count, self.unsigned_count
         );
-        info!(
-            "chain/reorder: {}/{}",
-            self.chain_request.len(),
-            self.reorder_request.len()
-        );
+        if !self.chain_request.is_empty() {
+            warn!(
+                "not inserted chain request: {} remain",
+                self.chain_request.len()
+            );
+        }
+        if !self.reorder_request.is_empty() {
+            warn!(
+                "not inserted reorder request: {} remain",
+                self.reorder_request.len()
+            );
+        }
     }
 }

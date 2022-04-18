@@ -105,6 +105,8 @@ fn main() {
         property_list: Vec<String>,
         #[clap(long)]
         load: bool,
+        #[clap(long)]
+        wait_all: bool,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -333,7 +335,17 @@ fn main() {
             property,
         ),
         Mode::Neo => WorkerData::launch(
-            || neo::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
+            {
+                let wait_all = args.wait_all;
+                let transport = &mut transport;
+                move || {
+                    neo::Client::<_, AsyncEcosystem>::register_new(
+                        config.clone(),
+                        transport,
+                        wait_all,
+                    )
+                }
+            },
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
