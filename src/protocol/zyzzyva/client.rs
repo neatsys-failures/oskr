@@ -40,6 +40,7 @@ pub struct Client<T: Transport, E> {
         Vec<(ReplicaId, SignedMessage<message::SpeculativeResponse>)>,
     )>,
     commit_set: HashSet<ReplicaId>,
+    wait_all: bool,
 }
 
 struct Response {
@@ -59,7 +60,7 @@ impl<T: Transport, E> Receiver<T> for Client<T, E> {
 }
 
 impl<T: Transport, E> Client<T, E> {
-    pub fn register_new(config: Config<T>, transport: &mut T) -> Self {
+    pub fn register_new(config: Config<T>, transport: &mut T, wait_all: bool) -> Self {
         let (tx, rx) = unbounded();
         let client = Self {
             address: transport.ephemeral_address(),
@@ -72,6 +73,7 @@ impl<T: Transport, E> Client<T, E> {
             response_table: HashMap::new(),
             certification: None,
             commit_set: HashSet::new(),
+            wait_all,
             _executor: PhantomData,
         };
         transport.register(&client, move |remote, buffer| {
@@ -128,7 +130,12 @@ where
         // the timer detail may influence client strategy significantly which
         // results in major difference of overall system performance. hope
         // this do not hurt our reproducible :|
-        let mut commit_timeout = Instant::now() + Duration::from_millis(100);
+        let mut commit_timeout = Instant::now()
+            + if !self.wait_all {
+                Duration::from_millis(100)
+            } else {
+                Duration::from_secs(1000000)
+            };
         let mut resend_timeout = Instant::now() + Duration::from_millis(1000);
         loop {
             select! {
@@ -141,10 +148,13 @@ where
                         self.commit_set.clear();
                         return result;
                     }
+                    if !self.wait_all {
+                        self.send_commit();
+                    }
                 }
                 _ = E::sleep_until(resend_timeout).fuse() => {
                     if self.request_number > 1 {
-                        warn!("resend for request number {}", self.request_number);
+                        warn!("resend for request number {}, commit: {}", self.request_number, self.certification.is_some());
                     } else {
                         debug!("resend for request number {}", self.request_number);
                     }
@@ -159,18 +169,8 @@ where
                     } else {
                         debug!("commit timeout for request {}", self.request_number);
                     }
-                    if let Some((_, _, _, certification)) = &self.certification {
-                        let commit = message::Commit {
-                            client_id: self.id,
-                            certification: certification.clone(),
-                        };
-                        self.transport.send_message_to_all(
-                            self,
-                            self.config.replica(..),
-                            serialize(ToReplica::Commit(commit)),
-                        );
-                    }
                     // set next commit to "forever" (will be set back in resend)
+                    self.send_commit();
                     commit_timeout = Instant::now() + Duration::from_secs(1000000); // TODO
                 }
             }
@@ -258,6 +258,20 @@ impl<T: Transport, A> Client<T, A> {
                 }
                 None
             }
+        }
+    }
+
+    fn send_commit(&self) {
+        if let Some((_, _, _, certification)) = &self.certification {
+            let commit = message::Commit {
+                client_id: self.id,
+                certification: certification.clone(),
+            };
+            self.transport.send_message_to_all(
+                self,
+                self.config.replica(..),
+                serialize(ToReplica::Commit(commit)),
+            );
         }
     }
 }

@@ -151,8 +151,57 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                     .stateful(move |state| state.handle_order_request(order_request, batch));
                 return;
             }
-            Ok(ToReplica::Commit(_)) => {
-                todo!()
+            Ok(ToReplica::Commit(commit)) => {
+                let mut certification = commit.certification.into_iter();
+                let (replica_id, sample_response) = certification.next().unwrap();
+                let sample_response = if let Ok(response) = sample_response.verify(
+                    self.config
+                        .verifying_key(self.config.replica(replica_id))
+                        .unwrap(),
+                ) {
+                    response
+                } else {
+                    warn!("failed to verify commit certification");
+                    return;
+                };
+                let mut certification: HashMap<_, _> = certification
+                    .map_while(|(replica_id, speculative_response)| {
+                        if let Ok(speculative_response) = speculative_response.verify(
+                            self.config
+                                .verifying_key(self.config.replica(replica_id))
+                                .as_ref()
+                                .unwrap(),
+                        ) {
+                            if (
+                                speculative_response.view_number,
+                                speculative_response.op_number,
+                                speculative_response.digest,
+                                speculative_response.history_digest,
+                            ) == (
+                                sample_response.view_number,
+                                sample_response.op_number,
+                                sample_response.digest,
+                                sample_response.history_digest,
+                            ) {
+                                Some((replica_id, speculative_response))
+                            } else {
+                                None
+                            }
+                        } else {
+                            warn!("failed to verify commit certification");
+                            None
+                        }
+                    })
+                    .collect();
+                certification.insert(replica_id, sample_response);
+                if certification.len() < 2 * self.config.f + 1 {
+                    warn!("commit certification has no matching quorum");
+                    return;
+                }
+                let client_id = commit.client_id;
+                self.submit
+                    .stateful(move |state| state.handle_commit(remote, client_id, certification));
+                return;
             }
             Ok(ToReplica::Checkpoint(checkpoint)) => {
                 let verifying_key = if let Some(key) = self.config.verifying_key(&remote) {
@@ -461,5 +510,35 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 }
             }
         }
+    }
+
+    fn handle_commit(
+        &mut self,
+        remote: T::Address,
+        client_id: ClientId,
+        certification: HashMap<ReplicaId, VerifiedMessage<message::SpeculativeResponse>>,
+    ) {
+        let (_, response) = certification.iter().next().unwrap();
+        if response.view_number != self.view_number {
+            return;
+        }
+        // TODO check match local history & insert certification
+        let local_commit = message::LocalCommit {
+            view_number: self.view_number,
+            digest: response.digest,
+            history_digest: response.history_digest,
+            replica_id: self.id,
+            client_id,
+        };
+        self.submit.stateless(move |shared| {
+            shared.transport.send_message(
+                shared,
+                &remote,
+                serialize(ToClient::LocalCommit(SignedMessage::sign(
+                    local_commit,
+                    shared.config.signing_key(shared),
+                ))),
+            )
+        });
     }
 }

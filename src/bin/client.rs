@@ -321,7 +321,17 @@ fn main() {
             property,
         ),
         Mode::Zyzzyva => WorkerData::launch(
-            || zyzzyva::Client::<_, AsyncEcosystem>::register_new(config.clone(), &mut transport),
+            {
+                let wait_all = args.wait_all;
+                let transport = &mut transport;
+                move || {
+                    zyzzyva::Client::<_, AsyncEcosystem>::register_new(
+                        config.clone(),
+                        transport,
+                        wait_all,
+                    )
+                }
+            },
             args,
             status.clone(),
             latency.iter().map(|latency| latency.local()).collect(),
