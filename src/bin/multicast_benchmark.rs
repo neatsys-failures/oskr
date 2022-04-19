@@ -15,7 +15,7 @@ use oskr::{
     dpdk_shim::{rte_eal_mp_remote_launch, rte_rmt_call_main_t},
     facade::{self, Receiver, Transport, TxAgent},
     framework::dpdk,
-    protocol::neo::message::{MulticastVerifyingKey, OrderedMulticast},
+    protocol::neo::message::{MulticastVerifyingKey, OrderedMulticast, Status},
     stage::{Handle, State},
 };
 use quanta::Clock;
@@ -38,7 +38,7 @@ impl<T: Transport> MulticastReceiver<T> {
         let message = OrderedMulticast::<u32>::parse(buffer.as_ref());
         let verified = message.verify(&MulticastVerifyingKey::default()).unwrap();
         shared.0.fetch_add(1, Ordering::SeqCst);
-        if verified.meta.is_signed() {
+        if verified.status == Status::Signed {
             shared.1.fetch_add(1, Ordering::SeqCst);
         }
         debug!("received: {}", &*verified);

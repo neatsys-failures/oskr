@@ -13,7 +13,7 @@ use crate::{
         serialize, ClientId, Config, Digest, OpNumber, ReplicaId, RequestNumber, SignedMessage,
     },
     facade::{App, Receiver, Transport, TxAgent},
-    protocol::neo::message::{self, OrderedMulticast, VerifiedOrderedMulticast},
+    protocol::neo::message::{self, OrderedMulticast, Status, VerifiedOrderedMulticast},
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
 
@@ -36,6 +36,7 @@ pub struct Replica<T: Transport> {
 
     signed_count: u32,
     unsigned_count: u32,
+    skipped_count: u32,
 }
 
 pub struct Shared<T: Transport> {
@@ -43,6 +44,7 @@ pub struct Shared<T: Transport> {
     transport: T::TxAgent,
     id: ReplicaId,
     multicast_key: MulticastVerifyingKey,
+    skip_size: u32,
 }
 
 impl<T: Transport> State for Replica<T> {
@@ -92,10 +94,12 @@ impl<T: Transport> Replica<T> {
                 transport: transport.tx_agent(),
                 id: replica_id,
                 multicast_key,
+                skip_size: batch_size as _,
             }),
 
             signed_count: 0,
             unsigned_count: 0,
+            skipped_count: 0,
         });
         state.with_stateful(|state| {
             let submit = state.submit.clone();
@@ -116,20 +120,34 @@ impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_multicast_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
         let ordered_multicast: OrderedMulticast<message::Request> =
             OrderedMulticast::parse(buffer.as_ref());
-        // TODO
-        let verified = if let Ok(verified) = ordered_multicast.verify(&self.multicast_key) {
-            verified
+        SEQUENCE_START.fetch_min(ordered_multicast.sequence_number, Ordering::SeqCst);
+
+        static MAX_SIGNED: AtomicU32 = AtomicU32::new(0);
+        let verified = (|ordered_multicast: OrderedMulticast<_>| {
+            if matches!(self.multicast_key, MulticastVerifyingKey::PublicKey(_)) {
+                // make this dynamically predicate base on system load?
+                if MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
+                    >= ordered_multicast.sequence_number
+                {
+                    return ordered_multicast.skip_verify();
+                }
+            }
+            ordered_multicast.verify(&self.multicast_key)
+        })(ordered_multicast);
+
+        if let Ok(verified) = verified {
+            if verified.status == Status::Signed {
+                MAX_SIGNED.fetch_max(verified.meta.sequence_number, Ordering::SeqCst);
+            }
+            self.submit
+                .stateful(move |state| state.handle_request(remote, verified));
         } else {
             warn!("failed to verify multicast");
-            return;
-        };
-        SEQUENCE_START.fetch_min(verified.meta.sequence_number, Ordering::SeqCst);
-        self.submit
-            .stateful(move |state| state.handle_request(remote, verified));
+        }
     }
 
     fn receive_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
-        //
+        todo!()
     }
 }
 
@@ -141,9 +159,18 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     ) {
         self.route_table.insert(request.client_id, remote);
 
-        if !request.meta.is_signed() {
+        if {
+            if request.status == Status::Unsigned {
+                self.unsigned_count += 1;
+                true
+            } else if request.status == Status::Skipped {
+                self.skipped_count += 1;
+                true
+            } else {
+                false
+            }
+        } {
             self.insert_chain(request);
-            self.unsigned_count += 1;
             return;
         }
         debug!("insert signed {}", request.meta.sequence_number);
@@ -158,7 +185,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     }
 
     fn insert_chain(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
-        assert!(!request.meta.is_signed());
+        // assert!(!request.meta.is_signed());
         let child = if let Some(child) = self.log.get(request.meta.sequence_number as usize) {
             assert_eq!(child.meta.sequence_number, request.meta.sequence_number + 1);
             child
@@ -278,13 +305,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 impl<T: Transport> Drop for Replica<T> {
     fn drop(&mut self) {
         info!(
-            "signed/unsigned: {}/{}",
-            self.signed_count, self.unsigned_count
+            "signed/unsigned/skipped: {}/{}/{}",
+            self.signed_count, self.unsigned_count, self.skipped_count
         );
         if !self.received_buffer.is_empty() {
             warn!(
-                "not inserted chain request: {:?} remain",
-                self.received_buffer.keys()
+                "not inserted chain request: {} remain",
+                self.received_buffer.len()
             );
         }
         if !self.verified_buffer.is_empty() {

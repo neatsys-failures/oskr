@@ -26,8 +26,17 @@ pub struct OrderedMulticast<M> {
     _m: PhantomData<M>,
 }
 
-// TODO make a enum for signed and unsigned variants
+// TODO transform VerifiedOrderedMulticast into the sum type
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Status {
+    Signed,
+    Skipped,
+    Unsigned, // and not chained yet
+    Chained,
+}
+
 pub struct VerifiedOrderedMulticast<M> {
+    pub status: Status,
     pub meta: OrderedMulticast<M>,
     message: M,
 }
@@ -93,7 +102,7 @@ impl<M> OrderedMulticast<M> {
         }
     }
 
-    pub fn is_signed(&self) -> bool {
+    fn is_signed(&self) -> bool {
         self.signature0 != [0; 32] || self.signature1 != [0; 32]
     }
 
@@ -104,7 +113,7 @@ impl<M> OrderedMulticast<M> {
     where
         M: DeserializeOwned,
     {
-        if self.is_signed() {
+        let status = if self.is_signed() {
             match verifying_key {
                 MulticastVerifyingKey::HMac(_) => {
                     // TODO
@@ -124,9 +133,13 @@ impl<M> OrderedMulticast<M> {
                     }
                 }
             }
-        }
+            Status::Signed
+        } else {
+            Status::Unsigned
+        };
         return deserialize(&*self.message)
             .map(|message| VerifiedOrderedMulticast {
+                status,
                 message,
                 meta: self,
             })
@@ -136,12 +149,13 @@ impl<M> OrderedMulticast<M> {
     pub fn verify_parent(
         &self,
         // actually can work on a different M type but not required by now
-        parent: VerifiedOrderedMulticast<M>,
+        mut parent: VerifiedOrderedMulticast<M>,
     ) -> Result<VerifiedOrderedMulticast<M>, InauthenticMessage>
     where
         M: DeserializeOwned,
     {
-        assert!(!parent.meta.is_signed());
+        assert_ne!(parent.status, Status::Signed);
+        assert_ne!(parent.status, Status::Chained);
         let mut chain_hash = self.digest;
         for (i, b) in self.sequence_number.to_le_bytes().into_iter().enumerate() {
             chain_hash[i] ^= b;
@@ -155,7 +169,21 @@ impl<M> OrderedMulticast<M> {
             // TODO
             // return Err(InauthenticMessage);
         }
+        parent.status = Status::Chained;
         Ok(parent)
+    }
+
+    pub fn skip_verify(self) -> Result<VerifiedOrderedMulticast<M>, InauthenticMessage>
+    where
+        M: DeserializeOwned,
+    {
+        deserialize(&*self.message)
+            .map(|message| VerifiedOrderedMulticast {
+                status: Status::Skipped,
+                message,
+                meta: self,
+            })
+            .map_err(|_| InauthenticMessage)
     }
 }
 
