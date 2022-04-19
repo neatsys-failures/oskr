@@ -6,6 +6,7 @@ use std::{
     },
 };
 
+use sha2::{Digest as _, Sha256};
 use tracing::{debug, info, warn};
 
 use crate::{
@@ -28,6 +29,7 @@ pub struct Replica<T: Transport> {
     check_equivocation: bool,
     op_number: OpNumber,
     log: Vec<VerifiedOrderedMulticast<message::Request>>,
+    log_hash: Digest,
     // using `u32` directly as key, so indicate it is not the `op_number` field's value
     // consider give sequence number a type or type alias
     received_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
@@ -95,6 +97,7 @@ impl<T: Transport> Replica<T> {
             check_equivocation,
             op_number: 0,
             log: Vec::new(),
+            log_hash: Digest::default(),
             received_buffer: HashMap::new(),
             verified_buffer: HashMap::new(),
             confirmed_high: if check_equivocation { 0 } else { u32::MAX },
@@ -171,16 +174,15 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     ) {
         self.route_table.insert(request.client_id, remote);
 
-        if {
-            if request.status == Status::Unsigned {
-                self.unsigned_count += 1;
-                true
-            } else if request.status == Status::SkippedSigned {
-                self.skipped_count += 1;
-                true
-            } else {
-                false
-            }
+        // is this what you expect me to write, Rust?
+        if if request.status == Status::Unsigned {
+            self.unsigned_count += 1;
+            true
+        } else if request.status == Status::SkippedSigned {
+            self.skipped_count += 1;
+            true
+        } else {
+            false
         } {
             self.insert_chain(request);
             return;
@@ -199,13 +201,25 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 if certification.request.is_some() {
                     break; // assert every lower check number already has request
                 }
+                let sequence_number = request.meta.sequence_number;
                 certification.request = Some(request.meta.clone());
-                // new confirmed high
+                if self.is_confirmed(sequence_number) {
+                    self.confirmed_high = sequence_number;
+                }
                 check_number -= self.batch_size as u32;
             }
         }
         self.verify_chain(&request.meta);
         self.insert_request(request);
+    }
+
+    fn is_confirmed(&self, sequence_number: u32) -> bool {
+        if let Some(certification) = self.ordering_certification_table.get(&sequence_number) {
+            certification.request.is_some()
+                && certification.confirm_table.len() >= 2 * self.config.f + 1
+        } else {
+            false
+        }
     }
 
     fn insert_chain(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
@@ -251,8 +265,9 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     }
 
     fn insert_request(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
+        assert!(request.status == Status::Signed || request.status == Status::Chained);
         let sequence_number = request.meta.sequence_number;
-        let op_number = request.meta.sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
+        let op_number = sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
         debug!(
             "insert request: sequence {} on {}",
             op_number, self.op_number
@@ -267,11 +282,22 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
             return;
         }
-        self.insert_log(request);
-        let mut insert_number = sequence_number + 1;
-        while let Some(request) = self.verified_buffer.remove(&insert_number) {
-            insert_number = request.meta.sequence_number + 1;
+
+        if request.meta.sequence_number <= self.confirmed_high {
+            let insert_number = request.meta.sequence_number + 1;
             self.insert_log(request);
+            self.insert_up_to_confirmed(insert_number);
+        }
+    }
+
+    fn insert_up_to_confirmed(&mut self, mut insert_number: u32) {
+        while insert_number <= self.confirmed_high {
+            if let Some(request) = self.verified_buffer.remove(&insert_number) {
+                insert_number = request.meta.sequence_number + 1;
+                self.insert_log(request);
+            } else {
+                break;
+            }
         }
     }
 
@@ -280,6 +306,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.op_number += 1;
         let request = (*verified).clone();
         self.log.push(verified);
+        self.log_hash = Sha256::new()
+            .chain_update(self.log_hash)
+            .chain_update(request.client_id)
+            .chain_update(request.request_number.to_le_bytes())
+            .chain_update(&request.op)
+            .finalize()
+            .into();
 
         // execution
         let client_id = request.client_id;
@@ -302,7 +335,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             view_number: 0, // TODO
             replica_id: self.id,
             op_number,
-            log_hash: Digest::default(), // TODO
+            log_hash: self.log_hash,
             request_number,
             result,
         };
