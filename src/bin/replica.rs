@@ -244,7 +244,8 @@ fn main() {
                 let multicast_key = match args.multicast_key {
                     MulticastKey::HMAC => MulticastVerifyingKey::HMac([0; 4]),
                     MulticastKey::PKEY => MulticastVerifyingKey::PublicKey(
-                        SigningKey::from_bytes(&[0xaa; 32]).unwrap().verifying_key(),
+                        SigningKey::K256(k256::ecdsa::SigningKey::from_bytes(&[0xaa; 32]).unwrap())
+                            .verifying_key(),
                     ),
                 };
                 WorkerData::launch(

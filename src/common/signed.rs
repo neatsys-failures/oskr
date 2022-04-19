@@ -32,12 +32,34 @@ use k256::ecdsa::{
     signature::{Signer, Verifier},
     Signature,
 };
+use secp256k1::{Message, Secp256k1};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_derive::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 
-// should we re-type sha2 as well?
-pub type SigningKey = k256::ecdsa::SigningKey;
-pub type VerifyingKey = k256::ecdsa::VerifyingKey;
+#[derive(Debug, Clone)]
+pub enum SigningKey {
+    K256(k256::ecdsa::SigningKey),
+    Secp256k1(secp256k1::SecretKey),
+}
+
+#[derive(Debug, Clone)]
+pub enum VerifyingKey {
+    K256(k256::ecdsa::VerifyingKey),
+    Secp256k1(secp256k1::PublicKey),
+}
+
+impl SigningKey {
+    pub fn verifying_key(&self) -> VerifyingKey {
+        let secp = Secp256k1::new();
+        match self {
+            Self::K256(key) => VerifyingKey::K256(key.verifying_key()),
+            Self::Secp256k1(key) => {
+                VerifyingKey::Secp256k1(secp256k1::PublicKey::from_secret_key(&secp, key))
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedMessage<M> {
@@ -75,14 +97,11 @@ impl<M> DerefMut for VerifiedMessage<M> {
     }
 }
 
+thread_local! {
+    pub static SECP: Secp256k1<secp256k1::All> = Secp256k1::new();
+}
 impl<M> SignedMessage<M> {
-    pub fn sign(message: M, key: &SigningKey) -> Self
-    where
-        M: Serialize,
-    {
-        let inner = bincode::DefaultOptions::new().serialize(&message).unwrap();
-        let signature: Signature = key.sign(&inner);
-        let signature = signature.to_vec();
+    pub fn from_data(inner: Vec<u8>, signature: [u8; 64]) -> Self {
         Self {
             inner,
             signature: (
@@ -93,17 +112,54 @@ impl<M> SignedMessage<M> {
         }
     }
 
+    pub fn sign(message: M, key: &SigningKey) -> Self
+    where
+        M: Serialize,
+    {
+        let inner = bincode::DefaultOptions::new().serialize(&message).unwrap();
+        match key {
+            SigningKey::K256(key) => {
+                let signature: Signature = key.sign(&inner);
+                let signature = signature.to_vec();
+                Self::from_data(inner, signature.try_into().unwrap())
+            }
+            SigningKey::Secp256k1(key) => {
+                let message = Message::from_slice(&*Sha256::digest(&*inner)).unwrap();
+                let signature =
+                    SECP.with(|secp| secp.sign_ecdsa(&message, key).serialize_compact());
+                Self::from_data(inner, signature)
+            }
+        }
+    }
+
     pub fn verify(self, key: &VerifyingKey) -> Result<VerifiedMessage<M>, InauthenticMessage>
     where
         M: DeserializeOwned,
     {
         let (sig_a, sig_b) = self.signature;
-        let signature: Signature = if let Ok(signature) = [sig_a, sig_b].concat()[..].try_into() {
-            signature
-        } else {
-            return Err(InauthenticMessage);
+        let verified = match key {
+            VerifyingKey::K256(key) => {
+                let signature: Signature =
+                    if let Ok(signature) = [sig_a, sig_b].concat()[..].try_into() {
+                        signature
+                    } else {
+                        return Err(InauthenticMessage);
+                    };
+                key.verify(&self.inner, &signature).is_ok()
+            }
+            VerifyingKey::Secp256k1(key) => {
+                let signature = if let Ok(signature) =
+                    secp256k1::ecdsa::Signature::from_compact(&[sig_a, sig_b].concat())
+                {
+                    signature
+                } else {
+                    return Err(InauthenticMessage);
+                };
+                let message = Message::from_slice(&*Sha256::digest(&*self.inner)).unwrap();
+                SECP.with(|secp| secp.verify_ecdsa(&message, &signature, key).is_ok())
+            }
         };
-        if key.verify(&self.inner, &signature).is_ok() {
+        if verified {
             if let Ok(message) = bincode::DefaultOptions::new().deserialize(&self.inner) {
                 return Ok(VerifiedMessage(message, self));
             }

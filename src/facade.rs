@@ -256,7 +256,7 @@ impl<T: Transport + ?Sized> Config<T> {
                 File::open(key).unwrap().read_to_string(&mut buf).unwrap();
                 buf
             };
-            let key = key.parse().unwrap();
+            let key = SigningKey::K256(key.parse().unwrap());
             self.signing_key.push((replica.clone(), key));
         }
     }

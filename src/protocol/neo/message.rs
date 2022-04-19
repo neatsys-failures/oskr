@@ -120,14 +120,13 @@ impl<M> OrderedMulticast<M> {
                     // TODO
                 }
                 MulticastVerifyingKey::PublicKey(verifying_key) => {
-                    let signature: Signature = if let Ok(signature) =
-                        [self.signature0, self.signature1].concat()[..].try_into()
-                    {
-                        signature
-                    } else {
-                        return Err(InauthenticMessage);
-                    };
-                    if verifying_key.verify(&self.message, &signature).is_err() {
+                    let signature: [_; 64] = [self.signature0, self.signature1]
+                        .concat()
+                        .try_into()
+                        .unwrap();
+                    let signed: SignedMessage<M> =
+                        SignedMessage::from_data(self.message.clone(), signature);
+                    if signed.verify(verifying_key).is_err() {
                         // return Err(InauthenticMessage);
                         debug!("public key multicast verification fail");
                         // just allow it to go
