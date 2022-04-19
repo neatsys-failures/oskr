@@ -157,14 +157,13 @@ impl<M> OrderedMulticast<M> {
     {
         assert_ne!(parent.status, Status::Signed);
         assert_ne!(parent.status, Status::Chained);
-        let mut chain_hash = self.digest;
-        for (i, b) in self.sequence_number.to_le_bytes().into_iter().enumerate() {
-            chain_hash[i] ^= b;
-        }
-        chain_hash[4] ^= self.session_number;
-        for (i, b) in parent.meta.chain_hash.iter().enumerate() {
-            chain_hash[i] ^= b;
-        }
+        let chain_hash: Digest = Sha256::new()
+            .chain_update(parent.meta.digest)
+            .chain_update(parent.meta.sequence_number.to_le_bytes())
+            .chain_update([parent.meta.session_number])
+            .chain_update(parent.meta.chain_hash)
+            .finalize()
+            .into();
         if chain_hash != self.chain_hash {
             debug!("chain hash verification failed");
             // TODO
