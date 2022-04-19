@@ -28,8 +28,10 @@ pub struct Replica<T: Transport> {
     check_equivocation: bool,
     op_number: OpNumber,
     log: Vec<VerifiedOrderedMulticast<message::Request>>,
-    received_buffer: HashMap<OpNumber, VerifiedOrderedMulticast<message::Request>>,
-    verified_buffer: HashMap<OpNumber, VerifiedOrderedMulticast<message::Request>>,
+    // using `u32` directly as key, so indicate it is not the `op_number` field's value
+    // consider give sequence number a type or type alias
+    received_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
+    verified_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     route_table: HashMap<ClientId, T::Address>,
     shared: Arc<Shared<T>>,

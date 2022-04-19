@@ -200,7 +200,7 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 }
                 let client_id = commit.client_id;
                 self.submit
-                    .stateful(move |state| state.handle_commit(remote, client_id, certification));
+                    .stateful(move |state| state.handle_commit(remote, (client_id, certification)));
                 return;
             }
             Ok(ToReplica::Checkpoint(checkpoint)) => {
@@ -515,9 +515,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn handle_commit(
         &mut self,
         remote: T::Address,
-        client_id: ClientId,
-        certification: HashMap<ReplicaId, VerifiedMessage<message::SpeculativeResponse>>,
+        // group into single parameter, keep the uniform shape of handle_* methods
+        verified_commit: (
+            ClientId,
+            HashMap<ReplicaId, VerifiedMessage<message::SpeculativeResponse>>,
+        ),
     ) {
+        let (client_id, certification) = verified_commit;
         let (_, response) = certification.iter().next().unwrap();
         if response.view_number != self.view_number {
             return;

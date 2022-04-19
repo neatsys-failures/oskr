@@ -1,5 +1,5 @@
 <div align="center">
-<img src="./logo-banner.svg" height=100>
+<img src="./logo-banner.svg" height=200>
 
 ## High Performance Distributed Works Collection
 

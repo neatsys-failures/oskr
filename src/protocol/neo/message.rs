@@ -11,7 +11,7 @@ use tracing::debug;
 
 use crate::common::{
     deserialize, serialize, signed::InauthenticMessage, ClientId, Digest, OpNumber, Opaque,
-    ReplicaId, RequestNumber, VerifyingKey, ViewNumber,
+    ReplicaId, RequestNumber, SignedMessage, VerifyingKey, ViewNumber,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -202,7 +202,7 @@ impl<M> DerefMut for VerifiedOrderedMulticast<M> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ToReplica {
-    // multicast is not here
+    OrderConfirm(SignedMessage<OrderConfirm>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -216,8 +216,16 @@ pub struct Request {
 pub struct Reply {
     pub view_number: ViewNumber,
     pub replica_id: ReplicaId,
-    pub op_number: OpNumber, // log slot number is so...
+    pub op_number: OpNumber, // the name "log slot number" is so...
     pub log_hash: Digest,
     pub request_number: RequestNumber,
     pub result: Opaque,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OrderConfirm {
+    pub view_number: ViewNumber,
+    pub replica_id: ReplicaId,
+    pub op_number: OpNumber,
+    pub digest: Digest,
 }
