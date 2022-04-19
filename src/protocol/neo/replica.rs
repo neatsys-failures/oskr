@@ -16,11 +16,11 @@ use crate::{
         ReplicaId, RequestNumber, SignedMessage, ViewNumber,
     },
     facade::{App, Receiver, Transport, TxAgent},
-    protocol::neo::message::{self, OrderedMulticast, Status, ToReplica, VerifiedOrderedMulticast},
+    protocol::neo::message::{
+        self, MulticastVerifyingKey, OrderedMulticast, Status, ToReplica, VerifiedOrderedMulticast,
+    },
     stage::{Handle, State, StatefulContext, StatelessContext},
 };
-
-use super::message::MulticastVerifyingKey;
 
 pub struct Replica<T: Transport> {
     config: Config<T>,
@@ -31,6 +31,7 @@ pub struct Replica<T: Transport> {
     check_equivocation: bool,
     view_number: ViewNumber,
     op_number: OpNumber,
+    query_number: Option<OpNumber>,
     log: Vec<VerifiedOrderedMulticast<message::Request>>,
     log_hash: Digest,
     // using `u32` directly as key, so indicate it is not the `op_number` field's value
@@ -105,6 +106,7 @@ impl<T: Transport> Replica<T> {
             check_equivocation,
             view_number: 0,
             op_number: 0,
+            query_number: None,
             log: Vec::new(),
             log_hash: Digest::default(),
             received_buffer: HashMap::new(),
@@ -192,6 +194,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
             Ok(ToReplica::Query(query)) => self
                 .submit
                 .stateful(|state| state.handle_query(remote, query)),
+            Ok(ToReplica::QueryReply(query_reply)) => {
+                //
+            }
             _ => warn!("failed to parse received buffer"),
         }
     }
@@ -237,10 +242,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
     fn insert_chain(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
         // assert!(!request.meta.is_signed());
-        let child = if let Some(child) = self.log.get(request.meta.sequence_number as usize) {
-            assert_eq!(child.meta.sequence_number, request.meta.sequence_number + 1);
-            child
-        } else if let Some(child) = self
+        let child = if let Some(child) = self
             .verified_buffer
             .get(&(request.meta.sequence_number + 1))
         {
@@ -276,9 +278,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 warn!("broken chain");
             }
         }
-        let child_number = child.sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
-        if child_number - 1 > self.confirm_number {
-            self.send_query(child_number - 1);
+        let query_number = child.sequence_number - SEQUENCE_START.load(Ordering::SeqCst);
+        if query_number > self.confirm_number && self.query_number.is_none() {
+            self.query_number = Some(query_number);
+            self.send_query();
         }
     }
 
@@ -291,8 +294,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             op_number, self.op_number
         );
 
-        // shortcut for no need to confirm
+        // shortcut for no need to insert verified
         if op_number == self.op_number + 1 && op_number <= self.confirmed_high {
+            assert_eq!(op_number, self.confirm_number + 1); // confirm number should never less than op number
+            self.confirm_next(&request);
             self.insert_log(request);
             self.flush_verified();
             return;
@@ -319,7 +324,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             .chain_update(&verified.op)
             .finalize()
             .into();
-        if self.confirm_number % self.batch_size as OpNumber == 0 {
+        if self.check_equivocation && self.confirm_number % self.batch_size as OpNumber == 0 {
             let confirm_number = self.confirm_number;
             let order_confirm = message::OrderConfirm {
                 view_number: self.view_number,
@@ -400,6 +405,16 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             "flush verified: op number = {}, confirm number = {}",
             self.op_number, self.confirm_number
         );
+        assert!(self.op_number <= self.confirm_number);
+
+        let mut op_number = self.confirm_number + 1;
+        let verified_buffer = mem::take(&mut self.verified_buffer);
+        while let Some(verified) = verified_buffer.get(&op_number) {
+            self.confirm_next(verified);
+            op_number = self.confirm_number + 1;
+        }
+        self.verified_buffer = verified_buffer;
+
         let mut op_number = self.op_number + 1;
         while op_number <= self.confirmed_high {
             if let Some(request) = self.verified_buffer.remove(&op_number) {
@@ -409,16 +424,11 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 break;
             }
         }
-
-        if self.check_equivocation {
-            let mut op_number = self.confirm_number + 1;
-            let verified_buffer = mem::take(&mut self.verified_buffer);
-            while let Some(verified) = verified_buffer.get(&op_number) {
-                self.confirm_next(verified);
-                op_number = self.confirm_number + 1;
-            }
-            self.verified_buffer = verified_buffer;
-        }
+        debug!(
+            "flush verified (out): op number = {}, confirm number = {}",
+            self.op_number, self.confirm_number
+        );
+        assert!(self.op_number <= self.confirm_number);
     }
 
     fn insert_log(&mut self, verified: VerifiedOrderedMulticast<message::Request>) {
@@ -493,11 +503,11 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.insert_order_confirm(&*message, message.signed_message());
     }
 
-    fn send_query(&self, op_number: OpNumber) {
-        info!("send query {}", op_number);
+    fn send_query(&self) {
+        info!("send query {:?}", self.query_number);
         let query = message::Query {
             view_number: self.view_number,
-            op_number,
+            op_number: self.query_number.unwrap(),
         };
         self.transport.send_message_to_all(
             self,
@@ -528,6 +538,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
 impl<T: Transport> Drop for Replica<T> {
     fn drop(&mut self) {
+        info!(
+            "op number/confirm number: {}/{}",
+            self.op_number, self.confirm_number
+        );
         info!(
             "signed/unsigned/skipped signed: {}/{}/{}",
             self.signed_count, self.unsigned_count, self.skipped_count
