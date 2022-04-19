@@ -207,6 +207,9 @@ impl<M> DerefMut for VerifiedOrderedMulticast<M> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ToReplica {
     OrderConfirm(SignedMessage<OrderConfirm>),
+    Query(Query),
+    QueryReply(QueryReply),
+    // TODO gap messages
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -232,4 +235,16 @@ pub struct OrderConfirm {
     pub replica_id: ReplicaId,
     pub op_number: OpNumber,
     pub digest: Digest,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Query {
+    pub view_number: ViewNumber,
+    pub op_number: OpNumber,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QueryReply {
+    pub view_number: ViewNumber,
+    pub request: OrderedMulticast<Request>,
 }

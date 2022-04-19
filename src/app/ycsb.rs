@@ -21,7 +21,7 @@ pub enum Op {
 // we are using BTreeMap instead of HashMap to maintain a deterministic order
 // during serialization, so the serialized messages can match each other which
 // is required by BFT protocols.
-// we could also use vector of pair instead of map, but that is not what 
+// we could also use vector of pair instead of map, but that is not what
 // expected by database backends
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Result {

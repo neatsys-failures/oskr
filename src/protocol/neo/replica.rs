@@ -149,18 +149,16 @@ impl<T: Transport> StatelessContext<Replica<T>> {
         SEQUENCE_START.fetch_min(ordered_multicast.sequence_number, Ordering::SeqCst);
 
         static MAX_SIGNED: AtomicU32 = AtomicU32::new(0);
-        let verified = (|ordered_multicast: OrderedMulticast<_>| {
-            if matches!(self.multicast_key, MulticastVerifyingKey::PublicKey(_)) {
-                // make this dynamically predicate base on system load?
-                if self.skip_size > 1
-                    && MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
-                        > ordered_multicast.sequence_number
-                {
-                    return ordered_multicast.skip_verify();
-                }
-            }
+        let verified = if matches!(self.multicast_key, MulticastVerifyingKey::PublicKey(_))
+            && self.skip_size > 1
+            // make this dynamically predicate base on system load?
+                && MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
+                    > ordered_multicast.sequence_number
+        {
+            ordered_multicast.skip_verify()
+        } else {
             ordered_multicast.verify(&self.multicast_key)
-        })(ordered_multicast);
+        };
 
         if let Ok(verified) = verified {
             if verified.status == Status::Signed {
@@ -191,6 +189,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 self.submit
                     .stateful(move |state| state.handle_order_confirm(remote, order_confirm));
             }
+            Ok(ToReplica::Query(query)) => self
+                .submit
+                .stateful(|state| state.handle_query(remote, query)),
             _ => warn!("failed to parse received buffer"),
         }
     }
@@ -220,29 +221,6 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         debug!("insert signed {}", request.meta.sequence_number);
         self.signed_count += 1;
-
-        if self.check_equivocation {
-            let op_number =
-                request.meta.sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
-            let mut check_number =
-                (op_number as usize / self.batch_size * self.batch_size) as OpNumber;
-            while check_number > self.confirmed_high {
-                let certification = self
-                    .ordering_certification_table
-                    .entry(check_number)
-                    .or_default();
-                if certification.request.is_some() {
-                    break; // assert every lower check number already has request
-                }
-                certification.request = Some(request.meta.clone());
-                if self.is_confirmed(check_number) {
-                    self.confirmed_high = check_number;
-                    self.flush_verified();
-                    // implies a breaking
-                }
-                check_number -= self.batch_size as OpNumber;
-            }
-        }
 
         self.verify_chain(&request.meta);
         self.insert_request(request);
@@ -293,9 +271,14 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             if let Ok(verified) = child.verify_parent(request) {
                 self.verify_chain(&verified.meta);
                 self.insert_request(verified);
+                return;
             } else {
                 warn!("broken chain");
             }
+        }
+        let child_number = child.sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
+        if child_number - 1 > self.confirm_number {
+            self.send_query(child_number - 1);
         }
     }
 
@@ -349,6 +332,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 .ordering_certification_table
                 .entry(confirm_number)
                 .or_default();
+            certification.request = Some(verified.meta.clone());
             if let Some(previous_digest) = certification.digest {
                 if previous_digest != confirm_digest {
                     warn!("order certification digest mismatch local one");
@@ -362,7 +346,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.submit.stateless(move |shared| {
                 let signed =
                     SignedMessage::sign(order_confirm.clone(), shared.config.signing_key(shared));
-                info!("send order confirm {:?}", order_confirm);
+                debug!("send order confirm {:?}", order_confirm);
                 shared.transport.send_message_to_all(
                     shared,
                     shared.config.replica(..),
@@ -426,13 +410,15 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             }
         }
 
-        let mut op_number = self.confirm_number + 1;
-        let verified_buffer = mem::take(&mut self.verified_buffer);
-        while let Some(verified) = verified_buffer.get(&op_number) {
-            self.confirm_next(verified);
-            op_number = self.confirm_number + 1;
+        if self.check_equivocation {
+            let mut op_number = self.confirm_number + 1;
+            let verified_buffer = mem::take(&mut self.verified_buffer);
+            while let Some(verified) = verified_buffer.get(&op_number) {
+                self.confirm_next(verified);
+                op_number = self.confirm_number + 1;
+            }
+            self.verified_buffer = verified_buffer;
         }
-        self.verified_buffer = verified_buffer;
     }
 
     fn insert_log(&mut self, verified: VerifiedOrderedMulticast<message::Request>) {
@@ -505,6 +491,38 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             return;
         }
         self.insert_order_confirm(&*message, message.signed_message());
+    }
+
+    fn send_query(&self, op_number: OpNumber) {
+        info!("send query {}", op_number);
+        let query = message::Query {
+            view_number: self.view_number,
+            op_number,
+        };
+        self.transport.send_message_to_all(
+            self,
+            self.config.replica(..),
+            serialize(ToReplica::Query(query)),
+        );
+    }
+
+    fn handle_query(&self, remote: T::Address, message: message::Query) {
+        if message.view_number != self.view_number {
+            return;
+        }
+        let request = if let Some(request) = self.log.get((message.op_number - 1) as usize) {
+            request
+        } else if let Some(request) = self.verified_buffer.get(&message.op_number) {
+            request
+        } else {
+            return;
+        };
+        let query_reply = message::QueryReply {
+            view_number: self.view_number,
+            request: request.meta.clone(),
+        };
+        self.transport
+            .send_message(self, &remote, serialize(ToReplica::QueryReply(query_reply)));
     }
 }
 
