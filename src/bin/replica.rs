@@ -101,6 +101,8 @@ fn main() {
         check_equivocation: bool,
         #[clap(long = "multi-key", arg_enum, default_value_t = MulticastKey::HMAC)]
         multicast_key: MulticastKey,
+        #[clap(long = "k256")]
+        use_k256: bool,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -110,7 +112,7 @@ fn main() {
     let prefix = args.config.file_name().unwrap().to_str().unwrap();
     let config = args.config.with_file_name(format!("{}.config", prefix));
     let mut config: facade::Config<_> = fs::read_to_string(config).unwrap().parse().unwrap();
-    config.collect_signing_key(&args.config);
+    config.collect_signing_key(&args.config, !args.use_k256);
     let config = Config::for_shard(config, 0); // TODO
 
     let mut property = Property::default();
@@ -244,8 +246,16 @@ fn main() {
                 let multicast_key = match args.multicast_key {
                     MulticastKey::HMAC => MulticastVerifyingKey::HMac([0; 4]),
                     MulticastKey::PKEY => MulticastVerifyingKey::PublicKey(
-                        SigningKey::K256(k256::ecdsa::SigningKey::from_bytes(&[0xaa; 32]).unwrap())
-                            .verifying_key(),
+                        {
+                            let mut key = SigningKey::K256(
+                                k256::ecdsa::SigningKey::from_bytes(&[0xaa; 32]).unwrap(),
+                            );
+                            if !args.use_k256 {
+                                key = key.use_secp256k1();
+                            }
+                            key
+                        }
+                        .verifying_key(),
                     ),
                 };
                 WorkerData::launch(

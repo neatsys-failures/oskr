@@ -247,7 +247,7 @@ where
 }
 
 impl<T: Transport + ?Sized> Config<T> {
-    pub fn collect_signing_key(&mut self, path: &Path) {
+    pub fn collect_signing_key(&mut self, path: &Path, use_secp256k1: bool) {
         for (i, replica) in self.replica.iter().enumerate() {
             let prefix = path.file_name().unwrap().to_str().unwrap();
             let key = path.with_file_name(format!("{}-{}.pem", prefix, i));
@@ -256,7 +256,10 @@ impl<T: Transport + ?Sized> Config<T> {
                 File::open(key).unwrap().read_to_string(&mut buf).unwrap();
                 buf
             };
-            let key = SigningKey::K256(key.parse().unwrap());
+            let mut key = SigningKey::K256(key.parse().unwrap());
+            if use_secp256k1 {
+                key = key.use_secp256k1();
+            }
             self.signing_key.push((replica.clone(), key));
         }
     }

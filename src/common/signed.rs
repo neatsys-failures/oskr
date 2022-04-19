@@ -59,6 +59,14 @@ impl SigningKey {
             }
         }
     }
+
+    pub fn use_secp256k1(self) -> Self {
+        if let Self::K256(key) = self {
+            Self::Secp256k1(secp256k1::SecretKey::from_slice(&*key.to_bytes()).unwrap())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -107,6 +107,8 @@ fn main() {
         load: bool,
         #[clap(long)]
         wait_all: bool,
+        #[clap(long = "k256")]
+        use_k256: bool,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -119,7 +121,7 @@ fn main() {
         .unwrap()
         .parse()
         .unwrap();
-    config.collect_signing_key(&args.config);
+    config.collect_signing_key(&args.config, !args.use_k256);
     let config = Config::for_shard(config, 0); // TODO
 
     let mut property = Property::default();

@@ -3,7 +3,6 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use k256::ecdsa::{signature::Verifier, Signature};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
