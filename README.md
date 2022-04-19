@@ -1,12 +1,15 @@
+<div align="center">
 <img src="./logo-banner.svg" height=100>
 
 ## High Performance Distributed Works Collection
+
 ![Crates.io](https://img.shields.io/crates/v/oskr)
 ![Crates.io](https://img.shields.io/crates/l/oskr)
 ![docs.rs](https://img.shields.io/docsrs/oskr)
 ![Lines of code](https://img.shields.io/tokei/lines/github/sgdxbc/oskr)
 ![GitHub contributors](https://img.shields.io/github/contributors/sgdxbc/oskr)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/sgdxbc/oskr)
+</div>
 
 **Motivation.** This is an attempt to improve based on [specpaxos]. 
 Traditionally system work is hard to evaluate and compare, because it takes a
