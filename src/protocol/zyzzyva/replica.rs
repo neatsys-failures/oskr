@@ -227,9 +227,13 @@ impl<T: Transport> StatelessContext<Replica<T>> {
 }
 impl<T: Transport> StatefulContext<'_, Replica<T>> {
     // the interval per request not per op number, i.e. divided by batch size
-    // when used
-    // for my benchmark platform under maximum throughput, checkpoint is
-    // generated once per ~0.15s at 1 batch, and once per ~0.075s at 100 batch
+    // when used. this enable checkpoint frequency only be proportional to
+    // overall throughput, not related to selected batch size, which should be
+    // desired
+    // for benchmark on my platform maximum throughput is about 100-200K for
+    // 1-batch and 200K-1000K for 100-batch. a 10K checkpoint interval means
+    // several tens of checkpoint broadcast per second, and should be a reasonable
+    // setup
     const CHECKPOINT_INTERVAL: usize = 10000;
 
     fn handle_request(&mut self, remote: T::Address, message: message::Request) {

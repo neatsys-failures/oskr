@@ -30,8 +30,9 @@ pub struct OrderedMulticast<M> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     Signed,
-    Skipped,
     Unsigned, // and not chained yet
+    // consider tuple (signed/unsigned, skipped/verified)?
+    SkippedSigned,
     Chained,
 }
 
@@ -179,7 +180,11 @@ impl<M> OrderedMulticast<M> {
     {
         deserialize(&*self.message)
             .map(|message| VerifiedOrderedMulticast {
-                status: Status::Skipped,
+                status: if self.is_signed() {
+                    Status::SkippedSigned
+                } else {
+                    Status::Unsigned
+                },
                 message,
                 meta: self,
             })

@@ -32,6 +32,8 @@ pub struct Replica<T: Transport> {
     // consider give sequence number a type or type alias
     received_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
     verified_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
+    confirmed_high: u32, // confirmed for non-equivocation
+    ordering_certification_table: HashMap<u32, OrderingCertification>,
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     route_table: HashMap<ClientId, T::Address>,
     shared: Arc<Shared<T>>,
@@ -39,6 +41,12 @@ pub struct Replica<T: Transport> {
     signed_count: u32,
     unsigned_count: u32,
     skipped_count: u32,
+}
+
+#[derive(Debug, Clone, Default)]
+struct OrderingCertification {
+    request: Option<OrderedMulticast<message::Request>>,
+    confirm_table: HashMap<ReplicaId, SignedMessage<message::OrderConfirm>>,
 }
 
 pub struct Shared<T: Transport> {
@@ -89,6 +97,8 @@ impl<T: Transport> Replica<T> {
             log: Vec::new(),
             received_buffer: HashMap::new(),
             verified_buffer: HashMap::new(),
+            confirmed_high: if check_equivocation { 0 } else { u32::MAX },
+            ordering_certification_table: HashMap::new(),
             client_table: HashMap::new(),
             route_table: HashMap::new(),
             shared: Arc::new(Shared {
@@ -165,7 +175,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             if request.status == Status::Unsigned {
                 self.unsigned_count += 1;
                 true
-            } else if request.status == Status::Skipped {
+            } else if request.status == Status::SkippedSigned {
                 self.skipped_count += 1;
                 true
             } else {
@@ -175,13 +185,25 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.insert_chain(request);
             return;
         }
+
         debug!("insert signed {}", request.meta.sequence_number);
         self.signed_count += 1;
-
         if self.check_equivocation {
-            todo!()
+            let mut check_number =
+                request.meta.sequence_number / self.batch_size as u32 * self.batch_size as u32;
+            while check_number > self.confirmed_high {
+                let certification = self
+                    .ordering_certification_table
+                    .entry(check_number)
+                    .or_default();
+                if certification.request.is_some() {
+                    break; // assert every lower check number already has request
+                }
+                certification.request = Some(request.meta.clone());
+                // new confirmed high
+                check_number -= self.batch_size as u32;
+            }
         }
-
         self.verify_chain(&request.meta);
         self.insert_request(request);
     }
@@ -307,7 +329,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 impl<T: Transport> Drop for Replica<T> {
     fn drop(&mut self) {
         info!(
-            "signed/unsigned/skipped: {}/{}/{}",
+            "signed/unsigned/skipped signed: {}/{}/{}",
             self.signed_count, self.unsigned_count, self.skipped_count
         );
         if !self.received_buffer.is_empty() {
