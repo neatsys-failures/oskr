@@ -152,8 +152,9 @@ impl<T: Transport> StatelessContext<Replica<T>> {
         let verified = (|ordered_multicast: OrderedMulticast<_>| {
             if matches!(self.multicast_key, MulticastVerifyingKey::PublicKey(_)) {
                 // make this dynamically predicate base on system load?
-                if MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
-                    >= ordered_multicast.sequence_number
+                if self.skip_size > 1
+                    && MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
+                        > ordered_multicast.sequence_number
                 {
                     return ordered_multicast.skip_verify();
                 }
@@ -303,31 +304,30 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         let sequence_number = request.meta.sequence_number;
         let op_number = sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
         debug!(
-            "insert request: sequence {} on {}",
+            "insert request: op {}, stable {}",
             op_number, self.op_number
         );
-        if op_number != self.op_number + 1 {
-            if self
-                .verified_buffer
-                .insert(sequence_number, request)
-                .is_some()
-            {
-                warn!("duplicated sequence number {sequence_number}");
-            }
+
+        // shortcut for no need to confirm
+        if op_number == self.op_number + 1 && op_number <= self.confirmed_high {
+            self.insert_log(request);
             self.flush_verified();
             return;
         }
 
-        self.confirm_next(&request);
-        if request.meta.sequence_number <= self.confirmed_high {
-            self.insert_log(request);
-            self.flush_verified();
+        if self.verified_buffer.insert(op_number, request).is_some() {
+            warn!("duplicated sequence number {sequence_number}");
         }
+        self.flush_verified();
     }
 
     fn confirm_next(&mut self, verified: &VerifiedOrderedMulticast<message::Request>) {
         // assert verified's op number == confirm number + 1
         self.confirm_number += 1;
+        debug!(
+            "confirm op {} seq {}",
+            self.confirm_number, verified.meta.sequence_number
+        );
         // hope this to be fast...
         self.confirm_digest = Sha256::new()
             .chain_update(self.confirm_digest)
@@ -362,6 +362,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.submit.stateless(move |shared| {
                 let signed =
                     SignedMessage::sign(order_confirm.clone(), shared.config.signing_key(shared));
+                info!("send order confirm {:?}", order_confirm);
                 shared.transport.send_message_to_all(
                     shared,
                     shared.config.replica(..),
@@ -383,6 +384,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         order_confirm: &message::OrderConfirm,
         signed: &SignedMessage<message::OrderConfirm>,
     ) {
+        debug!("insert {:?}", order_confirm);
         assert_eq!(order_confirm.view_number, self.view_number);
         assert!(self.confirmed_high < order_confirm.op_number);
         let certification = self
@@ -401,6 +403,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             .confirm_table
             .insert(order_confirm.replica_id, signed.clone());
         if self.is_confirmed(order_confirm.op_number) {
+            debug!("confirmed {}", order_confirm.op_number);
             self.confirmed_high = order_confirm.op_number;
             self.flush_verified();
         }
@@ -409,20 +412,25 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     // should be called whenever op_number changed, confirmed_high changed, or
     // verified_buffer changed
     fn flush_verified(&mut self) {
+        debug!(
+            "flush verified: op number = {}, confirm number = {}",
+            self.op_number, self.confirm_number
+        );
         let mut op_number = self.op_number + 1;
         while op_number <= self.confirmed_high {
             if let Some(request) = self.verified_buffer.remove(&op_number) {
                 self.insert_log(request);
-                op_number += 1;
+                op_number = self.op_number + 1;
             } else {
                 break;
             }
         }
-        op_number = self.confirm_number + 1;
+
+        let mut op_number = self.confirm_number + 1;
         let verified_buffer = mem::take(&mut self.verified_buffer);
         while let Some(verified) = verified_buffer.get(&op_number) {
             self.confirm_next(verified);
-            op_number += 1;
+            op_number = self.confirm_number + 1;
         }
         self.verified_buffer = verified_buffer;
     }
@@ -430,6 +438,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn insert_log(&mut self, verified: VerifiedOrderedMulticast<message::Request>) {
         // assert_eq!(verified.meta.sequence_number, self.op_number + 1);
         self.op_number += 1;
+        debug!("insert log op {}", self.op_number);
         let request = (*verified).clone();
         self.log.push(verified);
         self.log_hash = Sha256::new()
