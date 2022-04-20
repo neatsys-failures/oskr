@@ -7,7 +7,6 @@ use std::{
     },
 };
 
-use rand::random;
 use sha2::{Digest as _, Sha256};
 use tracing::{debug, info, warn};
 
@@ -155,10 +154,6 @@ impl<T: Transport> Replica<T> {
 static SEQUENCE_START: AtomicU32 = AtomicU32::new(u32::MAX);
 impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_multicast_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
-        if random::<f32>() < 0.01 {
-            return;
-        }
-
         let ordered_multicast: OrderedMulticast<message::Request> =
             OrderedMulticast::parse(buffer.as_ref());
         SEQUENCE_START.fetch_min(ordered_multicast.sequence_number, Ordering::SeqCst);
@@ -486,7 +481,6 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         );
         let request = (*verified).clone();
         self.log.push(verified);
-
         self.log_hash = Sha256::new()
             .chain_update(&self.log_hash)
             .chain_update(request.client_id)
@@ -509,8 +503,6 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                     } else {
                         info!("skip resend reply, no remote record");
                     }
-                } else {
-                    debug!("reply not available");
                 }
                 return;
             }
@@ -585,7 +577,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         // prevent query flood
         if self.query_number.is_some() && self.query_number != previous_query {
-            // if self.query_number.is_some() {
+        // if self.query_number.is_some() {
             debug!("new query: {:?}", self.query_number);
             let query = message::Query {
                 view_number: self.view_number,

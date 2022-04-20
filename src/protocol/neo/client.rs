@@ -99,10 +99,9 @@ where
                 result_table.insert(reply.replica_id, matcher.clone());
 
                 if result_table
-                    // .values()
-                    // .filter(|record| **record == matcher)
-                    // .count()
-                    .len()
+                    .values()
+                    .filter(|record| **record == matcher)
+                    .count()
                     == wait_count
                 {
                     Some(matcher.3)
