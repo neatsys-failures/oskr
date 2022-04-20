@@ -20,7 +20,7 @@ use super::{Client, Replica};
 #[test]
 fn send_pre_prepare_message() {
     *TRACING;
-    let signing_key = SigningKey::from_bytes(&[1; 32]).unwrap();
+    let signing_key = SigningKey::K256(k256::ecdsa::SigningKey::from_bytes(&[1; 32]).unwrap());
 
     let pre_prepare = message::PrePrepare {
         view_number: 0,

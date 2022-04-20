@@ -395,7 +395,7 @@ impl<'a, T: Transport> StatefulContext<'a, Replica<T>> {
         let digest = item.digest;
         let op_number = item.op_number;
         if op_number != self.log.len() as OpNumber + 1 {
-            info!(
+            debug!(
                 "out of order log item: {} (expect {})",
                 item.op_number,
                 self.log.len() as OpNumber + 1

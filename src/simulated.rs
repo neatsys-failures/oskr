@@ -163,7 +163,9 @@ impl Transport {
                                 .unwrap();
                             (
                                 address.clone(),
-                                SigningKey::from_bytes(&signing_key).unwrap(),
+                                SigningKey::K256(
+                                    k256::ecdsa::SigningKey::from_bytes(&signing_key).unwrap(),
+                                ),
                             )
                         })
                         .collect(),
