@@ -110,7 +110,7 @@ where
                 }
             };
 
-        let mut timeout = Instant::now() + Duration::from_millis(1000);
+        let mut timeout = Instant::now() + Duration::from_millis(100);
         loop {
             select! {
                 recv = self.rx.next() => {
@@ -120,12 +120,12 @@ where
                     }
                 }
                 _ = E::sleep_until(timeout).fuse() => {
-                    warn!("resend for request number {}", self.request_number);
+                    debug!("resend for request number {}", self.request_number);
                     self.transport
                         .send_message(self, self.config.multicast.as_ref().unwrap(), |buffer| {
                             OrderedMulticast::assemble(request.clone(), buffer)
                         });
-                    timeout = Instant::now() + Duration::from_millis(1000);
+                    timeout = Instant::now() + Duration::from_millis(100);
                 }
             }
         }

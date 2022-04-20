@@ -232,7 +232,15 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             self.confirm_number = start - 1;
             self.confirmed_high = self.confirmed_high.max(start - 1);
         });
-        assert!(request.meta.sequence_number > self.sequence_number);
+        // may be a late message already fulfilled by query
+        // assert!(
+        //     request.meta.sequence_number > self.sequence_number,
+        //     "received {}",
+        //     request.meta.sequence_number
+        // );
+        if request.meta.sequence_number <= self.confirm_number {
+            return;
+        }
 
         self.route_table.insert(request.client_id, remote);
 
@@ -252,9 +260,11 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         debug!("insert signed {}", request.meta.sequence_number);
         self.signed_count += 1;
-
         self.verify_chain(&request.meta);
+        let sequence_number = request.meta.sequence_number;
         self.insert_request(request);
+
+        self.send_query(sequence_number);
     }
 
     fn is_confirmed(&self, sequence_number: u32) -> bool {
@@ -275,24 +285,23 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             child
         } else {
             // child not verified yet
-            debug!("insert chain {}", request.meta.sequence_number);
+            debug!(
+                "insert chain {}, confirm {}",
+                request.meta.sequence_number, self.confirm_number
+            );
             // TODO don't let a faulty chain to cause unnecessary query
             // i.e. store unverified parents like a block chain
+            let sequence_number = request.meta.sequence_number;
             if self
                 .received_buffer
                 .insert(request.meta.sequence_number, request)
                 .is_some()
             {
-                warn!("duplicated chain hash");
+                warn!("duplicated chain hash {}", sequence_number);
             }
             return;
         };
         if let Ok(verified) = child.meta.verify_parent(request) {
-            if Some(verified.meta.sequence_number) == self.query_number {
-                info!("query {:?} fullfiled", self.query_number);
-                self.query_number = None;
-            }
-
             self.verify_chain(&verified.meta);
             self.insert_request(verified);
         } else {
@@ -309,11 +318,6 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             } else {
                 warn!("broken chain");
             }
-        }
-        let query_number = child.sequence_number - 1;
-        if query_number > self.confirm_number && self.query_number.is_none() {
-            self.query_number = Some(query_number);
-            self.send_query();
         }
     }
 
@@ -487,14 +491,18 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 
         // execution
         let client_id = request.client_id;
-        let remote = self.route_table[&client_id].clone();
+        let remote = self.route_table.get(&client_id).cloned();
         if let Some((request_number, reply)) = self.client_table.get(&request.client_id) {
             if *request_number > request.request_number {
                 return;
             }
             if *request_number == request.request_number {
                 if let Some(reply) = reply {
-                    self.transport.send_message(self, &remote, serialize(reply));
+                    if let Some(remote) = remote {
+                        self.transport.send_message(self, &remote, serialize(reply));
+                    } else {
+                        info!("skip resend reply, no remote record");
+                    }
                 }
                 return;
             }
@@ -517,9 +525,13 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
         self.submit.stateless(move |shared| {
             let signed = SignedMessage::sign(reply, shared.config.signing_key(shared));
-            shared
-                .transport
-                .send_message(shared, &remote, serialize(signed.clone()));
+            if let Some(remote) = remote {
+                shared
+                    .transport
+                    .send_message(shared, &remote, serialize(signed.clone()));
+            } else {
+                info!("skip send reply, no remote record");
+            }
             shared.submit.stateful(move |state| {
                 let (current_request, reply) = state.client_table.get_mut(&client_id).unwrap();
                 if *current_request == request_number {
@@ -543,17 +555,40 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.insert_order_confirm(&*message, message.signed_message());
     }
 
-    fn send_query(&self) {
-        info!("send query {:?}", self.query_number);
-        let query = message::Query {
-            view_number: self.view_number,
-            sequence_number: self.query_number.unwrap(),
-        };
-        self.transport.send_message_to_all(
-            self,
-            self.config.replica(..),
-            serialize(ToReplica::Query(query)),
-        );
+    fn send_query(&mut self, sequence_number: u32) {
+        let previous_query = self.query_number;
+        if let Some(query_number) = self.query_number {
+            if query_number <= self.confirm_number
+                || self.verified_buffer.contains_key(&query_number)
+            {
+                debug!("query {query_number} fulfilled");
+                self.query_number = None;
+            }
+        }
+
+        if sequence_number > self.confirm_number {
+            let mut query_number = sequence_number - 1;
+            while self.verified_buffer.contains_key(&query_number) {
+                query_number -= 1;
+                assert!(query_number > self.confirm_number);
+            }
+            self.query_number = Some(query_number);
+        }
+
+        // prevent query flood
+        if self.query_number.is_some() && self.query_number != previous_query {
+        // if self.query_number.is_some() {
+            debug!("new query: {:?}", self.query_number);
+            let query = message::Query {
+                view_number: self.view_number,
+                sequence_number: self.query_number.unwrap(),
+            };
+            self.transport.send_message_to_all(
+                self,
+                self.config.replica(..),
+                serialize(ToReplica::Query(query)),
+            );
+        }
     }
 
     fn handle_query(&mut self, remote: T::Address, message: message::Query) {
@@ -589,7 +624,9 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         }
         self.queried_count += 1;
         // assert higher neighbour already verified so just chain into
+        let sequence_number = verified.meta.sequence_number;
         self.insert_chain(verified);
+        self.send_query(sequence_number);
     }
 }
 
