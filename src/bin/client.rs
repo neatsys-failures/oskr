@@ -109,6 +109,8 @@ fn main() {
         wait_all: bool,
         #[clap(long = "k256")]
         use_k256: bool,
+        #[clap(long = "drop", default_value_t = 0.)]
+        drop_rate: f32,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -140,6 +142,7 @@ fn main() {
     }
 
     let mut transport = Transport::setup(core_mask, args.port_id, 1, args.n_tx);
+    transport.set_drop_rate(args.drop_rate);
     struct WorkerData<Client> {
         client_list: Vec<Vec<Client>>,
         count: Arc<AtomicU32>,

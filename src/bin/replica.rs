@@ -103,6 +103,8 @@ fn main() {
         multicast_key: MulticastKey,
         #[clap(long = "k256")]
         use_k256: bool,
+        #[clap(long = "drop", default_value_t = 0.)]
+        drop_rate: f32,
     }
     let args = Args::parse();
     let core_mask = u128::from_str_radix(&args.mask, 16).unwrap();
@@ -141,6 +143,7 @@ fn main() {
     if let Some(address) = config.multicast {
         transport.set_multicast_address(address);
     }
+    transport.set_drop_rate(args.drop_rate);
 
     struct WorkerData<Replica: State> {
         replica: Arc<Handle<Replica>>,

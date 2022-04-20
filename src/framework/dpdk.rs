@@ -12,6 +12,7 @@ use std::{
 };
 
 use crossbeam::utils::Backoff;
+use rand::random;
 
 use crate::{
     dpdk_shim::{
@@ -132,7 +133,6 @@ impl facade::TxAgent for TxAgent {
                 } else {
                     let mbuf = NonNull::new(*mbuf).unwrap();
                     let data = rte_mbuf::get_data(mbuf);
-                    // TODO hide length + 16 behide rte_mbuf abstraction
                     rte_mbuf::copy_data(sample_data, data, length);
                     (mbuf, data)
                 };
@@ -163,6 +163,7 @@ pub struct Transport {
     multicast_address: Option<Address>,
     multicast_recv: Box<dyn Fn(Address, RxBuffer) + Send>,
     rr: Arc<RoundRobin>,
+    drop_rate: f32,
 }
 type RecvTable = HashMap<Address, Box<dyn Fn(Address, RxBuffer) + Send>>;
 
@@ -271,12 +272,17 @@ impl Transport {
                 multicast_address: None,
                 multicast_recv: Box::new(|_, _| {}),
                 rr: Arc::new(RoundRobin::new(n_tx as u32)),
+                drop_rate: 0.,
             }
         }
     }
 
     pub fn set_multicast_address(&mut self, address: Address) {
         self.multicast_address = Some(address);
+    }
+
+    pub fn set_drop_rate(&mut self, drop_rate: f32) {
+        self.drop_rate = drop_rate;
     }
 
     pub fn worker_id() -> usize {
@@ -308,6 +314,9 @@ impl Transport {
             &(burst.assume_init())[..burst_size as usize]
         };
         for mbuf in burst {
+            if self.drop_rate > 0. && random::<f32>() < self.drop_rate {
+                continue;
+            }
             let mbuf = NonNull::new(*mbuf).unwrap();
             unsafe {
                 let data = rte_mbuf::get_data(mbuf);
