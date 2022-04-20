@@ -3,7 +3,7 @@ use std::{
     mem,
     sync::{
         atomic::{AtomicU32, Ordering},
-        Arc,
+        Arc, Once,
     },
 };
 
@@ -30,24 +30,28 @@ pub struct Replica<T: Transport> {
     batch_size: usize,
     check_equivocation: bool,
     view_number: ViewNumber,
-    op_number: OpNumber,
-    query_number: Option<OpNumber>,
+    op_number: OpNumber, // the number exposed to app and client
+    // using `u32` directly as type, because the number is given by hardware
+    // from replica's view, come from nowhere in network
+    // so the value width should not be controled by this codebase
+    // consider give sequence number a type or type alias
+    sequence_number: u32, // speculative number, verified and no gap
+    query_number: Option<u32>,
     log: Vec<VerifiedOrderedMulticast<message::Request>>,
     log_hash: Digest,
-    // using `u32` directly as key, so indicate it is not the `op_number` field's value
-    // consider give sequence number a type or type alias
     received_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
     verified_buffer: HashMap<u32, VerifiedOrderedMulticast<message::Request>>,
-    confirm_number: OpNumber, // every op number up to `confirm_number` is already
+    confirm_number: u32, // yet to verify and no gap
     // verified locally, so every OrderConfirm whose op_number is lower than
     // confirm_number is already sent
     confirm_digest: Digest,
-    confirmed_high: OpNumber, // the OC present in OC table
-    ordering_certification_table: HashMap<OpNumber, OrderingCertification>,
+    confirmed_high: u32, // the OC present in OC table
+    ordering_certification_table: HashMap<u32, OrderingCertification>,
     client_table: HashMap<ClientId, (RequestNumber, Option<SignedMessage<message::Reply>>)>,
     route_table: HashMap<ClientId, T::Address>,
     shared: Arc<Shared<T>>,
 
+    // these are u32 just because u32 is fast :)
     signed_count: u32,
     unsigned_count: u32,
     skipped_count: u32,
@@ -106,6 +110,7 @@ impl<T: Transport> Replica<T> {
             check_equivocation,
             view_number: 0,
             op_number: 0,
+            sequence_number: 0,
             query_number: None,
             log: Vec::new(),
             log_hash: Digest::default(),
@@ -143,6 +148,7 @@ impl<T: Transport> Replica<T> {
     }
 }
 
+// some more local solution?
 static SEQUENCE_START: AtomicU32 = AtomicU32::new(u32::MAX);
 impl<T: Transport> StatelessContext<Replica<T>> {
     fn receive_multicast_buffer(&self, remote: T::Address, buffer: T::RxBuffer) {
@@ -152,9 +158,8 @@ impl<T: Transport> StatelessContext<Replica<T>> {
 
         static MAX_SIGNED: AtomicU32 = AtomicU32::new(0);
         let verified = if matches!(self.multicast_key, MulticastVerifyingKey::PublicKey(_))
-            && self.skip_size > 1
             // make this dynamically predicate base on system load?
-                && MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size
+                && MAX_SIGNED.load(Ordering::SeqCst) + self.skip_size / 2
                     > ordered_multicast.sequence_number
         {
             ordered_multicast.skip_verify()
@@ -208,6 +213,17 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         remote: T::Address,
         request: VerifiedOrderedMulticast<message::Request>,
     ) {
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            // assert at this point SEQUENCE_START from never go lower any more
+            let start = SEQUENCE_START.load(Ordering::SeqCst);
+            assert_ne!(start, 0);
+            self.sequence_number = start - 1;
+            self.confirm_number = start - 1;
+            self.confirmed_high = self.confirmed_high.max(start - 1);
+        });
+        assert!(request.meta.sequence_number > self.sequence_number);
+
         self.route_table.insert(request.client_id, remote);
 
         // is this what you expect me to write, Rust?
@@ -231,8 +247,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.insert_request(request);
     }
 
-    fn is_confirmed(&self, op_number: u32) -> bool {
-        if let Some(certification) = self.ordering_certification_table.get(&op_number) {
+    fn is_confirmed(&self, sequence_number: u32) -> bool {
+        if let Some(certification) = self.ordering_certification_table.get(&sequence_number) {
             certification.request.is_some()
                 && certification.confirm_table.len() >= 2 * self.config.f + 1
         } else {
@@ -251,6 +267,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             // child not verified yet
             debug!("insert chain {}", request.meta.sequence_number);
             // TODO don't let a faulty chain to cause unnecessary query
+            // i.e. store unverified parents like a block chain
             if self
                 .received_buffer
                 .insert(request.meta.sequence_number, request)
@@ -278,7 +295,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 warn!("broken chain");
             }
         }
-        let query_number = child.sequence_number - SEQUENCE_START.load(Ordering::SeqCst);
+        let query_number = child.sequence_number - 1;
         if query_number > self.confirm_number && self.query_number.is_none() {
             self.query_number = Some(query_number);
             self.send_query();
@@ -288,84 +305,87 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     fn insert_request(&mut self, request: VerifiedOrderedMulticast<message::Request>) {
         assert!(request.status == Status::Signed || request.status == Status::Chained);
         let sequence_number = request.meta.sequence_number;
-        let op_number = sequence_number - SEQUENCE_START.load(Ordering::SeqCst) + 1;
-        debug!(
-            "insert request: op {}, stable {}",
-            op_number, self.op_number
-        );
 
         // shortcut for no need to insert verified
-        if op_number == self.op_number + 1 && op_number <= self.confirmed_high {
-            assert_eq!(op_number, self.confirm_number + 1); // confirm number should never less than op number
+        if sequence_number == self.sequence_number + 1 && sequence_number <= self.confirmed_high {
+            assert_eq!(sequence_number, self.confirm_number + 1); // confirm number should never less than sequence number
             self.confirm_next(&request);
             self.insert_log(request);
             self.flush_verified();
             return;
         }
 
-        if self.verified_buffer.insert(op_number, request).is_some() {
+        if self
+            .verified_buffer
+            .insert(sequence_number, request)
+            .is_some()
+        {
             warn!("duplicated sequence number {sequence_number}");
         }
         self.flush_verified();
     }
 
     fn confirm_next(&mut self, verified: &VerifiedOrderedMulticast<message::Request>) {
-        // assert verified's op number == confirm number + 1
+        assert_eq!(verified.meta.sequence_number, self.confirm_number + 1);
         self.confirm_number += 1;
-        debug!(
-            "confirm op {} seq {}",
-            self.confirm_number, verified.meta.sequence_number
-        );
+
+        if !self.check_equivocation {
+            return;
+        }
+
         // hope this to be fast...
         self.confirm_digest = Sha256::new()
-            .chain_update(self.confirm_digest)
+            .chain_update(&self.confirm_digest)
             .chain_update(verified.client_id)
             .chain_update(verified.request_number.to_le_bytes())
             .chain_update(&verified.op)
             .finalize()
             .into();
-        if self.check_equivocation && self.confirm_number % self.batch_size as OpNumber == 0 {
-            let confirm_number = self.confirm_number;
-            let order_confirm = message::OrderConfirm {
-                view_number: self.view_number,
-                replica_id: self.id,
-                op_number: confirm_number,
-                digest: self.confirm_digest,
-            };
-            let confirm_digest = mem::take(&mut self.confirm_digest);
-            let certification = self
-                .ordering_certification_table
-                .entry(confirm_number)
-                .or_default();
-            certification.request = Some(verified.meta.clone());
-            if let Some(previous_digest) = certification.digest {
-                if previous_digest != confirm_digest {
-                    warn!("order certification digest mismatch local one");
-                    // everything previously collected is diveraged
-                    // local information is always prioritized
-                    certification.confirm_table.clear();
-                }
-            } else {
-                certification.digest = Some(confirm_digest);
-            }
-            self.submit.stateless(move |shared| {
-                let signed =
-                    SignedMessage::sign(order_confirm.clone(), shared.config.signing_key(shared));
-                debug!("send order confirm {:?}", order_confirm);
-                shared.transport.send_message_to_all(
-                    shared,
-                    shared.config.replica(..),
-                    serialize(ToReplica::OrderConfirm(signed.clone())),
-                );
-                shared.submit.stateful(move |state| {
-                    if state.view_number == order_confirm.view_number
-                        && order_confirm.op_number > state.confirmed_high
-                    {
-                        state.insert_order_confirm(&order_confirm, &signed);
-                    }
-                });
-            });
+
+        if self.confirm_number % self.batch_size as u32 != 0 {
+            return;
         }
+
+        let confirm_number = self.confirm_number;
+        let confirm_digest = mem::take(&mut self.confirm_digest);
+        let certification = self
+            .ordering_certification_table
+            .entry(confirm_number)
+            .or_default();
+        certification.request = Some(verified.meta.clone());
+        if let Some(previous_digest) = certification.digest {
+            if previous_digest != confirm_digest {
+                warn!("order certification digest mismatch local one");
+                // everything previously collected is diveraged
+                // local information is always prioritized
+                certification.confirm_table.clear();
+            }
+        }
+        certification.digest = Some(confirm_digest);
+
+        let order_confirm = message::OrderConfirm {
+            view_number: self.view_number,
+            replica_id: self.id,
+            sequence_number: confirm_number,
+            digest: confirm_digest,
+        };
+        self.submit.stateless(move |shared| {
+            let signed =
+                SignedMessage::sign(order_confirm.clone(), shared.config.signing_key(shared));
+            debug!("send order confirm {:?}", order_confirm);
+            shared.transport.send_message_to_all(
+                shared,
+                shared.config.replica(..),
+                serialize(ToReplica::OrderConfirm(signed.clone())),
+            );
+            shared.submit.stateful(move |state| {
+                if state.view_number == order_confirm.view_number
+                    && order_confirm.sequence_number > state.confirmed_high
+                {
+                    state.insert_order_confirm(&order_confirm, &signed);
+                }
+            });
+        });
     }
 
     fn insert_order_confirm(
@@ -375,10 +395,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     ) {
         debug!("insert {:?}", order_confirm);
         assert_eq!(order_confirm.view_number, self.view_number);
-        assert!(self.confirmed_high < order_confirm.op_number);
+        assert!(self.confirmed_high < order_confirm.sequence_number);
         let certification = self
             .ordering_certification_table
-            .entry(order_confirm.op_number)
+            .entry(order_confirm.sequence_number)
             .or_default();
         if let Some(digest) = certification.digest {
             if digest != order_confirm.digest {
@@ -386,14 +406,15 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
                 return;
             }
         } else {
+            assert!(certification.confirm_table.is_empty());
             certification.digest = Some(order_confirm.digest);
         }
         certification
             .confirm_table
             .insert(order_confirm.replica_id, signed.clone());
-        if self.is_confirmed(order_confirm.op_number) {
-            debug!("confirmed {}", order_confirm.op_number);
-            self.confirmed_high = order_confirm.op_number;
+        if self.is_confirmed(order_confirm.sequence_number) {
+            debug!("confirmed {}", order_confirm.sequence_number);
+            self.confirmed_high = order_confirm.sequence_number;
             self.flush_verified();
         }
     }
@@ -402,43 +423,47 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
     // verified_buffer changed
     fn flush_verified(&mut self) {
         debug!(
-            "flush verified: op number = {}, confirm number = {}",
-            self.op_number, self.confirm_number
+            "flush verified: seq number = {}, confirm number = {}",
+            self.sequence_number, self.confirm_number
         );
-        assert!(self.op_number <= self.confirm_number);
+        assert!(self.sequence_number <= self.confirm_number);
 
-        let mut op_number = self.confirm_number + 1;
+        let mut next_confirm = self.confirm_number + 1;
         let verified_buffer = mem::take(&mut self.verified_buffer);
-        while let Some(verified) = verified_buffer.get(&op_number) {
+        while let Some(verified) = verified_buffer.get(&next_confirm) {
             self.confirm_next(verified);
-            op_number = self.confirm_number + 1;
+            next_confirm = self.confirm_number + 1;
         }
         self.verified_buffer = verified_buffer;
 
-        let mut op_number = self.op_number + 1;
-        while op_number <= self.confirmed_high {
-            if let Some(request) = self.verified_buffer.remove(&op_number) {
+        let mut next_insert = self.sequence_number + 1;
+        while next_insert <= self.confirmed_high {
+            if let Some(request) = self.verified_buffer.remove(&next_insert) {
                 self.insert_log(request);
-                op_number = self.op_number + 1;
+                next_insert = self.sequence_number + 1;
             } else {
                 break;
             }
         }
         debug!(
-            "flush verified (out): op number = {}, confirm number = {}",
-            self.op_number, self.confirm_number
+            "flush verified (out): seq number = {}, confirm number = {}",
+            self.sequence_number, self.confirm_number
         );
-        assert!(self.op_number <= self.confirm_number);
+        assert!(self.sequence_number <= self.confirm_number);
     }
 
     fn insert_log(&mut self, verified: VerifiedOrderedMulticast<message::Request>) {
-        // assert_eq!(verified.meta.sequence_number, self.op_number + 1);
+        assert_eq!(verified.meta.sequence_number, self.sequence_number + 1);
+        self.sequence_number += 1;
         self.op_number += 1;
-        debug!("insert log op {}", self.op_number);
+        debug!(
+            "insert log seq {} op {}",
+            self.sequence_number, self.op_number
+        );
         let request = (*verified).clone();
         self.log.push(verified);
         self.log_hash = Sha256::new()
-            .chain_update(self.log_hash)
+            .chain_update(&self.log_hash)
             .chain_update(request.client_id)
             .chain_update(request.request_number.to_le_bytes())
             .chain_update(&request.op)
@@ -497,7 +522,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         if message.view_number != self.view_number {
             return;
         }
-        if message.op_number <= self.confirmed_high {
+        if message.sequence_number <= self.confirmed_high {
             return;
         }
         self.insert_order_confirm(&*message, message.signed_message());
@@ -507,7 +532,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         info!("send query {:?}", self.query_number);
         let query = message::Query {
             view_number: self.view_number,
-            op_number: self.query_number.unwrap(),
+            sequence_number: self.query_number.unwrap(),
         };
         self.transport.send_message_to_all(
             self,
@@ -520,9 +545,10 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         if message.view_number != self.view_number {
             return;
         }
-        let request = if let Some(request) = self.log.get((message.op_number - 1) as usize) {
+        let op_number = message.sequence_number + self.op_number as u32 - self.sequence_number;
+        let request = if let Some(request) = self.log.get((op_number - 1) as usize) {
             request
-        } else if let Some(request) = self.verified_buffer.get(&message.op_number) {
+        } else if let Some(request) = self.verified_buffer.get(&message.sequence_number) {
             request
         } else {
             return;
@@ -539,8 +565,8 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
 impl<T: Transport> Drop for Replica<T> {
     fn drop(&mut self) {
         info!(
-            "op number/confirm number: {}/{}",
-            self.op_number, self.confirm_number
+            "seq number/confirm number: {}/{}",
+            self.sequence_number, self.confirm_number
         );
         info!(
             "signed/unsigned/skipped signed: {}/{}/{}",
@@ -548,8 +574,12 @@ impl<T: Transport> Drop for Replica<T> {
         );
         if !self.received_buffer.is_empty() {
             warn!(
-                "not inserted chain request: {} remain",
-                self.received_buffer.len()
+                "not inserted chain request: {} remain ({} skipped)",
+                self.received_buffer.len(),
+                self.received_buffer
+                    .values()
+                    .filter(|verified| verified.status == Status::SkippedSigned)
+                    .count()
             );
         }
         if !self.verified_buffer.is_empty() {

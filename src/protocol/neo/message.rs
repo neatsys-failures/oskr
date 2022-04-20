@@ -156,10 +156,10 @@ impl<M> OrderedMulticast<M> {
         assert_ne!(parent.status, Status::Signed);
         assert_ne!(parent.status, Status::Chained);
         let chain_hash: Digest = Sha256::new()
-            .chain_update(parent.meta.digest)
+            .chain_update(&parent.meta.digest)
             .chain_update(parent.meta.sequence_number.to_le_bytes())
             .chain_update([parent.meta.session_number])
-            .chain_update(parent.meta.chain_hash)
+            .chain_update(&parent.meta.chain_hash)
             .finalize()
             .into();
         if chain_hash != self.chain_hash {
@@ -231,14 +231,14 @@ pub struct Reply {
 pub struct OrderConfirm {
     pub view_number: ViewNumber,
     pub replica_id: ReplicaId,
-    pub op_number: OpNumber,
+    pub sequence_number: u32,
     pub digest: Digest,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Query {
     pub view_number: ViewNumber,
-    pub op_number: OpNumber,
+    pub sequence_number: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
