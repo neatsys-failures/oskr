@@ -55,6 +55,7 @@ pub struct Replica<T: Transport> {
     signed_count: u32,
     unsigned_count: u32,
     skipped_count: u32,
+    queried_count: u32,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -133,6 +134,7 @@ impl<T: Transport> Replica<T> {
             signed_count: 0,
             unsigned_count: 0,
             skipped_count: 0,
+            queried_count: 0,
         });
         state.with_stateful(|state| {
             let submit = state.submit.clone();
@@ -200,7 +202,15 @@ impl<T: Transport> StatelessContext<Replica<T>> {
                 .submit
                 .stateful(|state| state.handle_query(remote, query)),
             Ok(ToReplica::QueryReply(query_reply)) => {
-                //
+                let verified = if let Ok(verified) = query_reply.request.skip_verify() {
+                    verified
+                } else {
+                    warn!("failed to verify query reply request");
+                    return;
+                };
+                let query_reply = (query_reply.view_number, verified);
+                self.submit
+                    .stateful(move |state| state.handle_query_reply(remote, query_reply));
             }
             _ => warn!("failed to parse received buffer"),
         }
@@ -278,6 +288,11 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
             return;
         };
         if let Ok(verified) = child.meta.verify_parent(request) {
+            if Some(verified.meta.sequence_number) == self.query_number {
+                info!("query {:?} fullfiled", self.query_number);
+                self.query_number = None;
+            }
+
             self.verify_chain(&verified.meta);
             self.insert_request(verified);
         } else {
@@ -541,7 +556,7 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         );
     }
 
-    fn handle_query(&self, remote: T::Address, message: message::Query) {
+    fn handle_query(&mut self, remote: T::Address, message: message::Query) {
         if message.view_number != self.view_number {
             return;
         }
@@ -560,6 +575,22 @@ impl<T: Transport> StatefulContext<'_, Replica<T>> {
         self.transport
             .send_message(self, &remote, serialize(ToReplica::QueryReply(query_reply)));
     }
+
+    fn handle_query_reply(
+        &mut self,
+        _remote: T::Address,
+        message: (ViewNumber, VerifiedOrderedMulticast<message::Request>),
+    ) {
+        let (view_number, verified) = message;
+        if view_number != self.view_number
+            || Some(verified.meta.sequence_number) != self.query_number
+        {
+            return;
+        }
+        self.queried_count += 1;
+        // assert higher neighbour already verified so just chain into
+        self.insert_chain(verified);
+    }
 }
 
 impl<T: Transport> Drop for Replica<T> {
@@ -569,8 +600,8 @@ impl<T: Transport> Drop for Replica<T> {
             self.sequence_number, self.confirm_number
         );
         info!(
-            "signed/unsigned/skipped signed: {}/{}/{}",
-            self.signed_count, self.unsigned_count, self.skipped_count
+            "signed/unsigned/skipped signed/queried: {}/{}/{}/{}",
+            self.signed_count, self.unsigned_count, self.skipped_count, self.queried_count
         );
         if !self.received_buffer.is_empty() {
             warn!(
