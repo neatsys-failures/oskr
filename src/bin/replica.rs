@@ -24,11 +24,7 @@ use oskr::{
         sqlite::Database,
         ycsb_workload::{Property, Workload},
     },
-    protocol::{
-        hotstuff,
-        neo::{self, message::MulticastVerifyingKey},
-        pbft, unreplicated, zyzzyva,
-    },
+    protocol::{hotstuff, pbft, unreplicated, zyzzyva},
     stage::{Handle, State},
 };
 use tracing::{debug, info, warn};
@@ -52,7 +48,7 @@ fn main() {
         PBFT,
         HotStuff,
         Zyzzyva,
-        Neo,
+        // Neo,
     }
 
     // should be `AppName` which is more pricese
@@ -245,36 +241,6 @@ fn main() {
                 args,
                 shutdown.clone(),
             ),
-            Mode::Neo => {
-                let multicast_key = match args.multicast_key {
-                    MulticastKey::HMAC => MulticastVerifyingKey::HMac([0; 4]),
-                    MulticastKey::PKEY => MulticastVerifyingKey::PublicKey(
-                        {
-                            let mut key = SigningKey::K256(
-                                k256::ecdsa::SigningKey::from_bytes(&[0xaa; 32]).unwrap(),
-                            );
-                            if !args.use_k256 {
-                                key = key.use_secp256k1();
-                            }
-                            key
-                        }
-                        .verifying_key(),
-                    ),
-                };
-                WorkerData::launch(
-                    neo::Replica::register_new(
-                        config,
-                        transport,
-                        args.replica_id,
-                        app,
-                        args.batch_size,
-                        multicast_key,
-                        args.check_equivocation,
-                    ),
-                    args,
-                    shutdown.clone(),
-                )
-            }
         }
     }
 

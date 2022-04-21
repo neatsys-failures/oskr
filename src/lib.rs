@@ -315,7 +315,6 @@ pub mod common;
 /// reproducible.
 pub mod protocol {
     pub mod hotstuff;
-    pub mod neo;
     pub mod pbft;
     pub mod unreplicated;
     pub mod zyzzyva;
